@@ -1,0 +1,596 @@
+<title>Night Float</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap">
+<style>
+/* Layout: ward workstation — bedside monitor + chart on the left, order panel on the right; stacks on phones */
+:root{
+  --bg:#E9EEF1; --surface:#FFFFFF; --sunk:#F3F6F8; --ink:#13212B; --muted:#56687A; --line:#D2DCE2;
+  --accent:#0D6C70; --accent-ink:#FFFFFF; --accent-soft:#D6ECEC;
+  --ok:#24784A; --ok-soft:#DDF0E4; --warn:#9A6410; --warn-soft:#F7EAD2; --harm:#B8322A; --harm-soft:#F7DEDB;
+  --f-display:"Sora", "Segoe UI", system-ui, sans-serif;
+  --f-body:"Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  /* bedside monitor: a fixed device look in both themes (real monitor color conventions) */
+  --mon-bg:#04080A; --mon-frame:#1B2329; --mon-ecg:#3BE37A; --mon-spo2:#3FD3F2; --mon-bp:#F4F4F0; --mon-rr:#F3D34A; --mon-temp:#C79BF7; --mon-alarm:#FF4B3E; --mon-dim:#5D6C75;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0E151A; --surface:#162026; --sunk:#111A1F; --ink:#E2EAEE; --muted:#93A5B0; --line:#29363F;
+  --accent:#4DB5B3; --accent-ink:#06201F; --accent-soft:#173536;
+  --ok:#5CC48A; --ok-soft:#163324; --warn:#E3AC4A; --warn-soft:#3A2B12; --harm:#F2786C; --harm-soft:#3D1C19; color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0E151A; --surface:#162026; --sunk:#111A1F; --ink:#E2EAEE; --muted:#93A5B0; --line:#29363F;
+  --accent:#4DB5B3; --accent-ink:#06201F; --accent-soft:#173536;
+  --ok:#5CC48A; --ok-soft:#163324; --warn:#E3AC4A; --warn-soft:#3A2B12; --harm:#F2786C; --harm-soft:#3D1C19; color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
+button{font:inherit;color:inherit}
+button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.2}
+.wrap{max-width:1180px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:22px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--f-display);font-weight:700;font-size:19px;letter-spacing:-.01em}
+.brand svg{flex:none}
+.top-r{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.chip{font-family:var(--f-mono);font-size:12.5px;padding:5px 10px;border:1px solid var(--line);border-radius:6px;background:var(--surface);white-space:nowrap}
+.btn{border:1px solid var(--line);background:var(--surface);padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:500}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+.btn.primary:hover{filter:brightness(1.07)}
+.eyebrow{font-size:11.5px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:600}
+
+/* home */
+.hero{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:28px;align-items:end;margin-bottom:26px}
+.hero h1{font-size:clamp(30px,5vw,46px);letter-spacing:-.025em}
+.hero p{color:var(--muted);max-width:60ch;margin:12px 0 0}
+.rules{display:grid;gap:8px;margin:0;padding:0;list-style:none;font-size:14px}
+.rules li{display:flex;gap:10px;align-items:baseline}
+.rules b{font-family:var(--f-mono);font-size:12px;color:var(--accent);min-width:64px}
+.pages{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.pager{background:var(--mon-bg);color:#C8F5D6;border-radius:14px;padding:16px;border:6px solid var(--mon-frame);display:flex;flex-direction:column;gap:12px;cursor:pointer;text-align:left;transition:transform .15s}
+.pager:hover{transform:translateY(-2px)}
+.pager .lcd{font-family:var(--f-mono);font-size:13.5px;line-height:1.55;min-height:7.8em}
+.pager .lcd .from{color:var(--mon-rr);display:flex;justify-content:space-between;gap:8px;margin-bottom:6px;font-size:12px}
+.pager .foot{display:flex;justify-content:space-between;align-items:center;gap:8px;font-family:var(--f-mono);font-size:12px;color:#7FA394}
+.pager .go{background:var(--mon-ecg);color:#03200E;font-weight:700;border-radius:6px;padding:5px 10px;font-family:var(--f-body);font-size:13px}
+.blink{animation:blink 1.2s steps(2,start) infinite}
+@keyframes blink{to{visibility:hidden}}
+
+/* game */
+.game{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:18px;align-items:start}
+.col{display:grid;gap:16px;min-width:0}
+.monitor{background:var(--mon-bg);border:8px solid var(--mon-frame);border-radius:16px;overflow:hidden;color:var(--mon-bp)}
+.mon-head{display:flex;justify-content:space-between;gap:8px;font-family:var(--f-mono);font-size:11.5px;color:var(--mon-dim);padding:8px 12px 0;flex-wrap:wrap}
+.mon-body{display:grid;grid-template-columns:minmax(0,1fr) 150px}
+.trace-wrap{position:relative;min-width:0}
+#trace{display:block;width:100%;height:190px}
+.lbl{position:absolute;left:10px;font-family:var(--f-mono);font-size:11px}
+.vit{display:grid;border-left:1px solid #141C21}
+.v{padding:6px 10px;border-bottom:1px solid #141C21;font-family:var(--f-mono);display:flex;flex-direction:column}
+.v small{font-size:10.5px;opacity:.75;display:flex;justify-content:space-between}
+.v .n{font-size:30px;font-weight:700;line-height:1.05;font-variant-numeric:tabular-nums}
+.v .n.sm{font-size:22px}
+.v.hr{color:var(--mon-ecg)} .v.sp{color:var(--mon-spo2)} .v.bp{color:var(--mon-bp)} .v.rr{color:var(--mon-rr)} .v.tp{color:var(--mon-temp)}
+.v.alarm .n{color:var(--mon-alarm);animation:blink 1s steps(2,start) infinite}
+.mon-msg{font-family:var(--f-mono);font-size:12px;color:var(--mon-alarm);padding:6px 12px 8px;min-height:30px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0}
+.pt{display:flex;gap:14px;justify-content:space-between;flex-wrap:wrap;align-items:flex-start}
+.pt h2{font-size:19px}
+.pt p{margin:4px 0 0;color:var(--muted);font-size:14px;max-width:62ch}
+.clock{font-family:var(--f-mono);text-align:right}
+.clock .big{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
+.clock .el{font-size:12px;color:var(--muted)}
+.tabs{display:flex;gap:4px;background:var(--sunk);padding:4px;border-radius:9px;margin-bottom:12px}
+.tab{flex:1;border:0;background:transparent;padding:8px 6px;border-radius:7px;cursor:pointer;font-weight:600;font-size:13.5px;color:var(--muted)}
+.tab[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.acts{display:grid;gap:6px}
+.act{display:flex;justify-content:space-between;align-items:center;gap:10px;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:10px 12px;cursor:pointer}
+.act:hover:not(:disabled){border-color:var(--accent);background:var(--accent-soft)}
+.act:disabled{cursor:default;opacity:.55;background:var(--sunk)}
+.act .cost{font-family:var(--f-mono);font-size:12px;color:var(--muted);white-space:nowrap}
+.commit{width:100%;margin-top:14px;padding:12px}
+.hint{font-size:12.5px;color:var(--muted);margin-top:10px}
+.log{display:grid;gap:10px;max-height:560px;overflow:auto;padding-right:2px}
+.entry{border-left:3px solid var(--line);padding:2px 0 2px 12px}
+.entry.new{border-left-color:var(--accent)}
+.entry .meta{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--muted);font-family:var(--f-mono)}
+.entry h4{margin:2px 0 4px;font-size:14.5px;font-family:var(--f-body);font-weight:600}
+.entry .res{font-size:14px;max-width:68ch}
+.entry .res p{margin:4px 0}
+.empty{color:var(--muted);font-size:14px}
+.lab{border-collapse:collapse;font-family:var(--f-mono);font-size:13px;margin:4px 0;font-variant-numeric:tabular-nums}
+.lab th{text-align:left;font-weight:500;color:var(--muted);padding:2px 14px 2px 0}
+.lab td{padding:2px 10px 2px 0}
+.lab td b{font-size:11px}
+.flag-H{color:var(--harm)} .flag-L{color:#2C6CC0}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .flag-L{color:#7DB2FF} }
+:root[data-theme="dark"] .flag-L{color:#7DB2FF}
+.calc{font-family:var(--f-mono);font-size:12.5px;background:var(--sunk);border-radius:6px;padding:6px 8px;display:block;margin-top:4px}
+
+/* overlay */
+.overlay{position:fixed;inset:0;background:rgba(5,12,16,.55);display:flex;align-items:center;justify-content:center;padding:max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));z-index:20}
+.dialog{background:var(--surface);border-radius:14px;padding:20px;max-width:520px;width:100%;display:grid;gap:12px;max-height:100%;overflow:auto}
+.dx{display:grid;gap:6px}
+.dx button{text-align:left;padding:11px 12px;border:1px solid var(--line);background:var(--surface);border-radius:8px;cursor:pointer}
+.dx button:hover{border-color:var(--accent);background:var(--accent-soft)}
+
+/* debrief */
+.db-head{display:grid;grid-template-columns:auto minmax(0,1fr);gap:24px;align-items:center;margin-bottom:20px}
+.score{width:132px;height:132px;border-radius:50%;display:grid;place-items:center;text-align:center;background:conic-gradient(var(--accent) calc(var(--p)*1%), var(--line) 0)}
+.score>div{width:108px;height:108px;border-radius:50%;background:var(--bg);display:grid;place-items:center;align-content:center}
+.score b{font-family:var(--f-display);font-size:38px;line-height:1}
+.score span{font-size:12px;color:var(--muted)}
+.db-head h1{font-size:clamp(24px,4vw,34px)}
+.db-head p{color:var(--muted);margin:6px 0 0;max-width:62ch}
+.db-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+.panel h3{font-size:16px;margin-bottom:10px}
+.tl{display:grid;gap:8px;list-style:none;margin:0;padding:0}
+.tl li{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:10px;align-items:baseline;font-size:14px}
+.tl .t{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.tl .why{grid-column:2 / 4;font-size:13px;color:var(--muted);margin-top:-4px}
+.pill{font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;white-space:nowrap;font-family:var(--f-mono)}
+.pill.key{background:var(--ok-soft);color:var(--ok)} .pill.good{background:var(--accent-soft);color:var(--accent)}
+.pill.low{background:var(--warn-soft);color:var(--warn)} .pill.risk{background:var(--warn-soft);color:var(--warn)} .pill.harm{background:var(--harm-soft);color:var(--harm)}
+.pill.miss{background:var(--harm-soft);color:var(--harm)}
+.pearls{margin:0;padding-left:18px;display:grid;gap:8px;font-size:14.5px}
+.dxbox{display:grid;gap:8px;font-size:14.5px}
+.dxbox .row{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.qstem{font-size:14.5px;margin:0 0 10px}
+.qopts{display:grid;gap:6px}
+.qopts button{text-align:left;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);cursor:pointer}
+.qopts button.right{border-color:var(--ok);background:var(--ok-soft)}
+.qopts button.wrong{border-color:var(--harm);background:var(--harm-soft)}
+.qexp{margin-top:10px;font-size:14px}
+.db-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+.span2{grid-column:1 / -1}
+
+@media (max-width:860px){
+  .hero,.game,.db-grid{grid-template-columns:minmax(0,1fr)}
+  .pages{grid-template-columns:minmax(0,1fr)}
+  .pager .lcd{min-height:0}
+}
+@media (max-width:520px){
+  .mon-body{grid-template-columns:minmax(0,1fr)}
+  .vit{grid-template-columns:repeat(3,minmax(0,1fr));border-left:0;border-top:1px solid #141C21}
+  .v .n{font-size:24px} .v .n.sm{font-size:18px}
+  #trace{height:150px}
+  .db-head{grid-template-columns:minmax(0,1fr)}
+  .tl li{grid-template-columns:44px minmax(0,1fr)}
+  .tl li .pill{grid-column:2}
+  .tl .why{grid-column:2}
+}
+@media (prefers-reduced-motion: reduce){ .blink,.v.alarm .n{animation:none} .pager{transition:none} }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><rect x="2" y="5" width="24" height="18" rx="4" fill="var(--accent)"/><rect x="6" y="9" width="16" height="7" rx="1.5" fill="var(--mon-bg)"/><polyline points="7,13 10,13 11.5,10 13,15.5 14.5,12.5 21,12.5" fill="none" stroke="var(--mon-ecg)" stroke-width="1.3"/><circle cx="21" cy="19.5" r="1.4" fill="var(--accent-ink)"/></svg>
+      Night Float
+    </div>
+    <div class="top-r" id="topR"></div>
+  </header>
+
+  <main id="home">
+    <section class="hero">
+      <div>
+        <div class="eyebrow">Overnight cover · Internal medicine</div>
+        <h1>You're the intern on nights. Three pages are waiting.</h1>
+        <p>Each patient is live. Every history question, exam, lab and order costs minutes, and the monitor responds to what you do. When you're ready, commit to a diagnosis. You'll get a debrief with what helped, what hurt, and how the case shows up on USMLE.</p>
+      </div>
+      <ul class="rules">
+        <li><b>TIME</b><span>Tests take as long as they would on the ward. Slow workups let patients deteriorate.</span></li>
+        <li><b>ORDERS</b><span>Some treatments look reasonable and are wrong for this patient. Watch the monitor.</span></li>
+        <li><b>SCORE</b><span>Diagnosis 40, key actions 40, patient condition at handoff 20. Harm costs points.</span></li>
+      </ul>
+    </section>
+    <section class="pages" id="pages"></section>
+  </main>
+
+  <main id="game" hidden>
+    <div class="game">
+      <div class="col">
+        <div class="monitor" aria-label="Bedside monitor">
+          <div class="mon-head"><span id="monBed">BED --</span><span>II · 25 mm/s · PLETH</span><span id="monSound"></span></div>
+          <div class="mon-body">
+            <div class="trace-wrap">
+              <canvas id="trace" aria-hidden="true"></canvas>
+              <span class="lbl" style="top:4px;color:var(--mon-ecg)">II</span>
+              <span class="lbl" style="top:122px;color:var(--mon-spo2)">PLETH</span>
+            </div>
+            <div class="vit">
+              <div class="v hr" id="vHR"><small><span>HR</span><span>bpm</span></small><span class="n">--</span></div>
+              <div class="v sp" id="vSP"><small><span>SpO₂</span><span>%</span></small><span class="n">--</span></div>
+              <div class="v bp" id="vBP"><small><span>NIBP</span><span id="vMAP">(--)</span></small><span class="n sm">--/--</span></div>
+              <div class="v rr" id="vRR"><small><span>RR</span><span>/min</span></small><span class="n sm">--</span></div>
+              <div class="v tp" id="vTP"><small><span>TEMP</span><span>°C</span></small><span class="n sm">--</span></div>
+            </div>
+          </div>
+          <div class="mon-msg" id="monMsg" aria-live="polite"></div>
+        </div>
+        <div class="panel pt">
+          <div style="min-width:0">
+            <div class="eyebrow" id="ptEyebrow"></div>
+            <h2 id="ptTitle"></h2>
+            <p id="ptPage"></p>
+          </div>
+          <div class="clock"><div class="big" id="clock">--:--</div><div class="el" id="elapsed">0 min since page</div></div>
+        </div>
+        <div class="panel">
+          <div class="eyebrow" style="margin-bottom:10px">Chart</div>
+          <div class="log" id="log"></div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="panel">
+          <div class="tabs" role="tablist" id="tabs"></div>
+          <div class="acts" id="acts"></div>
+          <button class="btn primary commit" id="commitBtn">Commit to a diagnosis</button>
+          <div class="hint">Time cost is shown on each order. Results land in the chart.</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <main id="debrief" hidden></main>
+</div>
+
+<div class="overlay" id="overlay" hidden><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dxTitle" id="dialog"></div></div>
+
+<script>
+const $=s=>document.querySelector(s);
+const LS={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const labs=rows=>'<table class="lab"><tbody>'+rows.map(r=>`<tr><th>${r[0]}</th><td class="${r[3]?'flag-'+r[3]:''}">${r[1]}${r[3]?' <b>'+r[3]+'</b>':''}</td><td style="color:var(--muted)">${r[2]}</td></tr>`).join('')+'</tbody></table>';
+const calc=s=>`<span class="calc">${s}</span>`;
+
+const CASES=[
+{
+ id:'dka', bed:'12', who:'19 F', title:'Drowsy, vomiting, "fingerstick reads HI"', start:2*60+10,
+ page:'Bed 12, 19-year-old woman from ED. Vomiting for 2 days, now drowsy. Breathing fast. Fingerstick just says HI. Can you come see her?',
+ well:{hr:88,sbp:118,dbp:72,rr:16,spo2:99,temp:37.0}, crash:{hr:158,sbp:64,dbp:34,rr:38,spo2:94,temp:37.6}, s0:50, rate:0.25,
+ ecg:{st:0,t:1.9},
+ keys:{t_bmp:10,rx_ns:15,rx_ins:15},
+ actions:[
+  {id:'hx_pmh',cat:'hx',label:'Past medical history',min:2,text:'Type 1 diabetes since age 11. She ran out of insulin 3 days ago after her pharmacy coverage lapsed.'},
+  {id:'hx_sx',cat:'hx',label:'Presenting symptoms',min:2,text:'Two days of thirst and frequent urination, then nausea and vomiting (6 times today). Crampy, diffuse abdominal pain. No diarrhea.'},
+  {id:'hx_meds',cat:'hx',label:'Medications & allergies',min:1,text:'Insulin glargine 18 U nightly, insulin lispro with meals. Combined oral contraceptive. No known drug allergies.'},
+  {id:'hx_trig',cat:'hx',label:'Triggers & ingestions',min:2,text:'No fever, cough or dysuria. Last period 2 weeks ago. Denies alcohol, drugs or any pill ingestion.'},
+  {id:'ex_gen',cat:'ex',label:'General appearance & breath',min:2,tag:'good',text:'Drowsy but answers questions. Fruity odor on her breath. Deep, rapid, regular breathing (Kussmaul respirations).'},
+  {id:'ex_vol',cat:'ex',label:'Volume status',min:2,tag:'good',text:'Dry mucous membranes, poor skin turgor, capillary refill 4 seconds. Flat neck veins.'},
+  {id:'ex_abd',cat:'ex',label:'Abdomen',min:2,text:'Soft, diffusely tender, no guarding or rebound. Hypoactive bowel sounds. Murphy and McBurney signs negative.'},
+  {id:'t_fs',cat:'tx',label:'Repeat fingerstick glucose',min:1,text:'Meter reads HI (above 500 mg/dL).'},
+  {id:'t_bmp',cat:'tx',label:'Basic metabolic panel',min:20,text:labs([['Na⁺','131','mEq/L','L'],['K⁺','5.6','mEq/L','H'],['Cl⁻','95','mEq/L','L'],['HCO₃⁻','8','mEq/L','L'],['BUN','32','mg/dL','H'],['Creatinine','1.6','mg/dL','H'],['Glucose','542','mg/dL','H']])+calc('Anion gap = 131 − (95 + 8) = 28')+calc('Corrected Na⁺ ≈ 131 + 1.6 × (542 − 100)/100 ≈ 138')},
+  {id:'t_abg',cat:'tx',label:'Arterial blood gas',min:15,tag:'good',text:labs([['pH','7.11','','L'],['pCO₂','21','mm Hg','L'],['pO₂','104','mm Hg',''],['HCO₃⁻','7','mEq/L','L']])+calc("Winter's: expected pCO₂ = 1.5 × 8 + 8 ± 2 = 18–22. Compensation is appropriate.")},
+  {id:'t_bhb',cat:'tx',label:'Serum β-hydroxybutyrate',min:30,tag:'good',text:labs([['β-hydroxybutyrate','6.8','mmol/L (ref < 0.6)','H']])},
+  {id:'t_ua',cat:'tx',label:'Urinalysis',min:15,text:'Glucose 4+, ketones 3+. No leukocytes or nitrites.<p style="color:var(--muted)">The urine nitroprusside test detects acetoacetate, not β-hydroxybutyrate, so it can underestimate ketosis.</p>'},
+  {id:'t_ecg',cat:'tx',label:'12-lead ECG',min:5,tag:'good',text:'Sinus tachycardia, 122/min. Tall, peaked T waves in V2–V4. Normal PR and QRS intervals.'},
+  {id:'t_lip',cat:'tx',label:'Lipase',min:25,text:labs([['Lipase','110','U/L (ref < 60)','H']])+'<p style="color:var(--muted)">Mild lipase elevation is common in DKA. Pancreatitis needs more than 3 times the upper limit of normal.</p>'},
+  {id:'t_ct',cat:'tx',label:'CT abdomen & pelvis',min:45,tag:'low',why:'Abdominal pain in DKA usually resolves as the acidosis clears.',text:'No acute findings. The trip to the scanner took 45 minutes while the acidosis continued.'},
+  {id:'rx_ns',cat:'rx',label:'0.9% saline, 1 L bolus',min:5,ds:-12,mul:0.6,text:'Blood pressure improves. Fluids alone lower the glucose by restoring renal perfusion.'},
+  {id:'rx_ins',cat:'rx',label:'Regular insulin infusion, 0.1 U/kg/h',min:5,run:G=>{
+     const r={rate:-0.35,text:'Insulin drip running. The anion gap will start to close.'};
+     const notes=[];
+     if(!G.done.t_bmp){r.tag='risk';r.why='Started before a potassium level was available.';notes.push('You started insulin without a potassium level. Insulin drives K⁺ into cells, so if K⁺ had been below 3.3 this could have caused a fatal arrhythmia.');}
+     if(!G.done.rx_ns){r.ds=6;notes.push('No fluid resuscitation yet. Glucose and water shift into cells, and the blood pressure dips.');if(!r.tag){r.tag='risk';r.why='Insulin given before fluid resuscitation.';}}
+     if(notes.length) r.text+='<p>'+notes.join('</p><p>')+'</p>';
+     return r;}},
+  {id:'rx_k',cat:'rx',label:'Add KCl 20 mEq/L to fluids',min:3,tag:'harm',ds:6,why:'Serum K⁺ was 5.6. Hold potassium until K⁺ falls below 5.3.',run:G=>({text:G.done.t_bmp?'K⁺ is already 5.6. The T waves get taller. Potassium is added once K⁺ falls below 5.3.':'Potassium given without knowing the level. It was 5.6, and the T waves get taller.'})},
+  {id:'rx_bic',cat:'rx',label:'Sodium bicarbonate 100 mEq IV',min:3,tag:'harm',ds:8,why:'Bicarbonate is only for pH < 6.9.',text:'Bicarbonate is reserved for pH below 6.9. It worsens hypokalemia, can cause paradoxical CSF acidosis, and slows ketone clearance.'},
+  {id:'rx_ond',cat:'rx',label:'Ondansetron 4 mg IV',min:2,tag:'good',ds:-2,text:'Vomiting settles.'},
+  {id:'rx_d5',cat:'rx',label:'Switch fluids to D5 ½NS',min:3,tag:'low',why:'Dextrose is added when glucose falls to about 250 mg/dL.',text:'Too early. Glucose is still above 500. Dextrose is added at about 250 mg/dL so insulin can keep running until the anion gap closes.'}
+ ],
+ dx:[['dka','Diabetic ketoacidosis'],['hhs','Hyperosmolar hyperglycemic state'],['panc','Acute pancreatitis'],['asa','Salicylate toxicity'],['aka','Alcoholic ketoacidosis']],
+ dxCorrect:'dka', dxPartial:{},
+ dxWhy:'Hyperglycemia, an anion gap metabolic acidosis (gap 28, HCO₃⁻ 8) and ketonemia in a patient with type 1 diabetes who stopped insulin. HHS usually has glucose above 600, little ketosis, pH above 7.3 and osmolality above 320. Salicylate toxicity causes a mixed respiratory alkalosis and AG acidosis without this degree of hyperglycemia.',
+ pearls:[
+  'Serum K⁺ is high but total-body K⁺ is depleted. Insulin deficiency and acidosis shift K⁺ out of cells, and insulin pushes it back in. Check K⁺ before insulin, and hold insulin if K⁺ is below 3.3.',
+  'Order of operations: isotonic fluids, then check K⁺, then the insulin infusion. Add K⁺ once it falls below 5.3. Add dextrose at a glucose of about 250 mg/dL.',
+  'Titrate insulin to closing the anion gap, not to glucose. Give subcutaneous basal insulin 1–2 hours before stopping the drip.',
+  'Bicarbonate only if pH is below 6.9.',
+  'Find the trigger: missed insulin, infection, infarction, pregnancy, or SGLT2 inhibitors (euglycemic DKA).',
+  'Correct sodium for hyperglycemia: add 1.6 mEq/L for every 100 mg/dL of glucose above 100.'
+ ],
+ q:{stem:'A 19-year-old woman with type 1 diabetes has vomiting and drowsiness. pH 7.11, HCO₃⁻ 8 mEq/L, K⁺ 5.6 mEq/L, glucose 542 mg/dL. After 1 L of 0.9% saline, which of the following is the most appropriate next step?',
+   opts:['Sodium bicarbonate infusion','Intravenous regular insulin infusion','Intravenous potassium chloride','Subcutaneous insulin glargine','CT scan of the abdomen'],ans:1,
+   exp:'K⁺ is at least 3.3, so the insulin infusion can start. Potassium is held while K⁺ is above 5.3, and bicarbonate is not indicated at pH 7.11. Subcutaneous basal insulin is given only to overlap when the gap closes.'}
+},
+{
+ id:'stemi', bed:'4', who:'62 M', title:'Crushing chest pain, soft BP', start:3*60+40,
+ page:'Bed 4, 62-year-old man with crushing chest pain for 40 min. Sweaty and gray. BP is soft and HR is in the 50s. Please come now.',
+ well:{hr:72,sbp:128,dbp:78,rr:16,spo2:98,temp:36.8}, crash:{hr:34,sbp:58,dbp:30,rr:30,spo2:86,temp:36.6}, s0:45, rate:0.35,
+ ecg:{st:0.32,t:1.3},
+ keys:{t_ecg:10,rx_asa:10,rx_ns:5,rx_cath:15},
+ actions:[
+  {id:'hx_pain',cat:'hx',label:'Characterize the pain',min:2,text:'Crushing substernal pressure for 40 minutes, radiating to the jaw, started at rest. Nausea and drenching sweat. Not pleuritic, not positional, not tearing.'},
+  {id:'hx_pmh',cat:'hx',label:'Past medical history & risk factors',min:2,text:'Hypertension, hyperlipidemia, 40 pack-year smoker. Father had an MI at 55.'},
+  {id:'hx_meds',cat:'hx',label:'Medications & bleeding history',min:1,text:'Lisinopril and atorvastatin. No PDE-5 inhibitors, no anticoagulants. No recent bleeding, stroke or surgery.'},
+  {id:'ex_jvp',cat:'ex',label:'Neck veins',min:2,tag:'good',text:'JVP elevated to 12 cm H₂O. It rises on inspiration (Kussmaul sign).'},
+  {id:'ex_lung',cat:'ex',label:'Lungs',min:2,tag:'good',text:'Clear to auscultation bilaterally. No crackles.'},
+  {id:'ex_heart',cat:'ex',label:'Heart',min:2,text:'Slow and regular. S4 present. No murmur, no rub.'},
+  {id:'ex_arms',cat:'ex',label:'Pulses & BP in both arms',min:2,tag:'good',text:'Equal radial pulses. BP 94/60 right arm, 92/58 left arm. This argues against aortic dissection.'},
+  {id:'t_ecg',cat:'tx',label:'12-lead ECG',min:4,text:'Sinus bradycardia, 54/min. ST elevation in II, III and aVF, greater in III than II. Reciprocal ST depression in I and aVL. ST elevation in V1.<p style="color:var(--muted)">Lead II on the monitor shows the same ST elevation.</p>'},
+  {id:'t_recg',cat:'tx',label:'Right-sided ECG (V4R)',min:4,tag:'good',text:'1.5 mm ST elevation in V4R. This confirms right ventricular infarction.'},
+  {id:'t_trop',cat:'tx',label:'Troponin (wait for result)',min:45,tag:'low',why:'Troponin does not change management in STEMI.',text:labs([['hs-Troponin T','412','ng/L (ref < 14)','H']])+'<p>Positive, but it doesn\'t change management in STEMI. Waiting 45 minutes delayed reperfusion.</p>'},
+  {id:'t_cxr',cat:'tx',label:'Portable chest X-ray',min:15,text:'Clear lungs. Normal mediastinal width. No pulmonary edema.'},
+  {id:'t_echo',cat:'tx',label:'Bedside echo',min:10,tag:'good',text:'Inferior wall hypokinesis. Dilated, hypokinetic right ventricle. No pericardial effusion.'},
+  {id:'rx_asa',cat:'rx',label:'Aspirin 325 mg, chewed',min:1,ds:-3,text:'Given. Aspirin irreversibly inhibits platelet COX-1. Chewing it speeds absorption.'},
+  {id:'rx_ntg',cat:'rx',label:'Sublingual nitroglycerin 0.4 mg',min:2,tag:'harm',ds:30,why:'RV infarction makes the patient preload-dependent.',text:'<b>BP falls to about 70/40 within minutes.</b> RV infarction makes this patient preload-dependent. Venodilation reduces RV filling, so cardiac output falls.'},
+  {id:'rx_ns',cat:'rx',label:'0.9% saline, 500 mL bolus',min:5,ds:-12,text:'BP improves. A failing right ventricle needs enough preload to push blood through the lungs.'},
+  {id:'rx_cath',cat:'rx',label:'Activate cath lab (primary PCI)',min:5,run:G=>{const r={rate:-0.5,ds:-5,text:'Interventional cardiology is on the way. The goal is door-to-balloon within 90 minutes.'}; if(G.t>60){r.text+=`<p>You activated at ${G.t} minutes after the page. Each delay means more myocardium lost.</p>`;r.why='Activated late ('+G.t+' min after page).';} return r;}},
+  {id:'rx_hep',cat:'rx',label:'Unfractionated heparin bolus',min:2,tag:'good',text:'Anticoagulation given ahead of PCI.'},
+  {id:'rx_p2y',cat:'rx',label:'Ticagrelor 180 mg loading dose',min:1,tag:'good',text:'Dual antiplatelet therapy started.'},
+  {id:'rx_mor',cat:'rx',label:'Morphine 4 mg IV',min:2,tag:'risk',ds:8,why:'Venodilates and delays oral P2Y12 absorption.',text:'Pain eases a little, but BP drifts down. Morphine venodilates, which reduces preload, and slows absorption of oral P2Y12 inhibitors.'},
+  {id:'rx_bb',cat:'rx',label:'Metoprolol 5 mg IV',min:2,tag:'harm',ds:25,why:'Contraindicated with bradycardia, hypotension or shock.',text:'<b>HR falls into the 30s.</b> IV β-blockers are avoided with bradycardia, hypotension or signs of shock.'},
+  {id:'rx_atr',cat:'rx',label:'Atropine 0.5 mg IV',min:2,run:G=>{const hr=vitals().hr; return hr<60?{tag:'good',ds:-4,text:'HR rises to about 70. Inferior MI causes bradycardia through AV nodal ischemia (the RCA supplies the AV node in about 90% of people) and the Bezold–Jarisch reflex.'}:{tag:'low',why:'HR was not low.',text:'HR was not low enough to need atropine.'}}}
+ ],
+ dx:[['rv','Inferior STEMI with right ventricular infarction'],['inf','Inferior STEMI, left ventricle only'],['ao','Aortic dissection'],['peri','Acute pericarditis'],['pe','Massive pulmonary embolism']],
+ dxCorrect:'rv', dxPartial:{inf:20},
+ dxWhy:'ST elevation in II, III and aVF, with III greater than II and ST elevation in V1 and V4R, points to a proximal RCA occlusion. Hypotension, an elevated JVP and clear lungs make up the triad of RV infarction.',
+ pearls:[
+  'RV infarction triad: hypotension, elevated JVP, clear lungs. Confirm it with right-sided leads (V4R).',
+  'Avoid preload reducers (nitrates, diuretics, morphine). Treat hypotension with IV fluids first, then inotropes.',
+  'ST elevation greater in III than II, with reciprocal depression in aVL, suggests the RCA. ST elevation greater in II than III, plus elevation in I and aVL, suggests the LCx.',
+  'Bradycardia and AV block are common in inferior MI. The RCA supplies the SA node (about 60%) and the AV node (about 90% in right-dominant hearts).',
+  "Don't wait for troponin in STEMI. Door-to-balloon is ≤ 90 minutes. Give fibrinolysis within 30 minutes if PCI isn't possible within 120 minutes.",
+  'Give aspirin, a P2Y12 inhibitor, an anticoagulant, reperfusion, and a high-intensity statin.'
+ ],
+ q:{stem:'A 62-year-old man has 40 minutes of crushing chest pain. BP is 92/58 mm Hg and pulse is 54/min. The JVP is elevated and the lungs are clear. ECG shows ST elevation in II, III and aVF. After sublingual nitroglycerin, his BP falls to 68/40 mm Hg. Which of the following is the most appropriate next step?',
+   opts:['Intravenous furosemide','Intravenous normal saline bolus','Intravenous metoprolol','Intravenous morphine','Repeat nitroglycerin'],ans:1,
+   exp:'The failing RV depends on preload. Restoring preload with fluids comes first, and he still needs urgent PCI. Furosemide, morphine and nitrates all reduce preload, and metoprolol worsens bradycardia and shock.'}
+},
+{
+ id:'pe', bed:'21', who:'71 F', title:'Sudden dyspnea, post-op day 3', start:4*60+55,
+ page:'Bed 21, 71-year-old woman, post-op day 3 from a left hip replacement. Suddenly short of breath, sats 88% on room air, HR 115.',
+ well:{hr:84,sbp:132,dbp:80,rr:16,spo2:97,temp:37.2}, crash:{hr:148,sbp:70,dbp:40,rr:36,spo2:78,temp:37.9}, s0:45, rate:0.25,
+ ecg:{st:0,t:1},
+ keys:{rx_o2:5,rx_hep:20,t_cta:15},
+ actions:[
+  {id:'hx_onset',cat:'hx',label:'Onset & character',min:2,text:'Sudden breathlessness 30 minutes ago while getting up to the bathroom. Sharp right-sided chest pain that is worse on inspiration.'},
+  {id:'hx_ctx',cat:'hx',label:'Surgical course & prophylaxis',min:2,tag:'good',text:'Left total hip arthroplasty 3 days ago. Prophylactic enoxaparin has been held since yesterday because of wound oozing. Mostly in bed.'},
+  {id:'hx_pmh',cat:'hx',label:'Past medical history',min:1,text:'Obesity (BMI 34) and hypertension. No prior clots. No history of cancer.'},
+  {id:'hx_leg',cat:'hx',label:'Leg symptoms',min:1,text:'Her left calf has ached since this morning. She thought it was from the surgery.'},
+  {id:'ex_lung',cat:'ex',label:'Lungs',min:2,text:'Breathing fast. Clear breath sounds on both sides. No wheeze or crackles.'},
+  {id:'ex_heart',cat:'ex',label:'Heart',min:2,text:'Fast and regular. Loud P2. No murmur.'},
+  {id:'ex_leg',cat:'ex',label:'Legs',min:2,tag:'good',text:'Left calf is 3 cm larger than the right and tender along the deep veins, with pitting edema. Surgical wound is clean.'},
+  {id:'t_abg',cat:'tx',label:'Arterial blood gas (room air)',min:15,text:labs([['pH','7.48','','H'],['pCO₂','30','mm Hg','L'],['pO₂','58','mm Hg','L']])+calc('PAO₂ = 0.21 × 713 − 30/0.8 ≈ 112. A–a gradient ≈ 112 − 58 = 54')+calc('Expected for age ≈ 71/4 + 4 ≈ 22. Widened.')},
+  {id:'t_ecg',cat:'tx',label:'12-lead ECG',min:4,text:'Sinus tachycardia, 118/min. T-wave inversion in V1–V4. S wave in I, Q wave and inverted T in III (S1Q3T3).'},
+  {id:'t_dd',cat:'tx',label:'D-dimer',min:20,tag:'low',why:'D-dimer only helps rule out PE at low pretest probability.',text:labs([['D-dimer','4,800','ng/mL FEU','H']])+'<p>This doesn\'t help. D-dimer only rules out PE when pretest probability is low, and it is almost always raised after surgery.</p>'},
+  {id:'t_cta',cat:'tx',label:'CT pulmonary angiogram',min:35,text:'Filling defects in the right main pulmonary artery and left lower lobe segmental arteries. RV/LV ratio 1.1, showing RV strain.'},
+  {id:'t_dop',cat:'tx',label:'Lower-extremity duplex',min:20,tag:'good',text:'Noncompressible left popliteal and femoral veins. Acute DVT.'},
+  {id:'t_trop',cat:'tx',label:'Troponin & BNP',min:30,tag:'good',text:labs([['hs-Troponin T','48','ng/L','H'],['BNP','410','pg/mL','H']])+'<p>With RV strain and a normal BP, this is an intermediate–high risk (submassive) PE.</p>'},
+  {id:'t_echo',cat:'tx',label:'Bedside echo',min:10,tag:'good',text:'Dilated RV with free-wall hypokinesis that spares the apex (McConnell sign). Flattened septum.'},
+  {id:'t_cxr',cat:'tx',label:'Chest X-ray',min:15,text:'Small right pleural effusion. Otherwise unremarkable, which is typical in PE.'},
+  {id:'rx_o2',cat:'rx',label:'Oxygen, nasal cannula 4 L',min:1,ds:-5,mods:{spo2:5},text:'SpO₂ rises to the mid-90s.'},
+  {id:'rx_hep',cat:'rx',label:'Unfractionated heparin infusion',min:3,run:G=>({rate:-0.3,ds:-4,text:G.done.t_cta?'Heparin started. Unfractionated heparin suits a patient who just had surgery and may need escalation, because it can be stopped quickly.':'Good call. With high pretest probability and acceptable bleeding risk, start anticoagulation while imaging is pending. Unfractionated heparin can be stopped quickly if the wound bleeds.'})},
+  {id:'rx_tpa',cat:'rx',label:'Systemic alteplase',min:3,tag:'harm',ds:6,why:'Normotensive, and recent major surgery is a contraindication.',text:'<b>The wound starts to bleed through the dressing.</b> She is normotensive, so systemic thrombolysis isn\'t indicated, and surgery 3 days ago is a contraindication.'},
+  {id:'rx_ivc',cat:'rx',label:'Place IVC filter',min:20,tag:'low',why:'Only if anticoagulation is contraindicated or fails.',text:'IVC filters are for patients who can\'t be anticoagulated or who have recurrent PE despite anticoagulation. She can be anticoagulated.'},
+  {id:'rx_las',cat:'rx',label:'Furosemide 40 mg IV',min:2,tag:'harm',ds:18,why:'The strained RV is preload-dependent.',text:'<b>BP drops.</b> The strained right ventricle depends on preload, and diuresis takes it away.'},
+  {id:'rx_war',cat:'rx',label:'Start warfarin alone',min:2,tag:'harm',ds:6,why:'Warfarin must be bridged with heparin.',text:'Warfarin alone is briefly prothrombotic, because protein C falls first, and it takes days to work. It has to be bridged with heparin.'}
+ ],
+ dx:[['pe','Acute pulmonary embolism'],['pna','Hospital-acquired pneumonia'],['fat','Fat embolism syndrome'],['acs','Acute coronary syndrome'],['atel','Postoperative atelectasis']],
+ dxCorrect:'pe', dxPartial:{},
+ dxWhy:'Sudden pleuritic dyspnea, hypoxemia with a wide A–a gradient, and a swollen calf 3 days after hip replacement with prophylaxis held. Fat embolism usually appears 24–72 hours after a long-bone fracture, with petechiae and confusion. Atelectasis causes low-grade fever on days 1–2 without this degree of hypoxemia.',
+ pearls:[
+  'High pretest probability (Wells score above 4): go straight to CTPA, and start heparin while you wait if bleeding risk allows. Use D-dimer only to rule out PE when probability is low.',
+  'The most common ECG finding is sinus tachycardia. S1Q3T3 is classic but uncommon.',
+  'Risk-stratify by blood pressure. Hypotension (SBP below 90) means massive PE and thrombolysis. Normal BP with RV strain means submassive PE: anticoagulate and monitor closely.',
+  'Avoid diuretics in RV strain. The right ventricle is preload-sensitive.',
+  'IVC filter only if anticoagulation is contraindicated or fails.',
+  'If contrast is contraindicated, use a V/Q scan.'
+ ],
+ q:{stem:'A 71-year-old woman becomes short of breath 3 days after hip arthroplasty. Pulse is 118/min, BP 128/78 mm Hg, SpO₂ 88% on room air. Her left calf is swollen. She has no contraindication to anticoagulation. Which of the following is the most appropriate next step?',
+   opts:['Measure D-dimer','Start heparin and obtain CT pulmonary angiography','Systemic alteplase','Place an IVC filter','Repeat chest X-ray in 6 hours'],ans:1,
+   exp:'With high pretest probability, D-dimer adds nothing. Start empiric anticoagulation and confirm with CTPA. Thrombolysis is reserved for hypotensive (massive) PE, and a filter only for patients who can\'t be anticoagulated.'}
+}
+];
+
+const CATS=[['hx','History'],['ex','Exam'],['tx','Tests'],['rx','Treat']];
+const PEN={low:-5,risk:-8,harm:-15};
+let G=null, tab='hx';
+
+function fmtClock(m){m=((m%1440)+1440)%1440;return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0')}
+function vitals(){
+  const c=G.c,f=Math.max(0,Math.min(100,G.s))/100,v={};
+  for(const k in c.well) v[k]=c.well[k]+(c.crash[k]-c.well[k])*f;
+  for(const k in G.mods) v[k]+=G.mods[k];
+  v.spo2=Math.min(100,v.spo2);
+  return v;
+}
+
+/* ---------- home ---------- */
+function renderHome(){
+  const best=LS.get('nf-best',{});
+  $('#pages').innerHTML=CASES.map((c,i)=>`
+    <button class="pager" data-i="${i}" aria-label="Answer page from bed ${c.bed}">
+      <div class="lcd"><div class="from"><span>PAGE · BED ${c.bed}</span><span>${fmtClock(c.start)}</span></div>${c.page}${i===0?'<span class="blink">▌</span>':''}</div>
+      <div class="foot"><span>${best[c.id]!=null?'Best score '+best[c.id]:'Not yet seen'}</span><span class="go">Answer page</span></div>
+    </button>`).join('');
+  document.querySelectorAll('.pager').forEach(b=>b.onclick=()=>start(+b.dataset.i));
+  $('#topR').innerHTML='<span class="chip">3 pages · Step 2 CK level</span>';
+  show('home');
+}
+function show(id){for(const s of ['home','game','debrief']) $('#'+s).hidden=s!==id; running = id==='game'; if(running){sizeCanvas(); if(!rafOn){rafOn=true;requestAnimationFrame(loop)}} window.scrollTo(0,0)}
+
+/* ---------- game ---------- */
+function start(i){
+  const c=CASES[i];
+  G={i,c,s:c.s0,rate:c.rate,t:0,done:{},log:[],mods:{},over:false};
+  disp=vitals(); tab='hx';
+  $('#monBed').textContent='BED '+c.bed+' · '+c.who;
+  $('#ptEyebrow').textContent='Bed '+c.bed+' · '+c.who;
+  $('#ptTitle').textContent=c.title;
+  $('#ptPage').textContent=c.page;
+  renderTop(); renderTabs(); renderActs(); renderLog(); renderClock();
+  show('game');
+}
+function renderTop(){
+  $('#topR').innerHTML=`<button class="btn" id="sndBtn" aria-pressed="${sound}">${sound?'Sound on':'Sound off'}</button><button class="btn" id="homeBtn">All pages</button>`;
+  $('#sndBtn').onclick=toggleSound; $('#homeBtn').onclick=renderHome;
+}
+function renderTabs(){
+  $('#tabs').innerHTML=CATS.map(([k,l])=>`<button class="tab" role="tab" aria-selected="${tab===k}" data-k="${k}">${l}</button>`).join('');
+  document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{tab=b.dataset.k;renderTabs();renderActs()});
+}
+function renderActs(){
+  const list=G.c.actions.filter(a=>a.cat===tab);
+  $('#acts').innerHTML=list.map(a=>`<button class="act" data-id="${a.id}" ${G.done[a.id]||G.over?'disabled':''}><span>${G.done[a.id]?'✓ ':''}${a.label}</span><span class="cost">${a.min} min</span></button>`).join('');
+  document.querySelectorAll('.act').forEach(b=>b.onclick=()=>act(b.dataset.id));
+}
+function renderClock(){
+  $('#clock').textContent=fmtClock(G.c.start+G.t);
+  $('#elapsed').textContent=G.t+' min since page';
+}
+function renderLog(){
+  if(!G.log.length){$('#log').innerHTML='<div class="empty">Nothing charted yet. Start with the history, or go straight to orders if the patient looks unstable.</div>';return}
+  const catName=Object.fromEntries(CATS);
+  $('#log').innerHTML=G.log.slice().reverse().map((e,i)=>`<div class="entry ${i===0?'new':''}"><div class="meta"><span>${fmtClock(G.c.start+e.t)}</span><span>· ${catName[e.a.cat]}</span></div><h4>${e.a.label}</h4><div class="res">${e.r.text}</div></div>`).join('');
+}
+function act(id){
+  if(G.over||G.done[id]) return;
+  const a=G.c.actions.find(x=>x.id===id);
+  const r=Object.assign({},{text:a.text,ds:a.ds||0,mul:a.mul,rate:a.rate,tag:a.tag,why:a.why,mods:a.mods},a.run?a.run(G):{});
+  G.t+=a.min;
+  G.s+=G.rate*a.min;
+  G.s+=r.ds||0;
+  if(r.rate!=null) G.rate=r.rate;
+  if(r.mul) G.rate*=r.mul;
+  if(r.mods) for(const k in r.mods) G.mods[k]=(G.mods[k]||0)+r.mods[k];
+  G.s=Math.max(0,Math.min(100,G.s));
+  G.done[id]=true;
+  G.log.push({t:G.t,a,r});
+  flashMsg((r.ds||0)>=15?'⚠ PATIENT DETERIORATING':'');
+  renderActs(); renderLog(); renderClock();
+  if(G.s>=100){G.over=true;G.crashed=true;flashMsg('⚠ CODE BLUE · BED '+G.c.bed);setTimeout(()=>finish(null),2200);renderActs();}
+}
+let msgTimer;
+function flashMsg(t){clearTimeout(msgTimer);$('#monMsg').textContent=t;if(t&&!G.crashed)msgTimer=setTimeout(()=>{$('#monMsg').textContent=''},4000)}
+
+$('#commitBtn').onclick=()=>{
+  if(G.over) return;
+  const d=$('#dialog');
+  d.innerHTML=`<div class="eyebrow">Bed ${G.c.bed} · ${fmtClock(G.c.start+G.t)}</div><h2 id="dxTitle" style="font-size:20px">What's your diagnosis?</h2>
+   <div class="dx">${G.c.dx.map(([k,l])=>`<button data-k="${k}">${l}</button>`).join('')}</div>
+   <button class="btn" id="dxCancel">Keep working up</button>`;
+  $('#overlay').hidden=false;
+  d.querySelector('.dx button').focus();
+  d.querySelectorAll('.dx button').forEach(b=>b.onclick=()=>{$('#overlay').hidden=true;finish(b.dataset.k)});
+  $('#dxCancel').onclick=()=>{$('#overlay').hidden=true};
+};
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#overlay').hidden)$('#overlay').hidden=true});
+
+/* ---------- debrief ---------- */
+function finish(dxk){
+  G.over=true;
+  const c=G.c;
+  const dxPts=dxk===c.dxCorrect?40:(c.dxPartial[dxk]||0);
+  let keyPts=0;for(const k in c.keys) if(G.done[k]) keyPts+=c.keys[k];
+  let pen=0;G.log.forEach(e=>{if(PEN[e.r.tag]) pen+=PEN[e.r.tag]});
+  const cond=G.crashed?0:Math.round((100-G.s)/100*20);
+  const total=Math.max(0,Math.min(100,dxPts+keyPts+cond+pen));
+  const grade=G.crashed?'Patient coded':total>=85?'Attending-ready':total>=70?'Strong senior':total>=50?'Solid intern':'Call your senior';
+  const best=LS.get('nf-best',{}); if(best[c.id]==null||total>best[c.id]){best[c.id]=total;LS.set('nf-best',best)}
+  const v=vitals();
+  const dxLabel=k=>(c.dx.find(d=>d[0]===k)||[,'No diagnosis made'])[1];
+  const tagFor=e=>{const kp=c.keys[e.a.id]; if(kp) return ['key','KEY +'+kp]; const t=e.r.tag; return t==='harm'?['harm','HARM −15']:t==='risk'?['risk','RISK −8']:t==='low'?['low','LOW VALUE −5']:t==='good'?['good','USEFUL']:null};
+  const missed=Object.keys(c.keys).filter(k=>!G.done[k]).map(k=>c.actions.find(a=>a.id===k));
+  const condText=G.crashed?'Coded before a diagnosis was made.':G.s<25?'Improving and stable for handoff.':G.s<55?'Stable but still sick.':G.s<80?'Unstable at handoff.':'Peri-arrest at handoff.';
+  $('#debrief').innerHTML=`
+   <section class="db-head">
+     <div class="score" style="--p:${total}"><div><b>${total}</b><span>of 100</span></div></div>
+     <div><div class="eyebrow">Debrief · Bed ${c.bed} · ${G.t} min on the case</div><h1>${grade}</h1>
+     <p>Diagnosis ${dxPts}/40 · Key actions ${keyPts}/40 · Condition ${cond}/20${pen?` · Penalties ${pen}`:''}. At handoff: HR ${Math.round(v.hr)}, BP ${Math.round(v.sbp)}/${Math.round(v.dbp)}, SpO₂ ${Math.round(v.spo2)}%. ${condText}</p></div>
+   </section>
+   <div class="db-grid">
+     <div class="panel"><h3>Diagnosis</h3><div class="dxbox">
+       <div class="row"><span class="eyebrow">You said</span><span>${dxLabel(dxk)}</span>${dxk===c.dxCorrect?'<span class="pill key">CORRECT</span>':dxPts?'<span class="pill low">PARTIAL</span>':'<span class="pill harm">MISSED</span>'}</div>
+       ${dxk!==c.dxCorrect?`<div class="row"><span class="eyebrow">Answer</span><span><b>${dxLabel(c.dxCorrect)}</b></span></div>`:''}
+       <div style="color:var(--muted)">${c.dxWhy}</div></div></div>
+     <div class="panel"><h3>Your decisions</h3><ul class="tl">
+       ${G.log.map(e=>{const tg=tagFor(e);return `<li><span class="t">+${e.t}m</span><span>${e.a.label}</span>${tg?`<span class="pill ${tg[0]}">${tg[1]}</span>`:'<span></span>'}${e.r.why&&(e.r.tag!=='good')?`<span class="why">${e.r.why}</span>`:''}</li>`}).join('')||'<li><span></span><span class="empty">No actions taken.</span></li>'}
+       ${missed.map(a=>`<li><span class="t">—</span><span>${a.label}</span><span class="pill miss">MISSED</span></li>`).join('')}
+     </ul></div>
+     <div class="panel"><h3>High-yield points</h3><ul class="pearls">${c.pearls.map(p=>`<li>${p}</li>`).join('')}</ul></div>
+     <div class="panel"><h3>How it shows up on the exam</h3><p class="qstem">${c.q.stem}</p>
+       <div class="qopts">${c.q.opts.map((o,i)=>`<button data-i="${i}">${String.fromCharCode(65+i)}. ${o}</button>`).join('')}</div><div class="qexp" id="qexp" hidden></div></div>
+   </div>
+   <div class="db-actions"><button class="btn primary" id="again">Replay this page</button>${G.i<CASES.length-1?`<button class="btn" id="next">Next page: Bed ${CASES[G.i+1].bed}</button>`:''}<button class="btn" id="home2">All pages</button></div>`;
+  document.querySelectorAll('.qopts button').forEach(b=>b.onclick=()=>{
+    const i=+b.dataset.i;document.querySelectorAll('.qopts button').forEach((x,j)=>{x.disabled=true;if(j===c.q.ans)x.classList.add('right');else if(j===i)x.classList.add('wrong')});
+    const ex=$('#qexp');ex.hidden=false;ex.innerHTML=`<b>${i===c.q.ans?'Correct.':'Answer: '+String.fromCharCode(65+c.q.ans)+'.'}</b> ${c.q.exp}`;});
+  const gi=G.i;
+  $('#again').onclick=()=>start(gi);
+  if($('#next')) $('#next').onclick=()=>start(gi+1);
+  $('#home2').onclick=renderHome;
+  $('#topR').innerHTML='<button class="btn" id="homeBtn">All pages</button>';$('#homeBtn').onclick=renderHome;
+  show('debrief');
+}
+
+/* ---------- monitor ---------- */
+const cv=$('#trace'),cx=cv.getContext('2d');
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+let W=0,H=0,x=0,prevE=null,prevP=null,acc=0,ph=0,last=0,running=false,rafOn=false,disp={hr:80,sbp:120,dbp:80,rr:16,spo2:98,temp:37},jit={},jitT=0;
+const SPEED=95;
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function sizeCanvas(){
+  const dpr=window.devicePixelRatio||1,r=cv.getBoundingClientRect();
+  if(!r.width) return;
+  W=Math.floor(r.width);H=Math.floor(r.height);cv.width=W*dpr;cv.height=H*dpr;cx.setTransform(dpr,0,0,dpr,0,0);
+  cx.fillStyle=css('--mon-bg');cx.fillRect(0,0,W,H);x=0;prevE=prevP=null;
+}
+addEventListener('resize',()=>{if(running)sizeCanvas()});
+function ecg(p,st,ta){
+  const g=(c,w,a)=>a*Math.exp(-((p-c)**2)/(2*w*w));
+  let v=g(.1,.022,.13)+g(.215,.007,-.12)+g(.24,.009,1.15)+g(.265,.009,-.28)+g(.43,.045,.3*ta);
+  if(st){const s0=.272,s1=.47;let k=0;if(p>s0&&p<=s1)k=Math.min(1,(p-s0)/.012);else if(p>s1&&p<s1+.07)k=1-(p-s1)/.07;v+=st*k;}
+  return v;
+}
+function pleth(p){const q=(p-.33+1)%1;return q<.13?Math.sin(q/.13*Math.PI/2):Math.exp(-(q-.13)*4.2)*(1+.22*Math.exp(-((q-.36)**2)/.0012));}
+function curST(){if(!G)return 0;let s=G.c.ecg.st;if(G.done.rx_cath)s*=.55;return s}
+function sample(p){
+  const ye=H*.40-ecg(p,curST(),G?G.c.ecg.t:1)*H*.24;
+  const yp=H*.95-pleth(p)*H*.24*Math.max(.35,Math.min(1,(disp.sbp-50)/60));
+  return [ye,yp];
+}
+function plotStep(){
+  const [ye,yp]=sample(ph);
+  cx.fillStyle=css('--mon-bg');cx.fillRect(x+1,0,14,H);
+  if(prevE!=null){
+    cx.lineWidth=1.7;cx.lineJoin='round';
+    cx.strokeStyle=css('--mon-ecg');cx.beginPath();cx.moveTo(x-1,prevE);cx.lineTo(x,ye);cx.stroke();
+    cx.strokeStyle=css('--mon-spo2');cx.beginPath();cx.moveTo(x-1,prevP);cx.lineTo(x,yp);cx.stroke();
+  }
+  prevE=ye;prevP=yp;x++;if(x>=W){x=0;prevE=prevP=null;}
+}
+function loop(now){
+  if(!running){rafOn=false;last=0;return}
+  if(!last)last=now;const dt=Math.min(.1,(now-last)/1000);last=now;
+  if(G){const t=vitals();for(const k in t)disp[k]+=(t[k]-disp[k])*Math.min(1,dt*1.2);}
+  jitT-=dt;if(jitT<=0){jitT=2.5;jit={hr:Math.round(Math.random()*4-2),spo2:Math.round(Math.random()*2-1),rr:Math.round(Math.random()*2-1)}}
+  if(W){
+    if(reduce){ if(!G||G._drawn!==G.log.length){ cx.fillStyle=css('--mon-bg');cx.fillRect(0,0,W,H);x=0;prevE=prevP=null;ph=0;const hr=Math.max(25,disp.hr);for(let i=0;i<W-2;i++){ph=(ph+hr/60/SPEED)%1;plotStep()} if(G)G._drawn=G.log.length; } }
+    else{
+      acc+=dt*SPEED;const hr=Math.max(25,disp.hr);
+      while(acc>=1){acc-=1;const pp=ph;ph=(ph+hr/60/SPEED)%1;if(pp<.24&&ph>=.24)beep();plotStep();}
+    }
+  }
+  renderVitals();
+  requestAnimationFrame(loop);
+}
+function renderVitals(){
+  const hr=Math.round(disp.hr+(jit.hr||0)),sp=Math.round(Math.min(100,disp.spo2+(jit.spo2||0))),sb=Math.round(disp.sbp),db=Math.round(disp.dbp),rr=Math.round(disp.rr+(jit.rr||0));
+  setV('#vHR',hr,hr>130||hr<45);setV('#vSP',sp,sp<90);setV('#vBP',sb+'/'+db,sb<90);setV('#vRR',rr,rr>28);setV('#vTP',disp.temp.toFixed(1),disp.temp>=38);
+  $('#vMAP').textContent='('+Math.round((sb+2*db)/3)+')';
+}
+function setV(sel,val,alarm){const el=$(sel);const n=el.querySelector('.n');if(n.textContent!=String(val))n.textContent=val;el.classList.toggle('alarm',!!alarm)}
+
+/* sound: pulse-ox tone falls in pitch as saturation falls, like a real monitor */
+let sound=false,ac=null;
+function toggleSound(){sound=!sound;if(sound&&!ac){try{ac=new (window.AudioContext||window.webkitAudioContext)()}catch(e){sound=false}}if(ac&&ac.state==='suspended')ac.resume();renderTop();$('#monSound').textContent=sound?'♪ SpO₂ TONE':''}
+function beep(){if(!sound||!ac)return;try{const o=ac.createOscillator(),g=ac.createGain();o.type='sine';o.frequency.value=440+Math.max(0,Math.min(20,disp.spo2-80))*22;g.gain.setValueAtTime(.0001,ac.currentTime);g.gain.exponentialRampToValueAtTime(.08,ac.currentTime+.01);g.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+.09);o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+.1)}catch(e){}}
+
+renderHome();
+</script>
