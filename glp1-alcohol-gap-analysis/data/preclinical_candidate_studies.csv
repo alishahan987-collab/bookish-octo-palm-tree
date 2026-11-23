@@ -1,0 +1,50 @@
+pmid,year,title,doi,screening_flag,note
+19857083,2009,A comparative study of the antioxidant properties of two different species of Ocimum of southern Africa on alcohol-induced oxidative stress.,10.1089/jmf.2008.0066,exclude,"plant extract, not GLP-1 agonist"
+22444202,2012,Gastric bypass surgery attenuates ethanol consumption in ethanol-preferring rats.,10.1016/j.biopsych.2012.01.035,exclude,"gastric bypass, no GLP-1 agonist"
+23613987,2013,"Gut peptide GLP-1 and its analogue, Exendin-4, decrease alcohol intake and reward.",10.1371/journal.pone.0061965,likely include,
+23219472,2013,The glucagon-like peptide 1 analogue Exendin-4 attenuates alcohol mediated behaviors in rodents.,10.1016/j.psyneuen.2012.11.009,likely include,
+25380665,2015,Glucagon-like peptide-1 (GLP-1) receptor agonist prevents development of tolerance to anti-anxiety effect of ethanol and withdrawal-induced anxiety in rats.,10.1007/s11011-014-9627-z,likely include,
+25129124,2015,Dipeptidyl-peptidase IV (DPP-IV) inhibitor delays tolerance to anxiolytic effect of ethanol and withdrawal-induced anxiety in rats.,10.1007/s11011-014-9603-7,exclude,DPP-4 inhibitor only
+26080318,2015,The glucagon-like peptide-1 receptor as a potential treatment target in alcohol use disorder: evidence from human genetic association studies and a mouse model of alcohol dependence.,10.1038/tp.2015.68,check,mixed human genetics + mouse experiment
+26303264,2016,The glucagon-like peptide 1 receptor agonist liraglutide attenuates the reinforcing properties of alcohol in rodents.,10.1111/adb.12295,likely include,
+27072507,2016,Central & peripheral glucagon-like peptide-1 receptor signaling differentially regulate addictive behaviors.,10.1016/j.physbeh.2016.04.013,likely include,
+27579999,2016,Effects of the GLP-1 Agonist Exendin-4 on Intravenous Ethanol Self-Administration in Mice.,10.1111/acer.13199,likely include,
+27998722,2017,Intermittent access to a nutritionally complete high-fat diet attenuates alcohol drinking in rats.,10.1016/j.pbb.2016.12.009,exclude,high-fat diet
+28778739,2017,The glucagon-like peptide 1 receptor agonist Exendin-4 decreases relapse-like drinking in socially housed mice.,10.1016/j.pbb.2017.07.014,likely include,
+29448103,2018,FGF 21 deficiency slows gastric emptying and reduces initial blood alcohol concentration in mice exposed to acute alcohol in fasting state.,10.1016/j.bbrc.2018.01.189,exclude,FGF21 knockout
+29927808,2018,Accumbal ghrelin and glucagon-like peptide 1 signaling in alcohol reward in female rats.,10.1097/WNR.0000000000001071,likely include,
+30382353,2019,Effects of glucagon-like peptide 1 analogs on alcohol intake in alcohol-preferring vervet monkeys.,10.1007/s00213-018-5089-z,likely include,
+30772374,2019,Glucagon-like peptide-1 receptors within the nucleus of the solitary tract regulate alcohol-mediated behaviors in rodents.,10.1016/j.neuropharm.2019.02.020,likely include,
+30771711,2019,Brain region specific glucagon-like peptide-1 receptors regulate alcohol-induced behaviors in rodents.,10.1016/j.psyneuen.2019.02.006,likely include,
+32678077,2020,Long-term treatment with a glucagon-like peptide-1 receptor agonist reduces ethanol intake in male and female rats.,10.1038/s41398-020-00923-1,likely include,
+33043520,2020,Glucagon-Like Peptide-1 Receptor Signaling in the Ventral Tegmental Area Reduces Alcohol Self-Administration in Male Rats.,10.1111/acer.14437,likely include,
+33352692,2020,Brain Site-Specific Inhibitory Effects of the GLP-1 Analogue Exendin-4 on Alcohol Intake and Operant Responding for Palatable Food.,10.3390/ijms21249710,likely include,
+33424537,2020,Long-Acting Glucagon-Like Peptide-1 Receptor Agonists Suppress Voluntary Alcohol Intake in Male Wistar Rats.,10.3389/fnins.2020.599646,likely include,
+33619338,2021,Reducing alcohol and/or cocaine-induced reward and toxicity via an epidermal stem cell-based gene delivery platform.,10.1038/s41380-021-01043-y,check,GLP-1 gene-delivery platform - check eligibility
+34954300,2022,Differential effects of intra-ventral tegmental area ghrelin and glucagon-like peptide-1 on the stimulatory action of D-amphetamine and cocaine-induced ethanol intake in male Sprague Dawley rats.,10.1016/j.bbr.2021.113726,check,intra-VTA GLP-1 on drug-induced alcohol intake
+36496077,2023,Mesolimbic exendin-4 attenuates reward salience evoked by neuropeptide Y and ghrelin.,10.1016/j.bbr.2022.114249,exclude,"NPY/ghrelin reward salience, not alcohol"
+37106129,2023,Sex-dependent divergence in the effects of GLP-1 agonist exendin-4 on alcohol reinforcement and reinstatement in C57BL/6J mice.,10.1007/s00213-023-06367-x,likely include,
+36480394,2023,"Glucagon-like peptide-1 receptors in nucleus accumbens, ventral hippocampus, and lateral septum reduce alcohol reinforcement in mice.",10.1037/pha0000620,likely include,
+37192005,2023,The glucagon-like peptide-1 (GLP-1) analogue semaglutide reduces alcohol drinking and modulates central GABA neurotransmission.,10.1172/jci.insight.170671,likely include,
+37295046,2023,Semaglutide reduces alcohol intake and relapse-like drinking in male and female rats.,10.1016/j.ebiom.2023.104642,likely include,
+37719854,2023,Antismoking agents do not contribute synergistically to semaglutide's ability to reduce alcohol intake in rats.,10.3389/fphar.2023.1180512,likely include,
+38267691,2024,"Liraglutide Reduces Alcohol Consumption, Anxiety, Memory Impairment, and Synapse Loss in Alcohol Dependent Mice.",10.1007/s11064-023-04093-6,likely include,
+39639536,2024,The combination of a glucagon-like peptide-1 and amylin receptor agonists reduces alcohol consumption in both male and female rats.,10.1017/neu.2024.58,likely include,
+39734674,2024,Liuweizhiji Gegen-Sangshen beverage protects against alcoholic liver disease in mice through the gut microbiota mediated SCFAs/GPR43/GLP-1 pathway.,10.3389/fnut.2024.1495695,exclude,herbal beverage
+38884652,2025,Effect of the glucagon-like peptide-1 (GLP-1) receptor agonist semaglutide on alcohol consumption in alcohol-preferring male vervet monkeys.,10.1007/s00213-024-06637-2,likely include,
+39622492,2025,Synergistic-like decreases in alcohol intake following combined pharmacotherapy with GLP-1 and amylin in male rats.,10.1111/bph.17406,likely include,
+40048376,2025,"Glucagon-like peptide-1 receptor agonists, but not dipeptidyl peptidase-4 inhibitors, reduce alcohol intake.",10.1172/JCI188314,likely include,
+40245495,2025,An inhibitory GLP-1 circuit in the lateral septum modulates reward processing and alcohol intake in rodents.,10.1016/j.ebiom.2025.105684,likely include,
+40968135,2025,GLP-1 receptor agonism results in reduction in hepatic ethanol metabolism.,10.1038/s44324-025-00077-y,exclude,"hepatic ethanol metabolism (PK, not behaviour) - relevant to interaction review"
+41214144,2025,Identification of a common ketohexokinase-dependent link driving alcohol intake and alcohol-associated liver disease in mice.,10.1038/s42255-025-01402-x,exclude,ketohexokinase
+40818544,2025,Effects of glucagon-like peptide 1 receptor signaling in the dorsolateral septum on ethanol operant self-administration and relapse behaviors.,10.1016/j.neuropharm.2025.110640,likely include,
+40516914,2026,Identification of Preclinical Biomarkers of Metabolic Dysfunction-Associated Steatotic Liver Disease versus Metabolic Dysfunction and Alcohol-Associated Liver Disease and the Impact of Diet.,10.1016/j.ajpath.2025.05.013,exclude,liver biomarkers
+40419727,2026,FGF21 analogue PF-05231023 on alcohol consumption and neuronal activity in the nucleus accumbens.,10.1038/s41386-025-02133-z,exclude,FGF21 analogue only
+41617672,2026,Effects of chronic ethanol consumption on brain GLP-1R gene expression in mice and humans.,10.1038/s41398-026-03838-5,exclude,receptor expression only
+41506148,2026,Tirzepatide reduces alcohol drinking and relapse-like behaviours in rodents.,10.1016/j.ebiom.2025.106119,likely include,
+40699363,2026,"Semaglutide, tirzepatide, and retatrutide attenuate the interoceptive effects of alcohol in male and female rats.",10.1007/s00213-025-06854-3,likely include,
+42292814,2026,Activation of GLP-1R ameliorates alcohol withdrawal induced anxiety-like behavior by regulating neuronal mitochondrial quality control.,10.3389/fphar.2026.1820128,likely include,
+41903537,2026,A septal inhibitory circuit constrains alcohol reward and mediates liraglutide's suppressive effects on alcohol intake in mice.,10.1016/j.neuron.2026.02.019,likely include,
+43020264,2026,Activation of GLP-1 receptors in the middle part of the paraventricular nucleus of thalamus suppresses alcohol-related responses.,10.1016/j.neuropharm.2026.111259,likely include,
+42946204,2027,The GLP-1 receptor agonist semaglutide reduces alcohol consumption and anxiety-like behaviors during withdrawal in Marchigian Sardinian alcohol-preferring rats.,10.1016/j.neuropharm.2026.111240,likely include,
+,2026,"Dual GLP-1/FGF21 agonism suppresses voluntary alcohol consumption, alcohol choice, and nucleus accumbens dopamine modulation (bioRxiv preprint PPR1211087)",,check (preprint),preprint
