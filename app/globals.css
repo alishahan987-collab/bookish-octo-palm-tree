@@ -71,6 +71,9 @@
     outline-offset: 3px;
     border-radius: 6px;
   }
+  /* Fieldsets default to min-width: min-content, which lets scrolling rows
+     (e.g. the booking day strip) blow out the page width on phones. */
+  fieldset { min-width: 0; }
   /* Anchor targets clear the sticky header */
   [id] { scroll-margin-top: 6rem; }
 }

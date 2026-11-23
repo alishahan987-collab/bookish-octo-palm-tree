@@ -3,6 +3,7 @@ import { CONSENT_TEXT } from "../messages";
 import { isValidEmail, normalisePkMobile } from "../phone";
 import { validatePrice } from "../pricing";
 import { suggestJourneySteps } from "../journey";
+import { uid } from "../id";
 import { DEMO_PATIENT_NAMES, SEED_DOCTORS, SEED_SETTINGS, SEED_TREATMENTS } from "./seed";
 import { baseTimes, closedReason, getAvailabilityRange, getDayAvailability } from "./slots";
 import { DataError, type DataSource } from "./source";
@@ -37,12 +38,6 @@ interface DB {
 
 /* ------------------------------ helpers ------------------------------ */
 
-export function uid(prefix = "id"): string {
-  // crypto.randomUUID is unavailable on plain-http LAN URLs (e.g. testing on a phone), so fall back.
-  const c = typeof crypto !== "undefined" ? crypto : undefined;
-  const rand = c && "randomUUID" in c ? c.randomUUID().slice(0, 8) : Math.random().toString(36).slice(2, 10);
-  return `${prefix}_${Date.now().toString(36)}${rand}`;
-}
 
 const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v));
 const isBrowser = () => typeof window !== "undefined" && typeof window.localStorage !== "undefined";

@@ -1,6 +1,8 @@
 import type { JourneyStep, Treatment } from "./data/types";
 
-const sid = (i: number) => `st_${i}_${Math.random().toString(36).slice(2, 7)}`;
+import { uid } from "./id";
+
+const sid = (i: number) => uid(`st${i}`);
 
 /**
  * Suggested week-by-week plan for a treatment. The doctor edits it before

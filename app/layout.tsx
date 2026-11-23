@@ -3,6 +3,7 @@ import { Cormorant_Garamond, Manrope } from "next/font/google";
 import { FloatingActions } from "@/components/layout/FloatingActions";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
+import { HideOnAdmin } from "@/components/layout/HideOnAdmin";
 import { PreviewBanner } from "@/components/layout/PreviewBanner";
 import { MotionProvider } from "@/components/ui/Motion";
 import "./globals.css";
@@ -46,9 +47,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </a>
         <MotionProvider>
           <PreviewBanner />
-          <Header />
+          <HideOnAdmin>
+            <Header />
+          </HideOnAdmin>
           <main id="main">{children}</main>
-          <Footer />
+          <HideOnAdmin>
+            <Footer />
+          </HideOnAdmin>
           <FloatingActions />
         </MotionProvider>
       </body>
