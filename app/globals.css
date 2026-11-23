@@ -13,7 +13,7 @@
   --color-sand: #dccbad;
   --color-champagne: #c9aa6c;
   --color-champagne-soft: #e6d5b0;
-  --color-gold: #8a6a30; /* AA on ivory for text & icons */
+  --color-gold: #7a5d27; /* AA (>=4.5:1) on ivory, cream and beige */
   --color-gold-deep: #6e5424;
   --color-charcoal: #1f1d1a;
   --color-ink: #34302b;
@@ -166,7 +166,17 @@
   .no-scrollbar::-webkit-scrollbar { display: none; }
 }
 
+/* Scroll reveal (IntersectionObserver + CSS; no animation library needed). */
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1), transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--reveal-delay, 0s);
+}
+.reveal.is-visible { opacity: 1; transform: none; }
+
 @media (prefers-reduced-motion: reduce) {
+  .reveal { transform: none; }
   html { scroll-behavior: auto; }
   *, *::before, *::after {
     animation-duration: 0.001ms !important;

@@ -284,7 +284,7 @@ function TreatmentEditor({ initial, onClose }: { initial: TreatmentInput; onClos
             <legend className="label">Doctors</legend>
             {doctors.map((d) => (
               <label key={d.id} className="flex items-center gap-2 text-sm">
-                <input type="checkbox" className="h-4 w-4 accent-[#8a6a30]" checked={t.doctorIds.includes(d.id)}
+                <input type="checkbox" className="h-4 w-4 accent-[#7a5d27]" checked={t.doctorIds.includes(d.id)}
                   onChange={(e) => set("doctorIds", e.target.checked ? [...t.doctorIds, d.id] : t.doctorIds.filter((x) => x !== d.id))} />
                 {d.name}
               </label>

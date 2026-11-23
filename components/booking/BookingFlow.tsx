@@ -15,7 +15,7 @@ import { isValidEmail, normalisePkMobile } from "@/lib/phone";
 import { useSettings } from "../layout/useSettings";
 import { useTreatments } from "../treatments/useTreatments";
 import { Icon } from "../ui/Icon";
-import { m } from "../ui/Motion";
+import { m } from "../ui/FramerMotion";
 import { PriceTag } from "../ui/Price";
 import { MessagePreview } from "./MessagePreview";
 import { SlotPicker } from "./SlotPicker";
@@ -327,7 +327,7 @@ export function BookingFlow({ initialTreatments, initialDoctors }: { initialTrea
 
                 <div>
                   <label className={`flex cursor-pointer gap-3 rounded-2xl border p-4 text-sm leading-relaxed ${errors.consent ? "border-danger" : "border-line"} bg-ivory`}>
-                    <input id="f-consent" type="checkbox" className="mt-0.5 h-5 w-5 flex-none accent-[#8a6a30]" checked={details.consent}
+                    <input id="f-consent" type="checkbox" className="mt-0.5 h-5 w-5 flex-none accent-[#7a5d27]" checked={details.consent}
                       aria-invalid={!!errors.consent} aria-describedby={errors.consent ? "f-consent-err" : undefined}
                       onChange={(e) => setDetails({ ...details, consent: e.target.checked })} />
                     <span className="text-ink">{CONSENT_TEXT}</span>

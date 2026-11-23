@@ -5,12 +5,11 @@ import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { HideOnAdmin } from "@/components/layout/HideOnAdmin";
 import { PreviewBanner } from "@/components/layout/PreviewBanner";
-import { MotionProvider } from "@/components/ui/Motion";
 import "./globals.css";
 
 const serif = Cormorant_Garamond({
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: "500",
   style: ["normal", "italic"],
   variable: "--font-cormorant",
   display: "swap",
@@ -42,10 +41,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${serif.variable} ${sans.variable}`}>
       <body className="min-h-dvh">
+        <noscript>
+          <style>{`.reveal{opacity:1!important;transform:none!important}`}</style>
+        </noscript>
         <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-charcoal focus:px-4 focus:py-2 focus:text-ivory">
           Skip to content
         </a>
-        <MotionProvider>
+        <>
           <PreviewBanner />
           <HideOnAdmin>
             <Header />
@@ -55,7 +57,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Footer />
           </HideOnAdmin>
           <FloatingActions />
-        </MotionProvider>
+        </>
       </body>
     </html>
   );

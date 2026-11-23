@@ -1,38 +1,48 @@
 "use client";
 
-import { LazyMotion, MotionConfig, domAnimation, m, type HTMLMotionProps } from "framer-motion";
-import type { ReactNode } from "react";
+import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
 
-/** LazyMotion keeps the animation bundle small; reducedMotion="user" honours OS settings. */
-export function MotionProvider({ children }: { children: ReactNode }) {
-  return (
-    <LazyMotion features={domAnimation} strict>
-      <MotionConfig reducedMotion="user" transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}>
-        {children}
-      </MotionConfig>
-    </LazyMotion>
-  );
+/**
+ * Fade-and-rise when scrolled into view.
+ *
+ * Deliberately built on IntersectionObserver + CSS rather than Framer Motion:
+ * the homepage then ships no animation library, which keeps mobile
+ * Total Blocking Time low. Reduced-motion users get a plain fade (see globals.css).
+ */
+let observer: IntersectionObserver | null = null;
+function getObserver() {
+  if (!observer && typeof IntersectionObserver !== "undefined") {
+    observer = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) {
+            e.target.classList.add("is-visible");
+            observer!.unobserve(e.target);
+          }
+        }
+      },
+      { rootMargin: "0px 0px -60px 0px" },
+    );
+  }
+  return observer;
 }
 
-/** Fade-and-rise when scrolled into view. Use for below-the-fold content only. */
-export function Reveal({
-  children,
-  delay = 0,
-  className,
-  ...rest
-}: { children: ReactNode; delay?: number; className?: string } & HTMLMotionProps<"div">) {
+export function Reveal({ children, delay = 0, className = "" }: { children: ReactNode; delay?: number; className?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    const io = getObserver();
+    if (!el) return;
+    if (!io) {
+      el.classList.add("is-visible");
+      return;
+    }
+    io.observe(el);
+    return () => io.unobserve(el);
+  }, []);
   return (
-    <m.div
-      className={className}
-      initial={{ opacity: 0, y: 18 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-60px" }}
-      transition={{ duration: 0.8, delay, ease: [0.22, 1, 0.36, 1] }}
-      {...rest}
-    >
+    <div ref={ref} className={`reveal ${className}`} style={delay ? ({ "--reveal-delay": `${delay}s` } as CSSProperties) : undefined}>
       {children}
-    </m.div>
+    </div>
   );
 }
-
-export { m };

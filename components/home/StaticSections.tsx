@@ -16,7 +16,7 @@ export function Hero() {
         <div>
           <p className="eyebrow animate-rise">Skin &amp; Laser Clinic · Abbottabad</p>
           <h1 id="hero-title" className="mt-5 text-[2.9rem] leading-[1.02] sm:text-6xl lg:text-[4.6rem]">
-            Considered skin care, <em className="font-normal text-gold">in calm, expert hands.</em>
+            Considered skin care, <em className="text-gold">in calm, expert hands.</em>
           </h1>
           <p className="mt-6 max-w-xl text-[1.06rem] leading-relaxed text-muted">
             Doctor-led skin, laser and hair treatments, with honest advice and a plan built around you, not a one-size-fits-all package.

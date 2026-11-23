@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import { FINDER_CONCERNS, concernLabel } from "@/lib/data/catalog";
 import type { ConcernId, Treatment } from "@/lib/data/types";
 import { Icon } from "../ui/Icon";
-import { m } from "../ui/Motion";
+import { m } from "../ui/FramerMotion";
 import { TreatmentCard } from "./TreatmentCard";
 import { useTreatments } from "./useTreatments";
 
