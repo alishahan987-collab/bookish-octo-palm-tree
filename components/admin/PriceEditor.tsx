@@ -1,10 +1,9 @@
 "use client";
 
 import type { PriceModel, PriceType } from "@/lib/data/types";
-import { PRICE_TYPE_LABELS, formatPKR, packageSaving, validatePrice } from "@/lib/pricing";
+import { PRICE_TYPE_LABELS, formatMoney, packageSaving, validatePrice } from "@/lib/pricing";
 import { Icon } from "../ui/Icon";
 import { PriceBlock } from "../ui/Price";
-import { DemoChip } from "./ui";
 
 /** Convert between price types while keeping a sensible number. */
 function convert(p: PriceModel, type: PriceType): PriceModel {
@@ -25,14 +24,14 @@ function convert(p: PriceModel, type: PriceType): PriceModel {
   }
 }
 
-export function PriceEditor({ value, onChange }: { value: PriceModel; onChange: (p: PriceModel) => void }) {
+export function PriceEditor({ value, onChange, currency = "PKR" }: { value: PriceModel; onChange: (p: PriceModel) => void; currency?: string }) {
+  const formatPKR = (n: number) => formatMoney(n, currency);
   const err = validatePrice(value);
   const num = (v: string) => (v === "" ? 0 : Math.max(0, Number(v)));
 
   return (
     <div className="grid gap-5 lg:grid-cols-[1fr_17rem]">
       <div className="space-y-4">
-        <div className="flex items-center gap-2"><DemoChip /></div>
         <fieldset>
           <legend className="label">Price type</legend>
           <div className="mt-1 grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -47,14 +46,14 @@ export function PriceEditor({ value, onChange }: { value: PriceModel; onChange: 
 
         {(value.type === "fixed" || value.type === "from") && (
           <div className="grid gap-3 sm:grid-cols-2">
-            <Num id="p-amount" label={value.type === "from" ? "Starting price (PKR)" : "Price (PKR)"} value={value.amount} onChange={(v) => onChange({ ...value, amount: num(v) })} />
+            <Num id="p-amount" label={value.type === "from" ? `Starting price (${currency})` : `Price (${currency})`} value={value.amount} onChange={(v) => onChange({ ...value, amount: num(v) })} />
             <Text id="p-unit" label="Unit (optional)" placeholder="per session" value={value.unit ?? ""} onChange={(v) => onChange({ ...value, unit: v || undefined })} />
           </div>
         )}
         {value.type === "range" && (
           <div className="grid gap-3 sm:grid-cols-3">
-            <Num id="p-min" label="Minimum (PKR)" value={value.min} onChange={(v) => onChange({ ...value, min: num(v) })} />
-            <Num id="p-max" label="Maximum (PKR)" value={value.max} onChange={(v) => onChange({ ...value, max: num(v) })} />
+            <Num id="p-min" label={`Minimum (${currency})`} value={value.min} onChange={(v) => onChange({ ...value, min: num(v) })} />
+            <Num id="p-max" label={`Maximum (${currency})`} value={value.max} onChange={(v) => onChange({ ...value, max: num(v) })} />
             <Text id="p-unit" label="Unit (optional)" placeholder="per area" value={value.unit ?? ""} onChange={(v) => onChange({ ...value, unit: v || undefined })} />
           </div>
         )}
@@ -63,9 +62,9 @@ export function PriceEditor({ value, onChange }: { value: PriceModel; onChange: 
         )}
         {value.type === "promo" && (
           <div className="grid gap-3 sm:grid-cols-2">
-            <Num id="p-regular" label="Regular price (PKR)" value={value.regular} onChange={(v) => onChange({ ...value, regular: num(v) })} />
-            <Num id="p-promo" label="Promotional price (PKR)" value={value.promo} onChange={(v) => onChange({ ...value, promo: num(v) })} />
-            <Text id="p-label" label="Offer label" placeholder="Winter offer" value={value.label ?? ""} onChange={(v) => onChange({ ...value, label: v || undefined })} />
+            <Num id="p-regular" label={`Regular price (${currency})`} value={value.regular} onChange={(v) => onChange({ ...value, regular: num(v) })} />
+            <Num id="p-promo" label={`Discounted price (${currency})`} value={value.promo} onChange={(v) => onChange({ ...value, promo: num(v) })} />
+            <Text id="p-label" label="Discount label" placeholder="Winter offer" value={value.label ?? ""} onChange={(v) => onChange({ ...value, label: v || undefined })} />
             <div>
               <label htmlFor="p-until" className="label">Valid until (optional)</label>
               <input id="p-until" type="date" className="field" value={value.validUntil ?? ""} onChange={(e) => onChange({ ...value, validUntil: e.target.value || undefined })} />
@@ -75,12 +74,12 @@ export function PriceEditor({ value, onChange }: { value: PriceModel; onChange: 
         )}
         {value.type === "package" && (
           <div className="space-y-3">
-            <Num id="p-per" label="Price per session (PKR)" value={value.perSession} onChange={(v) => onChange({ ...value, perSession: num(v) })} />
+            <Num id="p-per" label={`Price per session (${currency})`} value={value.perSession} onChange={(v) => onChange({ ...value, perSession: num(v) })} />
             <p className="label !mb-0">Packages</p>
             {value.packages.map((pkg, i) => (
               <div key={i} className="flex items-end gap-2">
                 <Num id={`p-s-${i}`} label="Sessions" value={pkg.sessions} onChange={(v) => onChange({ ...value, packages: value.packages.map((x, j) => (j === i ? { ...x, sessions: num(v) } : x)) })} />
-                <Num id={`p-p-${i}`} label="Package price (PKR)" value={pkg.price} onChange={(v) => onChange({ ...value, packages: value.packages.map((x, j) => (j === i ? { ...x, price: num(v) } : x)) })} />
+                <Num id={`p-p-${i}`} label={`Package price (${currency})`} value={pkg.price} onChange={(v) => onChange({ ...value, packages: value.packages.map((x, j) => (j === i ? { ...x, price: num(v) } : x)) })} />
                 <button type="button" className="mb-1 rounded-full p-2.5 text-muted hover:bg-cream hover:text-danger" aria-label={`Remove package ${i + 1}`}
                   onClick={() => onChange({ ...value, packages: value.packages.filter((_, j) => j !== i) })}>
                   <Icon name="trash" size={18} />
@@ -97,9 +96,9 @@ export function PriceEditor({ value, onChange }: { value: PriceModel; onChange: 
         )}
         {err && <p className="error-text" role="alert">{err}</p>}
       </div>
-      <div className="rounded-2xl border border-line bg-[#fffdf9] p-4">
+      <div className="rounded-2xl border border-line bg-surface p-4">
         <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted">Live preview</p>
-        <PriceBlock price={value} />
+        <PriceBlock price={value} currency={currency} />
       </div>
     </div>
   );

@@ -1,35 +1,9 @@
-import { BeforeAfter, FeaturedTreatments, LocationContact, SpecialOffers } from "@/components/home/DataSections";
-import {
-  BookCTA,
-  ExploreProcedures,
-  FAQSection,
-  Hero,
-  Introduction,
-  MeetTheDoctor,
-  Reviews,
-  Technology,
-  WhyChoose,
-} from "@/components/home/StaticSections";
-import { getTreatments } from "@/lib/data";
+import { Home } from "@/components/home/Home";
+import { getConditionsList, getProcedures, getPublicGallery, getPublishedPosts } from "@/lib/server/data";
+
+export const revalidate = 60;
 
 export default async function HomePage() {
-  // Server render from the seed catalogue; the browser then reads the live (localStorage) copy.
-  const treatments = await getTreatments();
-  return (
-    <>
-      <Hero />
-      <Introduction />
-      <MeetTheDoctor />
-      <FeaturedTreatments initial={treatments} />
-      <ExploreProcedures />
-      <WhyChoose />
-      <Technology />
-      <BeforeAfter />
-      <Reviews />
-      <SpecialOffers initial={treatments} />
-      <BookCTA />
-      <FAQSection />
-      <LocationContact />
-    </>
-  );
+  const [treatments, conditions, posts, gallery] = await Promise.all([getProcedures(), getConditionsList(), getPublishedPosts(), getPublicGallery()]);
+  return <Home initial={{ treatments, conditions, posts, gallery }} />;
 }

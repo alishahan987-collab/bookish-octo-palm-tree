@@ -10,6 +10,7 @@ import type { Booking, ClinicSettings, Weekday } from "./types";
 const store = new Map<string, string>();
 beforeAll(() => {
   (globalThis as any).window = {
+    location: { hostname: "test" },
     localStorage: {
       getItem: (k: string) => store.get(k) ?? null,
       setItem: (k: string, v: string) => void store.set(k, v),
@@ -80,10 +81,10 @@ describe("slot engine", () => {
   it("closes non-working days and holidays", () => {
     const sunday = nextWeekday(0);
     const s = settings({ workingDays: [1, 2, 3, 4, 5, 6] });
-    expect(getDayAvailability(s, [], sunday, "dr-sajjad").open).toBe(false);
+    expect(getDayAvailability(s, [], sunday, "main").open).toBe(false);
     const monday = nextWeekday(1);
     const h = settings({ holidays: [{ id: "h", date: monday, label: "Eid" }] });
-    const day = getDayAvailability(h, [], monday, "dr-sajjad");
+    const day = getDayAvailability(h, [], monday, "main");
     expect(day.open).toBe(false);
     if (!day.open) expect(day.reason).toContain("Eid");
   });
@@ -91,13 +92,13 @@ describe("slot engine", () => {
   it("marks booked slots and enforces max per day", () => {
     const tue = nextWeekday(2);
     const mk = (time: string, status: Booking["status"] = "pending") =>
-      ({ id: time, date: tue, time, doctorId: "dr-sajjad", status }) as Booking;
-    const day = getDayAvailability(settings(), [mk("11:00"), mk("11:30", "cancelled")], tue, "dr-sajjad");
+      ({ id: time, date: tue, time, doctorId: "main", status }) as Booking;
+    const day = getDayAvailability(settings(), [mk("11:00"), mk("11:30", "cancelled")], tue, "main");
     if (!day.open) throw new Error("expected open");
     expect(day.slots.find((s) => s.time === "11:00")?.state).toBe("booked");
     expect(day.slots.find((s) => s.time === "11:30")?.state).toBe("available"); // cancelled frees the slot
 
-    const full = getDayAvailability(settings({ maxPerDay: 1 }), [mk("11:00")], tue, "dr-sajjad");
+    const full = getDayAvailability(settings({ maxPerDay: 1 }), [mk("11:00")], tue, "main");
     if (!full.open) throw new Error("expected open");
     expect(full.slots.every((s) => s.state !== "available")).toBe(true);
   });
@@ -113,23 +114,29 @@ describe("local data source", () => {
     let date = addDays(todayISO(), 1);
     let time = "";
     for (let i = 0; i < 30 && !time; i++, date = addDays(date, 1)) {
-      const d = getDayAvailability(s, await data.getBookings(), date, "dr-sajjad");
+      const d = getDayAvailability(s, await data.getBookings(), date, "main");
       const free = d.open ? d.slots.find((x) => x.state === "available") : undefined;
       if (free) time = free.time;
       if (time) break;
     }
     const input = {
-      treatmentId: t.id, doctorId: "dr-sajjad", date, time, patientName: "Test Person",
-      phone: "0300 1234567", contactMethod: "whatsapp" as const, consent: true,
+      treatmentId: t.id, doctorId: "main", date, time, patientName: "Test Person",
+      phone: "0300 1234567", email: "test@example.com", contactMethod: "both" as const, consent: true,
     };
-    const b = await data.createBooking(input);
+    const { booking: b, notifications } = await data.createBooking(input);
+    expect(notifications.every((n) => n.status === "skipped")).toBe(true); // demo mode never sends
     expect(b.reference).toMatch(/^AES-\d{4}-\d{4}$/);
     expect(b.phone).toBe("+92 300 1234567");
     await expect(data.createBooking(input)).rejects.toMatchObject({ code: "SLOT_UNAVAILABLE" });
 
-    // cancelling frees it again
-    await data.setBookingStatus(b.id, "cancelled");
-    await expect(data.createBooking(input)).resolves.toBeTruthy();
+    // rejecting frees it again
+    await data.setBookingStatus(b.id, "rejected", "Doctor unavailable");
+    const again = await data.createBooking(input);
+    expect(again.booking.reference).not.toBe(b.reference);
+    // email is required by default
+    await expect(data.createBooking({ ...input, time: "11:00", date: addDays(date, 1), email: undefined })).rejects.toMatchObject({ code: "VALIDATION" });
+    // honeypot
+    await expect(data.createBooking({ ...input, website: "spam" } as never)).rejects.toMatchObject({ code: "VALIDATION" });
   });
 
   it("rejects invalid input and invalid transitions", async () => {
@@ -137,8 +144,8 @@ describe("local data source", () => {
     await data.resetDemoData();
     const [t] = await data.getTreatments();
     await expect(
-      data.createBooking({ treatmentId: t.id, doctorId: "dr-sajjad", date: addDays(todayISO(), 2), time: "11:00",
-        patientName: "A B", phone: "12345", contactMethod: "whatsapp", consent: true }),
+      data.createBooking({ treatmentId: t.id, doctorId: "main", date: addDays(todayISO(), 2), time: "11:00",
+        patientName: "A B", phone: "12345", email: "a@b.co", contactMethod: "whatsapp", consent: true }),
     ).rejects.toMatchObject({ code: "VALIDATION" });
     const done = (await data.getBookings()).find((b) => b.status === "completed")!;
     await expect(data.setBookingStatus(done.id, "confirmed")).rejects.toMatchObject({ code: "INVALID_TRANSITION" });
@@ -151,5 +158,44 @@ describe("local data source", () => {
     await data.updatePrice(hydra.id, { type: "promo", regular: 12000, promo: 8000 });
     const again = (await data.getTreatmentBySlug("hydrafacial"))!;
     expect(again.price).toMatchObject({ promo: 8000 });
+  });
+});
+
+describe("blocked slots", () => {
+  it("removes blocked ranges from availability", () => {
+    const tue = nextWeekday(2);
+    const s = settings({ blocked: [{ id: "b", date: tue, start: "15:00", end: "16:00", reason: "Away" }] });
+    const day = getDayAvailability(s, [], tue, "main");
+    if (!day.open) throw new Error("expected open");
+    const times = day.slots.map((x) => x.time);
+    expect(times).not.toContain("15:00");
+    expect(times).not.toContain("15:30");
+    expect(times).toContain("16:00");
+  });
+});
+
+describe("gallery consent", () => {
+  it("refuses to publish real photos without consent", async () => {
+    const data = await import("./index");
+    await data.resetDemoData();
+    await expect(
+      data.saveGalleryItem({ title: "x", category: "skin", before: "/a.jpg", after: "/b.jpg", consentConfirmed: false, published: true, order: 0 }),
+    ).rejects.toMatchObject({ code: "VALIDATION" });
+    const ok = await data.saveGalleryItem({ title: "x", category: "skin", before: "/a.jpg", after: "/b.jpg", consentConfirmed: true, published: true, order: 0 });
+    expect((await data.getGallery()).some((g) => g.id === ok.id)).toBe(true);
+  });
+});
+
+describe("search", () => {
+  it("understands patient language and typos", async () => {
+    const { buildIndex, search } = await import("../search");
+    const { SEED_TREATMENTS, SEED_CONDITIONS, SEED_POSTS } = await import("./seed");
+    const index = buildIndex({ treatments: SEED_TREATMENTS, conditions: SEED_CONDITIONS, posts: SEED_POSTS });
+    expect(search(index, "hair fall")[0].title).toMatch(/hair/i);
+    expect(search(index, "pimples").some((h) => h.title === "Acne")).toBe(true);
+    expect(search(index, "melasama").some((h) => h.title === "Melasma")).toBe(true); // typo
+    expect(search(index, "botox")[0].title).toMatch(/Botox/);
+    expect(search(index, "sunscreen").some((h) => h.type === "article")).toBe(true);
+    expect(search(index, "x")).toEqual([]);
   });
 });

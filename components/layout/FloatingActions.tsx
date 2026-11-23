@@ -9,13 +9,11 @@ export function FloatingActions() {
   const pathname = usePathname();
   if (pathname.startsWith("/admin")) return null;
   const onBook = pathname.startsWith("/book");
-
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-30 flex items-end justify-between gap-3 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:justify-end">
       {!onBook && (
         <Link href="/book" className="btn btn-primary pointer-events-auto shadow-[var(--shadow-lift)] sm:order-1">
-          <Icon name="calendar" size={18} />
-          Book
+          <Icon name="calendar" size={18} /> Book
         </Link>
       )}
       <WhatsAppLink

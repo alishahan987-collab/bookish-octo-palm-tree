@@ -1,8 +1,8 @@
 import { addDays } from "./dates";
-import type { Booking, ClinicSettings } from "./data/types";
+import type { Booking, SiteContent } from "./data/types";
 
 /** Build an .ics calendar file so patients can save the appointment locally. */
-export function bookingToICS(b: Booking, s: ClinicSettings, durationMin = 30): string {
+export function bookingToICS(b: Booking, c: SiteContent, durationMin = 30): string {
   const [h, m] = b.time.split(":").map(Number);
   const endMin = h * 60 + m + durationMin;
   const d = b.date.replace(/-/g, "");
@@ -14,14 +14,14 @@ export function bookingToICS(b: Booking, s: ClinicSettings, durationMin = 30): s
   return [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Aesthetica design preview//EN",
+    "PRODID:-//Clinic website//EN",
     "BEGIN:VEVENT",
-    `UID:${b.id}@aesthetica-preview`,
+    `UID:${b.id}@clinic-website`,
     `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, "").slice(0, 15)}Z`,
     `DTSTART;TZID=Asia/Karachi:${start}`,
     `DTEND;TZID=Asia/Karachi:${end}`,
-    `SUMMARY:${esc(`${b.treatmentName} – ${s.clinicName}`)}`,
-    `LOCATION:${esc(`${s.addressLine}, ${s.city}`)}`,
+    `SUMMARY:${esc(`${b.treatmentName} – ${c.brand.clinicName}`)}`,
+    `LOCATION:${esc([c.contact.address, c.contact.city].filter(Boolean).join(", "))}`,
     `DESCRIPTION:${esc(`Reference ${b.reference}. Awaiting confirmation from the clinic.`)}`,
     "END:VEVENT",
     "END:VCALENDAR",

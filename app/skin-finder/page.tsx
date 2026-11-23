@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
 import { SkinFinder } from "@/components/treatments/SkinFinder";
 import { MotionProvider } from "@/components/ui/FramerMotion";
-import { getTreatments } from "@/lib/data";
+import { getConditionsList, getProcedures } from "@/lib/server/data";
 
+export const revalidate = 60;
 export const metadata: Metadata = { title: "Skin Concern Finder" };
 
 export default async function SkinFinderPage() {
-  const treatments = await getTreatments();
+  const [treatments, conditions] = await Promise.all([getProcedures(), getConditionsList()]);
   return (
     <MotionProvider>
-      <SkinFinder initial={treatments} />
+      <SkinFinder initialTreatments={treatments} initialConditions={conditions} />
     </MotionProvider>
   );
 }

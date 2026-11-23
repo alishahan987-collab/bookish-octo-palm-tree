@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { BookingFlow } from "@/components/booking/BookingFlow";
 import { MotionProvider } from "@/components/ui/FramerMotion";
-import { getDoctors, getTreatments } from "@/lib/data";
+import { getProcedures } from "@/lib/server/data";
 
+export const revalidate = 60;
 export const metadata: Metadata = { title: "Book an appointment" };
 
 export default async function BookPage() {
-  const [treatments, doctors] = await Promise.all([getTreatments(), getDoctors()]);
+  const treatments = await getProcedures();
   return (
     <section className="container-lux max-w-3xl pb-16 pt-10 sm:pt-14">
       <p className="eyebrow">Online booking</p>
@@ -15,7 +16,7 @@ export default async function BookPage() {
       <p className="mt-3 text-muted">Takes about a minute. The clinic will confirm your appointment.</p>
       <Suspense fallback={<div className="mt-10 h-96" aria-busy="true" />}>
         <MotionProvider>
-          <BookingFlow initialTreatments={treatments} initialDoctors={doctors} />
+          <BookingFlow initialTreatments={treatments} />
         </MotionProvider>
       </Suspense>
     </section>

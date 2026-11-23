@@ -5,7 +5,9 @@ next-env.d.ts
 *.tsbuildinfo
 .vercel
 .env*
+!.env.local.example
 test-results/
 playwright-report/
 lighthouse/
 .DS_Store
+.next-*/

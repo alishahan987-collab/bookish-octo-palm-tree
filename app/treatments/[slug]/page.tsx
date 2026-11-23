@@ -1,22 +1,19 @@
 import type { Metadata } from "next";
-import { TreatmentDetail } from "@/components/treatments/TreatmentDetail";
-import { getTreatmentBySlug, getTreatments } from "@/lib/data";
-import { SEED_TREATMENTS } from "@/lib/data/seed";
+import { TreatmentDetail } from "@/components/site/Details";
+import { getProcedures } from "@/lib/server/data";
 
-export function generateStaticParams() {
-  return SEED_TREATMENTS.map((t) => ({ slug: t.slug }));
+export const revalidate = 60;
+export async function generateStaticParams() {
+  return (await getProcedures()).map((t) => ({ slug: t.slug }));
 }
-
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const t = await getTreatmentBySlug(slug);
-  return { title: t?.name ?? "Treatment", description: t?.shortDescription };
+  const t = (await getProcedures()).find((x) => x.slug === slug);
+  return { title: t?.name ?? "Treatment", description: t?.shortDescription, openGraph: t?.image ? { images: [t.image] } : undefined };
 }
-
+// Procedures added in the demo admin exist only in that browser, so unknown slugs resolve client-side.
 export default async function TreatmentPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  // Treatments added in the demo admin exist only in the browser, so an unknown
-  // slug is resolved client-side rather than returning a server 404.
-  const [initial, all] = await Promise.all([getTreatmentBySlug(slug), getTreatments()]);
-  return <TreatmentDetail slug={slug} initial={initial} initialAll={all} />;
+  const all = await getProcedures();
+  return <TreatmentDetail slug={slug} initial={all.find((t) => t.slug === slug) ?? null} initialAll={all} />;
 }

@@ -6,7 +6,9 @@ import type { Booking, ClinicSettings, DayAvailability, ISODate, Slot } from "./
  * today and can run in a Supabase Edge Function / API route in Phase 2.
  */
 
-const ACTIVE = (b: Booking) => b.status !== "cancelled";
+/** Bookings that occupy a slot. Cancelled and rejected requests free it again. */
+export const occupiesSlot = (b: Pick<Booking, "status">) => b.status !== "cancelled" && b.status !== "rejected";
+const ACTIVE = occupiesSlot;
 
 export function isSlotTaken(bookings: Booking[], doctorId: string, date: ISODate, time: string, ignoreBookingId?: string): boolean {
   return bookings.some(
@@ -61,14 +63,21 @@ export function getDayAvailability(
   const full = dayCount >= settings.maxPerDay;
   const nowMin = now.getHours() * 60 + now.getMinutes() + settings.minNoticeMinutes;
 
+  const blocked = (settings.blocked ?? [])
+    .filter((b) => b.date === date)
+    .map((b) => [timeToMinutes(b.start), timeToMinutes(b.end)] as const);
+  const step = Math.max(5, settings.slotMinutes);
+
   const slots: Slot[] = times.map((time) => {
-    if (date === today && timeToMinutes(time) < nowMin) return { time, state: "past" };
+    const t = timeToMinutes(time);
+    if (date === today && t < nowMin) return { time, state: "past" };
+    if (blocked.some(([bs, be]) => t < be && t + step > bs)) return { time, state: "blocked" };
     if (isSlotTaken(bookings, doctorId, date, time, opts.ignoreBookingId)) return { time, state: "booked" };
     if (full) return { time, state: "full" };
     return { time, state: "available" };
   });
 
-  const visible = slots.filter((s) => s.state !== "past");
+  const visible = slots.filter((s) => s.state !== "past" && s.state !== "blocked");
   if (visible.length === 0) return { date, open: false, reason: "No times left today" };
 
   const availableCount = visible.filter((s) => s.state === "available").length;

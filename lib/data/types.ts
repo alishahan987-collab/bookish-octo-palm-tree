@@ -1,19 +1,19 @@
 /**
- * Domain types for the Aesthetica prototype.
- *
- * These are the contract between the UI and the data layer. In Phase 2 the
- * Supabase tables mirror these shapes (snake_case columns mapped in the
- * repository), so the UI does not change.
+ * Domain types: the contract between the UI and every storage backend
+ * (browser demo store or Supabase). Content entities are stored as JSON
+ * documents; bookings are relational.
  */
 
-export type ISODate = string; // "YYYY-MM-DD" (clinic local date, Asia/Karachi)
+export type ISODate = string; // "YYYY-MM-DD" (clinic local date)
 export type HHmm = string; // "14:30"
+/** Image reference: "/images/x.jpg", an https URL (Supabase Storage) or "idb:<id>" (demo uploads). */
+export type ImageRef = string;
 
 /* ---------------------------------- Pricing --------------------------------- */
 
 export interface SessionPackage {
   sessions: number;
-  price: number; // PKR, total for the package
+  price: number;
 }
 
 export type PriceModel =
@@ -26,27 +26,16 @@ export type PriceModel =
 
 export type PriceType = PriceModel["type"];
 
-/* -------------------------------- Treatments -------------------------------- */
+/* ----------------------------- Procedures ----------------------------- */
 
-export type CategoryId = "laser" | "facials" | "peels" | "skin-concerns" | "hair" | "consultation";
-
-export type ConcernId =
-  | "acne"
-  | "acne-scars"
-  | "pigmentation"
-  | "melasma"
-  | "wrinkles"
-  | "hair-loss"
-  | "uneven-tone"
-  | "ageing"
-  | "unwanted-hair"
-  | "dull-skin";
+export type CategoryId = "skin" | "aesthetic" | "hair" | "consultation";
 
 export interface FAQ {
   q: string;
   a: string;
 }
 
+/** A procedure / treatment. (Named Treatment for backwards compatibility.) */
 export interface Treatment {
   id: string;
   slug: string;
@@ -55,37 +44,183 @@ export interface Treatment {
   tagline: string;
   shortDescription: string;
   description: string;
+  image?: ImageRef;
+  imageAlt?: string;
   howItWorks: string[];
   benefits: string[];
   suitableFor: string[];
+  /** Expected recovery time. */
   downtime: string;
+  /** Number of sessions (free text, editable). */
   sessions: string;
+  /** Procedure duration. */
   sessionLength: string;
   sideEffects: string[];
   faqs: FAQ[];
   price: PriceModel;
-  concerns: ConcernId[];
+  /** Condition slugs this procedure is relevant to. */
+  concerns: string[];
   doctorIds: string[];
   featured: boolean;
   active: boolean;
-  /** Index into the abstract gradient palette used for artwork. */
+  order: number;
+  /** Fallback abstract artwork palette when no image is set. */
   palette: number;
   updatedAt: string;
 }
 
 export type TreatmentInput = Omit<Treatment, "id" | "updatedAt"> & { id?: string };
 
-/* ---------------------------------- Doctors --------------------------------- */
+/* ----------------------------- Conditions ----------------------------- */
 
-export interface Doctor {
+export interface Condition {
   id: string;
+  slug: string;
   name: string;
-  role: string;
-  /** Placeholder until the clinic supplies an approved bio. */
-  bio: string | null;
+  summary: string;
+  image?: ImageRef;
+  imageAlt?: string;
+  overview: string;
+  symptoms: string[];
+  causes: string[];
+  treatments: string[];
+  whenToConsult: string[];
+  /** Show in the Skin Concern Finder. */
+  inFinder: boolean;
+  active: boolean;
+  order: number;
+  updatedAt: string;
 }
 
-/* --------------------------------- Settings --------------------------------- */
+export type ConditionInput = Omit<Condition, "id" | "updatedAt"> & { id?: string };
+
+/* ------------------------------ Gallery ------------------------------ */
+
+export interface GalleryItem {
+  id: string;
+  title: string;
+  treatmentId?: string;
+  category: CategoryId;
+  before: ImageRef;
+  after: ImageRef;
+  caption?: string;
+  /** Admin must confirm written patient consent before the item can be published. */
+  consentConfirmed: boolean;
+  consentNote?: string;
+  /** Demo items use abstract illustrations, never real people. */
+  illustrative?: boolean;
+  published: boolean;
+  order: number;
+  createdAt: string;
+}
+
+export type GalleryInput = Omit<GalleryItem, "id" | "createdAt"> & { id?: string };
+
+/* -------------------------------- Blog -------------------------------- */
+
+export interface Post {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string;
+  cover?: ImageRef;
+  coverAlt?: string;
+  /** Markdown (headings, lists, bold, italic, links). */
+  content: string;
+  tags: string[];
+  status: "draft" | "published";
+  author: string;
+  publishedAt?: string;
+  updatedAt: string;
+}
+
+export type PostInput = Omit<Post, "id" | "updatedAt"> & { id?: string };
+
+/* ---------------------------- Site content ---------------------------- */
+
+export type SectionId =
+  | "intro"
+  | "conditions"
+  | "procedures"
+  | "doctor"
+  | "why"
+  | "beforeAfter"
+  | "pricing"
+  | "blog"
+  | "cta"
+  | "faq"
+  | "contact";
+
+export interface SectionConfig {
+  visible: boolean;
+  order: number;
+  eyebrow: string;
+  title: string;
+  intro: string;
+}
+
+export interface ThemeConfig {
+  preset: string;
+  background: string;
+  surface: string;
+  cream: string;
+  accent: string;
+  accentText: string;
+  ink: string;
+  headingFont: "cormorant" | "playfair" | "bodoni";
+  bodyFont: "manrope" | "inter" | "dmsans";
+}
+
+export interface SiteContent {
+  brand: { clinicName: string; shortName: string; tagline: string; logo?: ImageRef; logoAlt: string };
+  doctor: {
+    name: string;
+    designation: string;
+    photo?: ImageRef;
+    shortIntro: string;
+    bio: string;
+    qualifications: string[];
+    specialization: string;
+    experience: string;
+    certifications: string[];
+    achievements: string[];
+    expertise: string[];
+    registration: string;
+  };
+  hero: {
+    eyebrow: string;
+    title: string;
+    highlight: string;
+    intro: string;
+    primaryCta: string;
+    secondaryCta: string;
+    badges: { title: string; text: string }[];
+    backgroundImage?: ImageRef;
+  };
+  announcement: { enabled: boolean; text: string; linkLabel: string; href: string };
+  sections: Record<SectionId, SectionConfig>;
+  why: { title: string; text: string }[];
+  faqs: FAQ[];
+  contact: {
+    address: string;
+    city: string;
+    mapsQuery: string;
+    phone: string;
+    email: string;
+    /** International digits only, e.g. 923001234567. */
+    whatsapp: string;
+    /** Where new-booking alerts go (email). Falls back to `email`. */
+    bookingAlertEmail: string;
+  };
+  social: { instagram: string; facebook: string; youtube: string; tiktok: string };
+  theme: ThemeConfig;
+  seo: { title: string; description: string };
+  footer: { about: string; disclaimer: string };
+  previewBanner: { enabled: boolean; text: string };
+  currency: string;
+}
+
+/* ------------------------------ Settings ------------------------------ */
 
 export type Weekday = 0 | 1 | 2 | 3 | 4 | 5 | 6; // 0 = Sunday
 
@@ -94,7 +229,6 @@ export interface BreakTime {
   label: string;
   start: HHmm;
   end: HHmm;
-  /** Days the break applies to. Empty = every working day. */
   days: Weekday[];
 }
 
@@ -104,50 +238,60 @@ export interface Holiday {
   label: string;
 }
 
+/** A specific time range on a date that cannot be booked (e.g. doctor away). */
+export interface BlockedSlot {
+  id: string;
+  date: ISODate;
+  start: HHmm;
+  end: HHmm;
+  reason: string;
+}
+
 export interface ClinicSettings {
-  clinicName: string;
-  addressLine: string;
-  city: string;
-  mapsQuery: string;
-  /** International format without "+", e.g. 923001234567. Empty until supplied by the clinic. */
-  whatsappNumber: string;
-  phoneDisplay: string;
-  email: string;
   workingDays: Weekday[];
   openTime: HHmm;
   closeTime: HHmm;
   slotMinutes: number;
   breaks: BreakTime[];
   holidays: Holiday[];
+  blocked: BlockedSlot[];
   maxPerDay: number;
   bookingWindowDays: number;
-  /** Minimum notice before a same-day slot can be booked. */
   minNoticeMinutes: number;
+  requireEmail: boolean;
 }
 
-/* --------------------------------- Bookings --------------------------------- */
+/* ------------------------------ Bookings ------------------------------ */
 
 export type ContactMethod = "whatsapp" | "email" | "both";
 
-export type BookingStatus = "pending" | "confirmed" | "arrived" | "completed" | "cancelled";
+export type BookingStatus = "pending" | "confirmed" | "rejected" | "arrived" | "completed" | "cancelled";
 
 export interface BookingEvent {
-  at: string; // ISO timestamp
-  action: "created" | "confirmed" | "cancelled" | "rescheduled" | "arrived" | "completed";
+  at: string;
+  action: "created" | "confirmed" | "rejected" | "cancelled" | "rescheduled" | "arrived" | "completed";
   note?: string;
+}
+
+export interface NotificationLog {
+  at: string;
+  channel: "email" | "whatsapp";
+  audience: "patient" | "clinic";
+  kind: string;
+  status: "sent" | "failed" | "skipped";
+  detail?: string;
 }
 
 export interface Booking {
   id: string;
-  reference: string; // AES-2026-0001
+  reference: string;
   treatmentId: string;
-  /** Snapshot so the record still reads correctly if the treatment is renamed or deleted. */
   treatmentName: string;
   doctorId: string;
   date: ISODate;
   time: HHmm;
   patientName: string;
-  phone: string; // normalised +92 3XX XXXXXXX
+  phone: string;
   email?: string;
   contactMethod: ContactMethod;
   consent: { given: true; at: string; text: string };
@@ -155,7 +299,7 @@ export interface Booking {
   status: BookingStatus;
   createdAt: string;
   history: BookingEvent[];
-  /** True for seeded demo rows. */
+  notifications?: NotificationLog[];
   demo?: boolean;
 }
 
@@ -180,7 +324,20 @@ export interface BookingFilters {
   status?: BookingStatus;
 }
 
-/* --------------------------------- Journeys --------------------------------- */
+/** Result of a booking write: the booking plus what happened to notifications. */
+export interface BookingResult {
+  booking: Booking;
+  notifications: NotificationLog[];
+}
+
+export interface Doctor {
+  id: string;
+  name: string;
+  role: string;
+  bio: string | null;
+}
+
+/* ------------------------------ Journeys ------------------------------ */
 
 export interface JourneyStep {
   id: string;
@@ -203,9 +360,9 @@ export interface Journey {
 
 export type JourneyInput = Omit<Journey, "id" | "createdAt" | "treatmentName">;
 
-/* ---------------------------------- Slots ----------------------------------- */
+/* ------------------------------- Slots -------------------------------- */
 
-export type SlotState = "available" | "booked" | "past" | "full";
+export type SlotState = "available" | "booked" | "past" | "full" | "blocked";
 
 export interface Slot {
   time: HHmm;
@@ -215,3 +372,14 @@ export interface Slot {
 export type DayAvailability =
   | { date: ISODate; open: true; slots: Slot[]; availableCount: number }
   | { date: ISODate; open: false; reason: string };
+
+/* ------------------------------- Search ------------------------------- */
+
+export interface SearchHit {
+  type: "procedure" | "condition" | "article" | "page";
+  title: string;
+  href: string;
+  snippet: string;
+  image?: ImageRef;
+  score: number;
+}

@@ -91,6 +91,48 @@ const paths = {
     </>
   ),
   list: <path d="M9 6.5h11M9 12h11M9 17.5h11M4.5 6.5h.01M4.5 12h.01M4.5 17.5h.01" />,
+  instagram: (
+    <>
+      <rect x="3.5" y="3.5" width="17" height="17" rx="5" />
+      <circle cx="12" cy="12" r="4" />
+      <path d="M17.3 6.7h.01" />
+    </>
+  ),
+  facebook: <path d="M14 8.5h2.5V5H14a3.5 3.5 0 0 0-3.5 3.5V11H8v3.5h2.5V21H14v-6.5h2.5L17 11h-3V9a.5.5 0 0 1 .5-.5Z" />,
+  youtube: (
+    <>
+      <rect x="2.5" y="5.5" width="19" height="13" rx="4" />
+      <path d="m10 9.5 5 2.5-5 2.5v-5Z" />
+    </>
+  ),
+  tiktok: <path d="M14 3.5v11.25a3.25 3.25 0 1 1-3.25-3.25M14 3.5c.4 2.5 2 4 4.5 4.3" />,
+  upload: <path d="M12 16V4m-5 5 5-5 5 5M4.5 16.5v2a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-2" />,
+  image: (
+    <>
+      <rect x="3.5" y="4.5" width="17" height="15" rx="2.5" />
+      <circle cx="9" cy="10" r="1.8" />
+      <path d="m20.5 16-5-5-9.5 8.5" />
+    </>
+  ),
+  doc: <path d="M7 3.5h7l4 4v13H7a1.5 1.5 0 0 1-1.5-1.5V5A1.5 1.5 0 0 1 7 3.5Zm6.5 0V8H18M9 12.5h6M9 16h6" />,
+  palette: (
+    <>
+      <path d="M12 3.5a8.5 8.5 0 1 0 0 17c1 0 1.5-.7 1.5-1.5 0-1.2-1-1.5-1-2.5s.8-1.5 1.8-1.5H16a4.5 4.5 0 0 0 4.5-4.5c0-4-3.8-7-8.5-7Z" />
+      <circle cx="8" cy="11" r="1" />
+      <circle cx="11" cy="7.5" r="1" />
+      <circle cx="15.5" cy="8" r="1" />
+    </>
+  ),
+  layout: (
+    <>
+      <rect x="3.5" y="4" width="17" height="16" rx="2" />
+      <path d="M3.5 9h17M9.5 9v11" />
+    </>
+  ),
+  heartPulse: <path d="M3.5 12h4l2-4 3 8 2-4h6" />,
+  grip: <path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01" />,
+  arrowUp: <path d="M12 19V5m-6 6 6-6 6 6" />,
+  arrowDown: <path d="M12 5v14m6-6-6 6-6-6" />,
   whatsapp: (
     <path
       fill="currentColor"

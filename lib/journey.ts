@@ -31,7 +31,7 @@ export function suggestJourneySteps(t: Pick<Treatment, "slug" | "category" | "na
       [25, "Session 6 & review", "Review progress and decide on top-up sessions."],
     ]);
   }
-  if (t.category === "peels" || t.category === "laser" || t.category === "skin-concerns") {
+  if (t.category === "skin" || t.category === "aesthetic") {
     return make([
       [0, "Consultation & first treatment", "Assessment, skincare advice and first session if suitable."],
       [3, "Treatment 2", "Check skin response and sun-protection routine."],

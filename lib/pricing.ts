@@ -1,33 +1,36 @@
 import type { PriceModel, PriceType } from "./data/types";
 
-export function formatPKR(n: number): string {
-  return `PKR ${Math.round(n).toLocaleString("en-PK")}`;
+export function formatMoney(n: number, currency = "PKR"): string {
+  return `${currency} ${Math.round(n).toLocaleString("en-US")}`;
 }
+/** @deprecated use formatMoney */
+export const formatPKR = (n: number) => formatMoney(n);
 
 export const PRICE_TYPE_LABELS: Record<PriceType, string> = {
   fixed: "Fixed price",
   from: "Starting from",
   range: "Price range",
   consultation: "Consultation required",
-  promo: "Promotional price",
+  promo: "Discounted price",
   package: "Session packages",
 };
 
 /** One-line summary used on cards and in the admin list. */
-export function priceSummary(p: PriceModel): string {
+export function priceSummary(p: PriceModel, currency = "PKR"): string {
+  const f = (n: number) => formatMoney(n, currency);
   switch (p.type) {
     case "fixed":
-      return `${formatPKR(p.amount)}${p.unit ? ` ${p.unit}` : ""}`;
+      return `${f(p.amount)}${p.unit ? ` ${p.unit}` : ""}`;
     case "from":
-      return `From ${formatPKR(p.amount)}${p.unit ? ` ${p.unit}` : ""}`;
+      return `From ${f(p.amount)}${p.unit ? ` ${p.unit}` : ""}`;
     case "range":
-      return `${formatPKR(p.min)} – ${p.max.toLocaleString("en-PK")}${p.unit ? ` ${p.unit}` : ""}`;
+      return `${f(p.min)} – ${p.max.toLocaleString("en-US")}${p.unit ? ` ${p.unit}` : ""}`;
     case "consultation":
       return "Price after consultation";
     case "promo":
-      return `${formatPKR(p.promo)} (was ${p.regular.toLocaleString("en-PK")})`;
+      return `${f(p.promo)} (was ${p.regular.toLocaleString("en-US")})`;
     case "package":
-      return `${formatPKR(p.perSession)} per session`;
+      return `${f(p.perSession)} per session`;
   }
 }
 
@@ -53,7 +56,7 @@ export function validatePrice(p: PriceModel): string | null {
     case "consultation":
       return null;
     case "promo":
-      if (!pos(p.regular) || !pos(p.promo)) return "Enter both regular and promotional price.";
+      if (!pos(p.regular) || !pos(p.promo)) return "Enter both regular and discounted price.";
       return p.promo < p.regular ? null : "Promotional price must be lower than the regular price.";
     case "package":
       if (!pos(p.perSession)) return "Enter the per-session price.";

@@ -1,38 +1,48 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { isSupabaseMode } from "../supabase/config";
 import { subscribe } from "./index";
 
 /**
- * Load data from the async data layer and re-load whenever it changes
- * (including changes made in another tab, e.g. admin open next to the site).
- *
- * `initial` lets server-rendered pages paint immediately with seed data;
- * `ready` becomes true once the browser copy has been read.
+ * Load data through the data layer and reload when it changes.
+ *  - Demo mode: the server rendered seed data, so read the visitor's local copy on mount.
+ *  - Production: server-rendered data is already live, so skip the duplicate fetch
+ *    unless `fresh` is set (admin screens), but still reload after edits.
  */
-export function useData<T>(loader: () => Promise<T>, initial: T, deps: unknown[] = []) {
+export function useData<T>(loader: () => Promise<T>, initial: T, deps: unknown[] = [], opts: { fresh?: boolean } = {}) {
   const [data, setData] = useState<T>(initial);
-  const [ready, setReady] = useState(false);
+  const [ready, setReady] = useState(isSupabaseMode && !opts.fresh);
+  const [error, setError] = useState<string | null>(null);
   const loaderRef = useRef(loader);
   loaderRef.current = loader;
 
   const reload = useCallback(async () => {
-    const next = await loaderRef.current();
-    setData(next);
-    setReady(true);
+    try {
+      setData(await loaderRef.current());
+      setError(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not load data.");
+    } finally {
+      setReady(true);
+    }
   }, []);
 
   useEffect(() => {
     let alive = true;
-    loaderRef.current().then((d) => {
-      if (alive) {
-        setData(d);
-        setReady(true);
-      }
-    });
-    const unsub = subscribe(() => {
-      loaderRef.current().then((d) => alive && setData(d));
-    });
+    const run = () =>
+      loaderRef
+        .current()
+        .then((d) => {
+          if (alive) {
+            setData(d);
+            setError(null);
+          }
+        })
+        .catch((e) => alive && setError(e instanceof Error ? e.message : "Could not load data."))
+        .finally(() => alive && setReady(true));
+    if (!isSupabaseMode || opts.fresh || deps.length > 0) run();
+    const unsub = subscribe(() => void run());
     return () => {
       alive = false;
       unsub();
@@ -40,5 +50,5 @@ export function useData<T>(loader: () => Promise<T>, initial: T, deps: unknown[]
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 
-  return { data, ready, reload };
+  return { data, ready, error, reload };
 }

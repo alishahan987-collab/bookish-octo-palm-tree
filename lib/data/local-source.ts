@@ -1,10 +1,19 @@
 import { addDays, todayISO } from "../dates";
-import { CONSENT_TEXT } from "../messages";
-import { isValidEmail, normalisePkMobile } from "../phone";
-import { validatePrice } from "../pricing";
-import { suggestJourneySteps } from "../journey";
 import { uid } from "../id";
-import { DEMO_PATIENT_NAMES, SEED_DOCTORS, SEED_SETTINGS, SEED_TREATMENTS } from "./seed";
+import { suggestJourneySteps } from "../journey";
+import { CONSENT_TEXT, buildMessages } from "../messages";
+import { idbClear, idbPut } from "../media/idb";
+import { applyStatus, assertSettings, assertTreatment, buildBooking, canReschedule, referenceFor, uniqueSlug, validateBooking } from "./rules";
+import {
+  DEMO_PATIENT_NAMES,
+  MAIN_DOCTOR_ID,
+  SEED_CONDITIONS,
+  SEED_CONTENT,
+  SEED_GALLERY,
+  SEED_POSTS,
+  SEED_SETTINGS,
+  SEED_TREATMENTS,
+} from "./seed";
 import { baseTimes, closedReason, getAvailabilityRange, getDayAvailability } from "./slots";
 import { DataError, type DataSource } from "./source";
 import type {
@@ -12,56 +21,50 @@ import type {
   BookingEvent,
   BookingStatus,
   ClinicSettings,
+  Condition,
   ContactMethod,
-  Doctor,
+  GalleryItem,
   Journey,
+  NotificationLog,
+  Post,
+  SiteContent,
   Treatment,
 } from "./types";
 
 /**
- * localStorage implementation of the DataSource.
- * Everything lives in one JSON document so "Reset demo data" is atomic.
+ * Demo-mode DataSource: one JSON document in localStorage (so "Reset demo
+ * data" is atomic) plus IndexedDB for uploaded images. Nothing leaves the
+ * browser and no messages are sent.
  */
 
-export const STORAGE_KEY = "aesthetica-demo:v1";
-const SCHEMA_VERSION = 1;
+export const STORAGE_KEY = "aesthetica-site:v2";
+const SCHEMA_VERSION = 2;
 
 interface DB {
   version: number;
-  treatments: Treatment[];
-  doctors: Doctor[];
+  content: SiteContent;
   settings: ClinicSettings;
+  treatments: Treatment[];
+  conditions: Condition[];
+  posts: Post[];
+  gallery: GalleryItem[];
   bookings: Booking[];
   journeys: Journey[];
-  counters: Record<string, number>; // booking sequence per year
+  counters: Record<string, number>;
 }
-
-/* ------------------------------ helpers ------------------------------ */
-
 
 const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v));
 const isBrowser = () => typeof window !== "undefined" && typeof window.localStorage !== "undefined";
-
-export function slugify(s: string): string {
-  return s
-    .toLowerCase()
-    .normalize("NFKD")
-    .replace(/[^\w\s-]/g, "")
-    .trim()
-    .replace(/[\s_]+/g, "-")
-    .replace(/-+/g, "-");
-}
 
 function nextReference(db: DB, at: Date): string {
   const year = String(at.getFullYear());
   const n = (db.counters[year] ?? 0) + 1;
   db.counters[year] = n;
-  return `AES-${year}-${String(n).padStart(4, "0")}`;
+  return referenceFor(at.getFullYear(), n);
 }
 
 /* ------------------------------ seeding ------------------------------ */
 
-/** Tiny deterministic PRNG so demo data looks the same on every reset. */
 function prng(seed: number) {
   let s = seed >>> 0;
   return () => {
@@ -76,7 +79,7 @@ function seedBookings(db: DB, now: Date): Booking[] {
   const today = todayISO(now);
   const nowMin = now.getHours() * 60 + now.getMinutes();
   const bookable = db.treatments.filter((t) => t.active);
-  const methods: ContactMethod[] = ["whatsapp", "whatsapp", "both", "email", "whatsapp"];
+  const methods: ContactMethod[] = ["whatsapp", "both", "email", "both", "whatsapp"];
   const out: Booking[] = [];
   let nameIdx = 0;
 
@@ -84,13 +87,12 @@ function seedBookings(db: DB, now: Date): Booking[] {
     const date = addDays(today, offset);
     if (closedReason(db.settings, date)) continue;
     const times = baseTimes(db.settings, date);
-    const count = offset === 0 ? 5 : Math.floor(rand() * 4); // 0–3 a day, 5 today
+    const count = offset === 0 ? 5 : Math.floor(rand() * 4);
     const used = new Set<string>();
     for (let i = 0; i < count && used.size < times.length; i++) {
       let time = pick(times);
       while (used.has(time)) time = pick(times);
       used.add(time);
-
       const [h, m] = time.split(":").map(Number);
       const slotMin = h * 60 + m;
       let status: BookingStatus;
@@ -100,11 +102,9 @@ function seedBookings(db: DB, now: Date): Booking[] {
 
       const treatment = pick(bookable);
       const name = DEMO_PATIENT_NAMES[nameIdx++ % DEMO_PATIENT_NAMES.length];
-      const method = pick(methods);
       const createdAt = new Date(`${addDays(date, -3)}T10:00:00`).toISOString();
-      const phoneTail = String(100 + nameIdx).padStart(7, "0");
       const history: BookingEvent[] = [{ at: createdAt, action: "created", note: "Booked online (demo)" }];
-      if (status !== "pending" && status !== "cancelled") history.push({ at: createdAt, action: "confirmed" });
+      if (!["pending", "cancelled"].includes(status)) history.push({ at: createdAt, action: "confirmed" });
       if (status === "arrived" || status === "completed") history.push({ at: createdAt, action: "arrived" });
       if (status === "completed") history.push({ at: createdAt, action: "completed" });
       if (status === "cancelled") history.push({ at: createdAt, action: "cancelled", note: "Patient requested (demo)" });
@@ -114,23 +114,23 @@ function seedBookings(db: DB, now: Date): Booking[] {
         reference: "",
         treatmentId: treatment.id,
         treatmentName: treatment.name,
-        doctorId: db.doctors[0].id,
+        doctorId: MAIN_DOCTOR_ID,
         date,
         time,
         patientName: name,
-        phone: `+92 300 ${phoneTail}`,
-        email: method === "whatsapp" ? undefined : `${slugify(name).replace("-", ".")}@example.com`,
-        contactMethod: method,
+        phone: `+92 300 ${String(100 + nameIdx).padStart(7, "0")}`,
+        email: `${name.toLowerCase().replace(" ", ".")}@example.com`,
+        contactMethod: pick(methods),
         consent: { given: true, at: createdAt, text: CONSENT_TEXT },
         notes: rand() < 0.25 ? "First visit (demo note)" : undefined,
         status,
         createdAt,
         history,
+        notifications: [],
         demo: true,
       });
     }
   }
-
   out.sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
   for (const b of out) b.reference = nextReference(db, new Date(b.createdAt));
   return out;
@@ -139,15 +139,17 @@ function seedBookings(db: DB, now: Date): Booking[] {
 function createSeedDB(now = new Date()): DB {
   const db: DB = {
     version: SCHEMA_VERSION,
-    treatments: clone(SEED_TREATMENTS),
-    doctors: clone(SEED_DOCTORS),
+    content: clone(SEED_CONTENT),
     settings: clone(SEED_SETTINGS),
+    treatments: clone(SEED_TREATMENTS),
+    conditions: clone(SEED_CONDITIONS),
+    posts: clone(SEED_POSTS),
+    gallery: clone(SEED_GALLERY),
     bookings: [],
     journeys: [],
     counters: {},
   };
   db.bookings = seedBookings(db, now);
-
   const prp = db.treatments.find((t) => t.slug === "prp-hair-treatment")!;
   const start = addDays(todayISO(now), -14);
   db.journeys.push({
@@ -162,6 +164,18 @@ function createSeedDB(now = new Date()): DB {
   return db;
 }
 
+/** Server-side / first-paint snapshot: the seed catalogue, no bookings. */
+export function seedSnapshot() {
+  return {
+    content: SEED_CONTENT,
+    settings: SEED_SETTINGS,
+    treatments: SEED_TREATMENTS,
+    conditions: SEED_CONDITIONS,
+    posts: SEED_POSTS,
+    gallery: SEED_GALLERY,
+  };
+}
+
 /* ---------------------------- persistence ---------------------------- */
 
 type Listener = () => void;
@@ -169,7 +183,6 @@ const listeners = new Set<Listener>();
 const notify = () => listeners.forEach((l) => l());
 
 if (isBrowser()) {
-  // Keep multiple tabs (e.g. public site + admin side by side) in sync.
   window.addEventListener("storage", (e) => {
     if (e.key === STORAGE_KEY || e.key === null) notify();
   });
@@ -181,7 +194,7 @@ export function subscribe(listener: Listener): () => void {
 }
 
 function read(): DB {
-  if (!isBrowser()) return createServerSnapshot();
+  if (!isBrowser()) return { ...clone(seedSnapshot()), version: SCHEMA_VERSION, bookings: [], journeys: [], counters: {} } as DB;
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (raw) {
@@ -189,7 +202,7 @@ function read(): DB {
       if (db?.version === SCHEMA_VERSION && Array.isArray(db.treatments)) return db;
     }
   } catch {
-    /* corrupted or blocked storage: fall through to a fresh seed */
+    /* corrupted or blocked storage: reseed */
   }
   const fresh = createSeedDB();
   write(fresh, false);
@@ -197,123 +210,185 @@ function read(): DB {
 }
 
 function write(db: DB, emit = true) {
-  if (!isBrowser()) throw new DataError("VALIDATION", "Writes are only available in the browser in this prototype.");
+  if (!isBrowser()) throw new DataError("VALIDATION", "Saving is only available in the browser in demo mode.");
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
   } catch {
-    /* private mode / quota: keep working in memory for this page view */
+    throw new DataError("SERVER", "Browser storage is full. Remove some uploaded images or reset the demo data.");
   }
   if (emit) notify();
 }
 
-/** On the server there is no localStorage, so render from the seed catalogue. */
-function createServerSnapshot(): DB {
-  return {
-    version: SCHEMA_VERSION,
-    treatments: SEED_TREATMENTS,
-    doctors: SEED_DOCTORS,
-    settings: SEED_SETTINGS,
-    bookings: [],
-    journeys: [],
-    counters: {},
-  };
-}
+const now = () => new Date().toISOString();
+const byOrder = <T extends { order: number }>(a: T, b: T) => a.order - b.order;
 
-/* ------------------------------ transitions ------------------------------ */
-
-const TRANSITIONS: Record<BookingStatus, BookingStatus[]> = {
-  pending: ["confirmed", "cancelled", "arrived"],
-  confirmed: ["arrived", "cancelled"],
-  arrived: ["completed"],
-  completed: [],
-  cancelled: [],
-};
-
-export function allowedNextStatuses(s: BookingStatus): BookingStatus[] {
-  return TRANSITIONS[s];
+/** Demo mode never sends messages; it records what would have been sent. */
+function demoNotifications(b: Booking, content: SiteContent, kind: Parameters<typeof buildMessages>[0]): NotificationLog[] {
+  const preview = buildMessages(kind, b, content);
+  const at = now();
+  const out: NotificationLog[] = [];
+  if (preview.email) out.push({ at, channel: "email", audience: "patient", kind, status: "skipped", detail: "Demo mode: not sent" });
+  if (preview.whatsapp) out.push({ at, channel: "whatsapp", audience: "patient", kind, status: "skipped", detail: "Demo mode: not sent" });
+  if (kind === "confirmation") out.push({ at, channel: "email", audience: "clinic", kind: "clinic-alert", status: "skipped", detail: "Demo mode: not sent" });
+  return out;
 }
 
 /* ------------------------------ the source ------------------------------ */
 
 export const localSource: DataSource = {
-  async getTreatments(opts) {
-    const list = read().treatments;
-    return clone(opts?.includeInactive ? list : list.filter((t) => t.active));
-  },
+  mode: "demo",
 
-  async getTreatmentBySlug(slug) {
-    const t = read().treatments.find((x) => x.slug === slug && x.active);
-    return t ? clone(t) : null;
+  async getContent() {
+    return clone(read().content);
   },
-
-  async saveTreatment(input) {
+  async saveContent(next) {
     const db = read();
-    const name = input.name.trim();
-    if (!name) throw new DataError("VALIDATION", "Treatment name is required.");
-    const priceError = validatePrice(input.price);
-    if (priceError) throw new DataError("VALIDATION", priceError);
-
-    let slug = slugify(input.slug || name) || uid("treatment");
-    const clash = (s: string) => db.treatments.some((t) => t.slug === s && t.id !== input.id);
-    for (let i = 2; clash(slug); i++) slug = `${slugify(input.slug || name)}-${i}`;
-
-    const now = new Date().toISOString();
-    const existing = input.id ? db.treatments.find((t) => t.id === input.id) : undefined;
-    const record: Treatment = { ...input, name, slug, id: existing?.id ?? uid("t"), updatedAt: now };
-    if (existing) {
-      db.treatments = db.treatments.map((t) => (t.id === existing.id ? record : t));
-    } else {
-      db.treatments.push(record);
-    }
+    db.content = clone(next);
     write(db);
-    return clone(record);
+    return clone(db.content);
   },
-
-  async deleteTreatment(id) {
-    const db = read();
-    db.treatments = db.treatments.filter((t) => t.id !== id);
-    write(db);
-  },
-
-  async updatePrice(treatmentId, price) {
-    const db = read();
-    const t = db.treatments.find((x) => x.id === treatmentId);
-    if (!t) throw new DataError("NOT_FOUND", "Treatment not found.");
-    const err = validatePrice(price);
-    if (err) throw new DataError("VALIDATION", err);
-    t.price = price;
-    t.updatedAt = new Date().toISOString();
-    write(db);
-    return clone(t);
-  },
-
-  async getDoctors() {
-    return clone(read().doctors);
-  },
-
   async getSettings() {
     return clone(read().settings);
   },
-
   async updateSettings(patch) {
     const db = read();
     const next = { ...db.settings, ...patch };
-    if (next.openTime >= next.closeTime) throw new DataError("VALIDATION", "Opening time must be before closing time.");
-    if (!(next.slotMinutes >= 10 && next.slotMinutes <= 180)) throw new DataError("VALIDATION", "Slot length must be 10–180 minutes.");
-    if (!(next.maxPerDay >= 1)) throw new DataError("VALIDATION", "Maximum appointments per day must be at least 1.");
-    for (const b of next.breaks) {
-      if (b.start >= b.end) throw new DataError("VALIDATION", `Break "${b.label || "Untitled"}" must end after it starts.`);
-    }
+    assertSettings(next);
     db.settings = next;
     write(db);
     return clone(next);
   },
 
+  /* procedures */
+  async getTreatments(opts) {
+    const list = [...read().treatments].sort(byOrder);
+    return clone(opts?.includeInactive ? list : list.filter((t) => t.active));
+  },
+  async getTreatmentBySlug(slug) {
+    const t = read().treatments.find((x) => x.slug === slug && x.active);
+    return t ? clone(t) : null;
+  },
+  async saveTreatment(input) {
+    const db = read();
+    assertTreatment(input);
+    const slug = uniqueSlug(input.slug || input.name, (s) => db.treatments.some((t) => t.slug === s && t.id !== input.id));
+    const existing = input.id ? db.treatments.find((t) => t.id === input.id) : undefined;
+    const record: Treatment = { ...input, name: input.name.trim(), slug, id: existing?.id ?? uid("t"), updatedAt: now() };
+    db.treatments = existing ? db.treatments.map((t) => (t.id === record.id ? record : t)) : [...db.treatments, record];
+    write(db);
+    return clone(record);
+  },
+  async deleteTreatment(id) {
+    const db = read();
+    db.treatments = db.treatments.filter((t) => t.id !== id);
+    write(db);
+  },
+  async updatePrice(treatmentId, price) {
+    const db = read();
+    const t = db.treatments.find((x) => x.id === treatmentId);
+    if (!t) throw new DataError("NOT_FOUND", "Procedure not found.");
+    assertTreatment({ ...t, price });
+    t.price = price;
+    t.updatedAt = now();
+    write(db);
+    return clone(t);
+  },
+
+  /* conditions */
+  async getConditions(opts) {
+    const list = [...read().conditions].sort(byOrder);
+    return clone(opts?.includeInactive ? list : list.filter((c) => c.active));
+  },
+  async getConditionBySlug(slug) {
+    const c = read().conditions.find((x) => x.slug === slug && x.active);
+    return c ? clone(c) : null;
+  },
+  async saveCondition(input) {
+    const db = read();
+    if (!input.name.trim()) throw new DataError("VALIDATION", "Condition name is required.");
+    const slug = uniqueSlug(input.slug || input.name, (s) => db.conditions.some((c) => c.slug === s && c.id !== input.id));
+    const existing = input.id ? db.conditions.find((c) => c.id === input.id) : undefined;
+    const record: Condition = { ...input, name: input.name.trim(), slug, id: existing?.id ?? uid("c"), updatedAt: now() };
+    db.conditions = existing ? db.conditions.map((c) => (c.id === record.id ? record : c)) : [...db.conditions, record];
+    write(db);
+    return clone(record);
+  },
+  async deleteCondition(id) {
+    const db = read();
+    db.conditions = db.conditions.filter((c) => c.id !== id);
+    write(db);
+  },
+
+  /* blog */
+  async getPosts(opts) {
+    const list = [...read().posts].sort((a, b) => (b.publishedAt ?? b.updatedAt).localeCompare(a.publishedAt ?? a.updatedAt));
+    return clone(opts?.includeDrafts ? list : list.filter((p) => p.status === "published"));
+  },
+  async getPostBySlug(slug, opts) {
+    const p = read().posts.find((x) => x.slug === slug && (opts?.includeDrafts || x.status === "published"));
+    return p ? clone(p) : null;
+  },
+  async savePost(input) {
+    const db = read();
+    if (!input.title.trim()) throw new DataError("VALIDATION", "Article title is required.");
+    const slug = uniqueSlug(input.slug || input.title, (s) => db.posts.some((p) => p.slug === s && p.id !== input.id));
+    const existing = input.id ? db.posts.find((p) => p.id === input.id) : undefined;
+    const publishedAt = input.status === "published" ? input.publishedAt ?? existing?.publishedAt ?? now() : input.publishedAt;
+    const record: Post = { ...input, title: input.title.trim(), slug, publishedAt, id: existing?.id ?? uid("post"), updatedAt: now() };
+    db.posts = existing ? db.posts.map((p) => (p.id === record.id ? record : p)) : [...db.posts, record];
+    write(db);
+    return clone(record);
+  },
+  async deletePost(id) {
+    const db = read();
+    db.posts = db.posts.filter((p) => p.id !== id);
+    write(db);
+  },
+
+  /* gallery */
+  async getGallery(opts) {
+    const list = [...read().gallery].sort(byOrder);
+    return clone(opts?.includeUnpublished ? list : list.filter((g) => g.published && (g.consentConfirmed || g.illustrative)));
+  },
+  async saveGalleryItem(input) {
+    const db = read();
+    if (!input.before || !input.after) throw new DataError("VALIDATION", "Upload both a before and an after photo.");
+    if (input.published && !input.consentConfirmed && !input.illustrative)
+      throw new DataError("VALIDATION", "Confirm the patient's written consent before publishing.");
+    const existing = input.id ? db.gallery.find((g) => g.id === input.id) : undefined;
+    const record: GalleryItem = { ...input, id: existing?.id ?? uid("g"), createdAt: existing?.createdAt ?? now() };
+    db.gallery = existing ? db.gallery.map((g) => (g.id === record.id ? record : g)) : [...db.gallery, record];
+    write(db);
+    return clone(record);
+  },
+  async deleteGalleryItem(id) {
+    const db = read();
+    db.gallery = db.gallery.filter((g) => g.id !== id);
+    write(db);
+  },
+
+  /* media */
+  async uploadImage(file) {
+    const id = uid("img");
+    await idbPut(id, file);
+    return `idb:${id}`;
+  },
+
+  /* availability & bookings */
   async getAvailability(doctorId, opts = {}) {
     const db = read();
     return getAvailabilityRange(db.settings, db.bookings, doctorId, opts);
   },
-
+  async createBooking(input) {
+    const db = read();
+    const n = validateBooking(input, { treatments: db.treatments, settings: db.settings, bookings: db.bookings });
+    const at = new Date();
+    const booking = buildBooking(n, input, { id: uid("bk"), reference: nextReference(db, at) }, at);
+    booking.notifications = demoNotifications(booking, db.content, "confirmation");
+    db.bookings.push(booking);
+    write(db);
+    return { booking: clone(booking), notifications: booking.notifications };
+  },
   async getBookings(filters = {}) {
     const today = todayISO();
     const q = filters.search?.trim().toLowerCase();
@@ -330,80 +405,30 @@ export const localSource: DataSource = {
           b.patientName.toLowerCase().includes(q) ||
           b.reference.toLowerCase().includes(q) ||
           b.treatmentName.toLowerCase().includes(q) ||
-          (qDigits && qDigits.length >= 3 && b.phone.replace(/\D/g, "").includes(qDigits.replace(/^0/, ""))),
+          (b.email ?? "").toLowerCase().includes(q) ||
+          (!!qDigits && qDigits.length >= 3 && b.phone.replace(/\D/g, "").includes(qDigits.replace(/^0/, ""))),
       );
     }
     const sorted = [...list].sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
-    // "All" reads best newest-first; today/upcoming read best in time order.
     return clone(filters.scope === "all" || !filters.scope ? sorted.reverse() : sorted);
   },
-
-  async createBooking(input) {
-    const db = read();
-    const treatment = db.treatments.find((t) => t.id === input.treatmentId && t.active);
-    if (!treatment) throw new DataError("NOT_FOUND", "Please choose a treatment.");
-    const doctor = db.doctors.find((d) => d.id === input.doctorId);
-    if (!doctor) throw new DataError("NOT_FOUND", "Please choose a doctor.");
-    const name = input.patientName.trim();
-    if (name.length < 2) throw new DataError("VALIDATION", "Please enter your full name.");
-    const phone = normalisePkMobile(input.phone);
-    if (!phone) throw new DataError("VALIDATION", "Please enter a valid Pakistani mobile number.");
-    const email = input.email?.trim() || undefined;
-    if (email && !isValidEmail(email)) throw new DataError("VALIDATION", "Please enter a valid email address.");
-    if ((input.contactMethod === "email" || input.contactMethod === "both") && !email)
-      throw new DataError("VALIDATION", "An email address is needed for email updates.");
-    if (!input.consent) throw new DataError("VALIDATION", "Consent is required so the clinic can contact you.");
-
-    // Re-check availability at write time: this is what prevents double booking
-    // (Phase 2: a partial unique index on (doctor_id, date, time) where status <> 'cancelled').
-    const day = getDayAvailability(db.settings, db.bookings, input.date, input.doctorId);
-    if (!day.open) throw new DataError("DAY_CLOSED", `Sorry, the clinic is not taking bookings on that day (${day.reason}).`);
-    const slot = day.slots.find((s) => s.time === input.time);
-    if (!slot || slot.state !== "available")
-      throw new DataError("SLOT_UNAVAILABLE", "Sorry, that time has just been taken. Please choose another slot.");
-
-    const now = new Date();
-    const booking: Booking = {
-      id: uid("bk"),
-      reference: nextReference(db, now),
-      treatmentId: treatment.id,
-      treatmentName: treatment.name,
-      doctorId: doctor.id,
-      date: input.date,
-      time: input.time,
-      patientName: name,
-      phone,
-      email,
-      contactMethod: input.contactMethod,
-      consent: { given: true, at: now.toISOString(), text: CONSENT_TEXT },
-      notes: input.notes?.trim() || undefined,
-      status: "pending",
-      createdAt: now.toISOString(),
-      history: [{ at: now.toISOString(), action: "created", note: "Booked online" }],
-    };
-    db.bookings.push(booking);
-    write(db);
-    return clone(booking);
-  },
-
   async setBookingStatus(id, status, note) {
     const db = read();
-    const b = db.bookings.find((x) => x.id === id);
-    if (!b) throw new DataError("NOT_FOUND", "Appointment not found.");
-    if (!TRANSITIONS[b.status].includes(status))
-      throw new DataError("INVALID_TRANSITION", `Cannot change a ${b.status} appointment to ${status}.`);
-    b.status = status;
-    b.history.push({ at: new Date().toISOString(), action: status, note });
+    const idx = db.bookings.findIndex((x) => x.id === id);
+    if (idx < 0) throw new DataError("NOT_FOUND", "Appointment not found.");
+    const updated = applyStatus(db.bookings[idx], status, note);
+    const kind = status === "confirmed" ? "accepted" : status === "rejected" ? "rejected" : status === "cancelled" ? "cancellation" : null;
+    const logs = kind ? demoNotifications(updated, db.content, kind).filter((l) => l.audience === "patient") : [];
+    updated.notifications = [...(updated.notifications ?? []), ...logs];
+    db.bookings[idx] = updated;
     write(db);
-    return clone(b);
+    return { booking: clone(updated), notifications: logs };
   },
-
   async rescheduleBooking(id, date, time) {
     const db = read();
     const b = db.bookings.find((x) => x.id === id);
     if (!b) throw new DataError("NOT_FOUND", "Appointment not found.");
-    if (b.status !== "pending" && b.status !== "confirmed")
-      throw new DataError("INVALID_TRANSITION", "Only pending or confirmed appointments can be rescheduled.");
+    if (!canReschedule(b.status)) throw new DataError("INVALID_TRANSITION", "Only pending or confirmed appointments can be rescheduled.");
     const day = getDayAvailability(db.settings, db.bookings, date, b.doctorId, { ignoreBookingId: b.id });
     if (!day.open) throw new DataError("DAY_CLOSED", `The clinic is closed on that day (${day.reason}).`);
     const slot = day.slots.find((s) => s.time === time);
@@ -411,19 +436,21 @@ export const localSource: DataSource = {
     const previous = { date: b.date, time: b.time };
     b.date = date;
     b.time = time;
-    b.history.push({ at: new Date().toISOString(), action: "rescheduled", note: `From ${previous.date} ${previous.time}` });
+    b.history.push({ at: now(), action: "rescheduled", note: `From ${previous.date} ${previous.time}` });
+    const logs = demoNotifications(b, db.content, "reschedule").filter((l) => l.audience === "patient");
+    b.notifications = [...(b.notifications ?? []), ...logs];
     write(db);
-    return { booking: clone(b), previous };
+    return { booking: clone(b), notifications: logs, previous };
   },
 
+  /* journeys */
   async getJourneys() {
     return clone([...read().journeys].sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
   },
-
   async createJourney(input) {
     const db = read();
     const t = db.treatments.find((x) => x.id === input.treatmentId);
-    if (!t) throw new DataError("NOT_FOUND", "Treatment not found.");
+    if (!t) throw new DataError("NOT_FOUND", "Procedure not found.");
     if (!input.patientName.trim()) throw new DataError("VALIDATION", "Patient name is required.");
     if (input.steps.length === 0) throw new DataError("VALIDATION", "Add at least one step.");
     const journey: Journey = {
@@ -432,13 +459,12 @@ export const localSource: DataSource = {
       id: uid("jr"),
       treatmentName: t.name,
       steps: [...input.steps].sort((a, b) => a.week - b.week),
-      createdAt: new Date().toISOString(),
+      createdAt: now(),
     };
     db.journeys.push(journey);
     write(db);
     return clone(journey);
   },
-
   async updateJourneyStep(journeyId, stepId, patch) {
     const db = read();
     const j = db.journeys.find((x) => x.id === journeyId);
@@ -447,7 +473,6 @@ export const localSource: DataSource = {
     write(db);
     return clone(j);
   },
-
   async deleteJourney(id) {
     const db = read();
     db.journeys = db.journeys.filter((j) => j.id !== id);
@@ -455,6 +480,7 @@ export const localSource: DataSource = {
   },
 
   async resetDemoData() {
+    await idbClear().catch(() => {});
     write(createSeedDB());
   },
 };

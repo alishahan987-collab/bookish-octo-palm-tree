@@ -1,63 +1,47 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { getAvailability, getDoctors, updateSettings } from "@/lib/data";
+import { useState } from "react";
+import { getAvailability, getSettings, updateSettings } from "@/lib/data";
 import { useData } from "@/lib/data/hooks";
-import type { ClinicSettings, DayAvailability, Weekday } from "@/lib/data/types";
+import { MAIN_DOCTOR_ID, SEED_SETTINGS } from "@/lib/data/seed";
+import type { DayAvailability, Weekday } from "@/lib/data/types";
 import { WEEKDAYS, formatDate, parseISODate, todayISO } from "@/lib/dates";
 import { uid } from "@/lib/id";
-import { normalisePkMobile, toWhatsAppDigits } from "@/lib/phone";
-import { useSettings } from "../layout/useSettings";
 import { Icon } from "../ui/Icon";
-import { errorMessage, useToast } from "./ui";
+import { Card, SaveBar, Switch, errorMessage, useDraft, useToast } from "./ui";
 
 export function SettingsAdmin() {
   const toast = useToast();
-  const { data: saved, ready } = useSettings();
-  const [draft, setDraft] = useState<ClinicSettings>(saved);
-  const [waInput, setWaInput] = useState("");
+  const { data: saved, ready } = useData(getSettings, SEED_SETTINGS, [], { fresh: true });
+  const { draft, setDraft, dirty, reset } = useDraft(saved, ready);
   const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
   const [newHoliday, setNewHoliday] = useState({ date: "", label: "" });
+  const [newBlock, setNewBlock] = useState({ date: "", start: "15:00", end: "17:00", reason: "" });
+  const { data: days } = useData<DayAvailability[]>(() => getAvailability(MAIN_DOCTOR_ID, { days: 14 }), [], [], { fresh: true });
 
-  useEffect(() => {
-    if (ready) {
-      setDraft(saved);
-      setWaInput(saved.whatsappNumber ? `+${saved.whatsappNumber}` : "");
-    }
-  }, [ready, saved]);
-
-  const { data: doctors } = useData(getDoctors, []);
-  const doctorId = doctors[0]?.id;
-  const { data: days } = useData<DayAvailability[]>(() => (doctorId ? getAvailability(doctorId, { days: 14 }) : Promise.resolve([])), [], [doctorId]);
-
-  const dirty = JSON.stringify(draft) !== JSON.stringify(saved) || waInput !== (saved.whatsappNumber ? `+${saved.whatsappNumber}` : "");
-  const set = <K extends keyof ClinicSettings>(k: K, v: ClinicSettings[K]) => setDraft((d) => ({ ...d, [k]: v }));
+  const set = <K extends keyof typeof draft>(k: K, v: (typeof draft)[K]) => setDraft((d) => ({ ...d, [k]: v }));
+  const toggleDay = (d: Weekday) => set("workingDays", draft.workingDays.includes(d) ? draft.workingDays.filter((x) => x !== d) : [...draft.workingDays, d].sort());
 
   const save = async () => {
     setError(null);
-    let whatsappNumber = "";
-    if (waInput.trim()) {
-      const n = normalisePkMobile(waInput);
-      if (!n) return setError("WhatsApp number must be a Pakistani mobile number, e.g. 0300 1234567.");
-      whatsappNumber = toWhatsAppDigits(n);
-    }
+    setSaving(true);
     try {
-      await updateSettings({ ...draft, whatsappNumber });
-      toast("Settings saved. Booking page updated.");
+      await updateSettings(draft);
+      toast("Booking settings saved. The booking page is updated.");
     } catch (e) {
       setError(errorMessage(e));
+    } finally {
+      setSaving(false);
     }
   };
 
-  const toggleDay = (d: Weekday) =>
-    set("workingDays", draft.workingDays.includes(d) ? draft.workingDays.filter((x) => x !== d) : [...draft.workingDays, d].sort());
-
   return (
-    <div className="pb-24">
-      <h1 className="text-4xl sm:text-5xl">Clinic settings</h1>
-      <p className="mt-1 max-w-xl text-sm text-muted">These rules control which times patients can book. Demo values, to be confirmed with the clinic.</p>
+    <div>
+      <h1 className="text-4xl sm:text-5xl">Booking hours & slots</h1>
+      <p className="mt-1 max-w-xl text-sm text-muted">These rules control which times patients can book online. Opening hours on the website update automatically.</p>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_22rem]">
+      <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_20rem]">
         <div className="space-y-6">
           <Card title="Working days">
             <div className="flex flex-wrap gap-2" role="group" aria-label="Working days">
@@ -66,36 +50,30 @@ export function SettingsAdmin() {
                 return (
                   <button key={d.id} type="button" aria-pressed={on} onClick={() => toggleDay(d.id)} data-day={d.id}
                     className={`min-w-16 rounded-xl border px-3 py-2.5 text-sm font-semibold transition-colors ${on ? "border-charcoal bg-charcoal text-ivory" : "border-sand text-muted hover:bg-cream"}`}>
-                    {d.short}
-                    <span className="block text-[0.65rem] font-medium">{on ? "Open" : "Closed"}</span>
+                    {d.short}<span className="block text-[0.65rem] font-medium">{on ? "Open" : "Closed"}</span>
                   </button>
                 );
               })}
             </div>
           </Card>
 
-          <Card title="Opening hours & slots">
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Card title="Hours & slot rules">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <Field id="s-open" label="Opens"><input id="s-open" type="time" className="field" value={draft.openTime} onChange={(e) => set("openTime", e.target.value)} /></Field>
               <Field id="s-close" label="Closes"><input id="s-close" type="time" className="field" value={draft.closeTime} onChange={(e) => set("closeTime", e.target.value)} /></Field>
-              <Field id="s-slot" label="Slot length">
+              <Field id="s-slot" label="Appointment slot length">
                 <select id="s-slot" className="field" value={draft.slotMinutes} onChange={(e) => set("slotMinutes", Number(e.target.value))}>
                   {[15, 20, 30, 45, 60, 90].map((n) => <option key={n} value={n}>{n} minutes</option>)}
                 </select>
               </Field>
-              <Field id="s-max" label="Max appointments / day">
-                <input id="s-max" type="number" min={1} max={100} className="field" value={draft.maxPerDay} onChange={(e) => set("maxPerDay", Math.max(1, Number(e.target.value)))} />
-              </Field>
-              <Field id="s-window" label="Booking window (days ahead)">
-                <input id="s-window" type="number" min={1} max={120} className="field" value={draft.bookingWindowDays} onChange={(e) => set("bookingWindowDays", Math.min(120, Math.max(1, Number(e.target.value))))} />
-              </Field>
-              <Field id="s-notice" label="Minimum notice (minutes)">
-                <input id="s-notice" type="number" min={0} step={15} className="field" value={draft.minNoticeMinutes} onChange={(e) => set("minNoticeMinutes", Math.max(0, Number(e.target.value)))} />
-              </Field>
+              <Field id="s-max" label="Max appointments / day"><input id="s-max" type="number" min={1} max={200} className="field" value={draft.maxPerDay} onChange={(e) => set("maxPerDay", Math.max(1, Number(e.target.value)))} /></Field>
+              <Field id="s-window" label="Bookable days ahead"><input id="s-window" type="number" min={1} max={120} className="field" value={draft.bookingWindowDays} onChange={(e) => set("bookingWindowDays", Math.min(120, Math.max(1, Number(e.target.value))))} /></Field>
+              <Field id="s-notice" label="Minimum notice (minutes)"><input id="s-notice" type="number" min={0} step={15} className="field" value={draft.minNoticeMinutes} onChange={(e) => set("minNoticeMinutes", Math.max(0, Number(e.target.value)))} /></Field>
             </div>
+            <Switch label="Require an email address when booking" checked={draft.requireEmail} onChange={(v) => set("requireEmail", v)} />
           </Card>
 
-          <Card title="Breaks">
+          <Card title="Daily breaks">
             <ul className="space-y-3">
               {draft.breaks.map((b, i) => (
                 <li key={b.id} className="rounded-2xl border border-line p-3">
@@ -103,10 +81,7 @@ export function SettingsAdmin() {
                     <Field id={`b-l-${i}`} label="Label"><input id={`b-l-${i}`} className="field" value={b.label} onChange={(e) => set("breaks", draft.breaks.map((x) => (x.id === b.id ? { ...x, label: e.target.value } : x)))} /></Field>
                     <Field id={`b-s-${i}`} label="From"><input id={`b-s-${i}`} type="time" className="field" value={b.start} onChange={(e) => set("breaks", draft.breaks.map((x) => (x.id === b.id ? { ...x, start: e.target.value } : x)))} /></Field>
                     <Field id={`b-e-${i}`} label="To"><input id={`b-e-${i}`} type="time" className="field" value={b.end} onChange={(e) => set("breaks", draft.breaks.map((x) => (x.id === b.id ? { ...x, end: e.target.value } : x)))} /></Field>
-                    <button type="button" className="justify-self-start rounded-full p-2.5 text-muted hover:bg-cream hover:text-danger" aria-label={`Remove break ${b.label}`}
-                      onClick={() => set("breaks", draft.breaks.filter((x) => x.id !== b.id))}>
-                      <Icon name="trash" size={18} />
-                    </button>
+                    <button type="button" className="justify-self-start rounded-full p-2.5 text-muted hover:bg-cream hover:text-danger" aria-label={`Remove break ${b.label}`} onClick={() => set("breaks", draft.breaks.filter((x) => x.id !== b.id))}><Icon name="trash" size={18} /></button>
                   </div>
                   <div className="mt-3 flex flex-wrap items-center gap-1.5" role="group" aria-label={`Days for ${b.label}`}>
                     <span className="mr-1 text-xs text-muted">Applies on:</span>
@@ -128,101 +103,81 @@ export function SettingsAdmin() {
                 </li>
               ))}
             </ul>
-            <button type="button" className="btn btn-ghost btn-sm mt-3"
-              onClick={() => set("breaks", [...draft.breaks, { id: uid("brk"), label: "Break", start: "16:00", end: "16:30", days: [] }])}>
-              <Icon name="plus" size={16} /> Add break
-            </button>
+            <button type="button" className="btn btn-ghost btn-sm" onClick={() => set("breaks", [...draft.breaks, { id: uid("brk"), label: "Break", start: "16:00", end: "16:30", days: [] }])}><Icon name="plus" size={16} /> Add break</button>
           </Card>
 
-          <Card title="Holidays & closures">
+          <Card title="Holidays & closed dates">
             <ul className="divide-y divide-line">
               {[...draft.holidays].sort((a, b) => a.date.localeCompare(b.date)).map((h) => (
                 <li key={h.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
-                  <span><span className="font-semibold text-charcoal">{formatDate(h.date, { weekday: "short", day: "numeric", month: "short", year: "numeric" })}</span> · {h.label || "Closed"}</span>
-                  <button type="button" className="rounded-full p-2 text-muted hover:bg-cream hover:text-danger" aria-label={`Remove holiday ${h.label} on ${h.date}`}
-                    onClick={() => set("holidays", draft.holidays.filter((x) => x.id !== h.id))}>
-                    <Icon name="trash" size={16} />
-                  </button>
+                  <span><span className="font-semibold text-charcoal">{formatDate(h.date, { weekday: "short", day: "numeric", month: "short", year: "numeric" })}</span> · {h.label}</span>
+                  <button type="button" className="rounded-full p-2 text-muted hover:bg-cream hover:text-danger" aria-label={`Remove holiday ${h.label} on ${h.date}`} onClick={() => set("holidays", draft.holidays.filter((x) => x.id !== h.id))}><Icon name="trash" size={16} /></button>
                 </li>
               ))}
               {draft.holidays.length === 0 && <li className="py-2 text-sm text-muted">No holidays added.</li>}
             </ul>
-            <form className="mt-3 grid gap-3 sm:grid-cols-[10rem_1fr_auto] sm:items-end"
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (!newHoliday.date) return;
-                set("holidays", [...draft.holidays.filter((h) => h.date !== newHoliday.date), { id: uid("hol"), date: newHoliday.date, label: newHoliday.label.trim() || "Clinic closed" }]);
-                setNewHoliday({ date: "", label: "" });
-              }}>
+            <form className="grid gap-3 sm:grid-cols-[10rem_1fr_auto] sm:items-end" onSubmit={(e) => {
+              e.preventDefault();
+              if (!newHoliday.date) return;
+              set("holidays", [...draft.holidays.filter((h) => h.date !== newHoliday.date), { id: uid("hol"), date: newHoliday.date, label: newHoliday.label.trim() || "Clinic closed" }]);
+              setNewHoliday({ date: "", label: "" });
+            }}>
               <Field id="h-date" label="Date"><input id="h-date" type="date" min={todayISO()} className="field" value={newHoliday.date} onChange={(e) => setNewHoliday({ ...newHoliday, date: e.target.value })} /></Field>
               <Field id="h-label" label="Reason"><input id="h-label" className="field" placeholder="e.g. Eid ul-Fitr" value={newHoliday.label} onChange={(e) => setNewHoliday({ ...newHoliday, label: e.target.value })} /></Field>
               <button type="submit" className="btn btn-ghost" disabled={!newHoliday.date}><Icon name="plus" size={16} /> Add holiday</button>
             </form>
           </Card>
 
-          <Card title="Contact details">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field id="s-wa" label="WhatsApp number" hint="Used by the WhatsApp buttons on the website.">
-                <input id="s-wa" type="tel" className="field" placeholder="0300 1234567" value={waInput} onChange={(e) => setWaInput(e.target.value)} />
-              </Field>
-              <Field id="s-phone" label="Phone (as displayed)"><input id="s-phone" className="field" value={draft.phoneDisplay} onChange={(e) => set("phoneDisplay", e.target.value)} /></Field>
-              <Field id="s-email" label="Email"><input id="s-email" type="email" className="field" value={draft.email} onChange={(e) => set("email", e.target.value)} /></Field>
-              <Field id="s-addr" label="Address"><input id="s-addr" className="field" value={draft.addressLine} onChange={(e) => set("addressLine", e.target.value)} /></Field>
-            </div>
+          <Card title="Blocked time slots" description="Block part of a day (e.g. the doctor is away for a few hours). Those slots disappear from online booking.">
+            <ul className="divide-y divide-line">
+              {[...(draft.blocked ?? [])].sort((a, b) => (a.date + a.start).localeCompare(b.date + b.start)).map((b) => (
+                <li key={b.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
+                  <span><span className="font-semibold text-charcoal">{formatDate(b.date)}</span> · {b.start}–{b.end}{b.reason && ` · ${b.reason}`}</span>
+                  <button type="button" className="rounded-full p-2 text-muted hover:bg-cream hover:text-danger" aria-label={`Remove blocked time on ${b.date}`} onClick={() => set("blocked", draft.blocked.filter((x) => x.id !== b.id))}><Icon name="trash" size={16} /></button>
+                </li>
+              ))}
+              {(draft.blocked ?? []).length === 0 && <li className="py-2 text-sm text-muted">No blocked times.</li>}
+            </ul>
+            <form className="grid gap-3 sm:grid-cols-[10rem_7rem_7rem_1fr_auto] sm:items-end" onSubmit={(e) => {
+              e.preventDefault();
+              if (!newBlock.date || newBlock.start >= newBlock.end) return;
+              set("blocked", [...(draft.blocked ?? []), { id: uid("blk"), ...newBlock, reason: newBlock.reason.trim() }]);
+              setNewBlock({ ...newBlock, date: "", reason: "" });
+            }}>
+              <Field id="bl-date" label="Date"><input id="bl-date" type="date" min={todayISO()} className="field" value={newBlock.date} onChange={(e) => setNewBlock({ ...newBlock, date: e.target.value })} /></Field>
+              <Field id="bl-start" label="From"><input id="bl-start" type="time" className="field" value={newBlock.start} onChange={(e) => setNewBlock({ ...newBlock, start: e.target.value })} /></Field>
+              <Field id="bl-end" label="To"><input id="bl-end" type="time" className="field" value={newBlock.end} onChange={(e) => setNewBlock({ ...newBlock, end: e.target.value })} /></Field>
+              <Field id="bl-reason" label="Reason"><input id="bl-reason" className="field" placeholder="Optional" value={newBlock.reason} onChange={(e) => setNewBlock({ ...newBlock, reason: e.target.value })} /></Field>
+              <button type="submit" className="btn btn-ghost" disabled={!newBlock.date || newBlock.start >= newBlock.end}><Icon name="plus" size={16} /> Block</button>
+            </form>
           </Card>
         </div>
 
-        <aside className="lg:sticky lg:top-36 lg:self-start" aria-label="Availability preview">
+        <aside className="xl:sticky xl:top-8 xl:self-start" aria-label="Availability preview">
           <div className="card p-5">
             <h2 className="text-2xl">Next 14 days</h2>
-            <p className="mt-1 text-xs text-muted">Live availability on the booking page (saved settings).</p>
+            <p className="mt-1 text-xs text-muted">Live availability (saved settings).</p>
             <ul className="mt-4 space-y-1.5" data-testid="availability-preview">
               {days.map((d) => (
                 <li key={d.date} className="flex items-center justify-between gap-3 rounded-lg px-2 py-1.5 text-sm odd:bg-cream/60" data-date={d.date} data-open={d.open}>
                   <span className="text-charcoal">{parseISODate(d.date).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })}</span>
-                  {d.open ? (
-                    <span className="font-semibold text-success">{d.availableCount} slots</span>
-                  ) : (
-                    <span className="text-muted">{d.reason}</span>
-                  )}
+                  {d.open ? <span className="font-semibold text-success">{d.availableCount} free</span> : <span className="text-muted">{d.reason}</span>}
                 </li>
               ))}
             </ul>
           </div>
         </aside>
       </div>
-
-      {/* Save bar */}
-      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-ivory/95 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <p className="text-sm text-muted" role={error ? "alert" : undefined}>
-            {error ? <span className="text-danger">{error}</span> : dirty ? "You have unsaved changes." : "All changes saved."}
-          </p>
-          <div className="flex gap-2">
-            <button type="button" className="btn btn-ghost btn-sm" disabled={!dirty} onClick={() => { setDraft(saved); setWaInput(saved.whatsappNumber ? `+${saved.whatsappNumber}` : ""); setError(null); }}>Discard</button>
-            <button type="button" className="btn btn-primary btn-sm" disabled={!dirty} onClick={save} data-testid="save-settings">Save settings</button>
-          </div>
-        </div>
-      </div>
+      <SaveBar dirty={dirty} saving={saving} error={error} onSave={save} onDiscard={() => { reset(); setError(null); }} testId="save-settings" />
     </div>
   );
 }
 
-function Card({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="card p-5 sm:p-6">
-      <h2 className="mb-4 text-2xl">{title}</h2>
-      {children}
-    </section>
-  );
-}
-
-function Field({ id, label, hint, children }: { id: string; label: string; hint?: string; children: React.ReactNode }) {
+function Field({ id, label, children }: { id: string; label: string; children: React.ReactNode }) {
   return (
     <div>
       <label htmlFor={id} className="label">{label}</label>
       {children}
-      {hint && <p className="hint">{hint}</p>}
     </div>
   );
 }

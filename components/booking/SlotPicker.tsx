@@ -50,7 +50,7 @@ export function SlotPicker({
                     ? "border-charcoal bg-charcoal text-ivory"
                     : disabled
                       ? "cursor-not-allowed border-line bg-cream/50 text-muted/70"
-                      : "border-sand bg-[#fffdf9] text-charcoal hover:border-champagne"
+                      : "border-sand bg-surface text-charcoal hover:border-champagne"
                 }`}
               >
                 <span className="text-[0.68rem] font-semibold uppercase tracking-wider">{dt.toLocaleDateString("en-GB", { weekday: "short" })}</span>
@@ -92,7 +92,7 @@ export function SlotPicker({
                               ? "border-charcoal bg-charcoal text-ivory"
                               : taken
                                 ? "cursor-not-allowed border-line bg-cream/50 text-muted/60 line-through"
-                                : "border-sand bg-[#fffdf9] text-charcoal hover:border-champagne hover:bg-cream"
+                                : "border-sand bg-surface text-charcoal hover:border-champagne hover:bg-cream"
                           }`}
                         >
                           {formatTime(s.time)}

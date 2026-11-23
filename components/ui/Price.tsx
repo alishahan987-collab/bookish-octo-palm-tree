@@ -1,39 +1,41 @@
 import { formatDate } from "@/lib/dates";
-import { formatPKR, packageSaving, promoSavingPercent } from "@/lib/pricing";
+import { formatMoney, packageSaving, promoSavingPercent } from "@/lib/pricing";
 import type { PriceModel } from "@/lib/data/types";
 
-/** Compact price for cards. */
-export function PriceTag({ price, className = "" }: { price: PriceModel; className?: string }) {
+/** Compact price for cards and lists. */
+export function PriceTag({ price, currency = "PKR", className = "" }: { price: PriceModel; currency?: string; className?: string }) {
+  const f = (n: number) => formatMoney(n, currency);
   const base = `text-sm text-charcoal ${className}`;
   switch (price.type) {
     case "fixed":
-      return <p className={base}><span className="font-semibold">{formatPKR(price.amount)}</span></p>;
+      return <p className={base}><span className="font-semibold">{f(price.amount)}</span></p>;
     case "from":
-      return <p className={base}><span className="text-muted">From </span><span className="font-semibold">{formatPKR(price.amount)}</span></p>;
+      return <p className={base}><span className="text-muted">From </span><span className="font-semibold">{f(price.amount)}</span></p>;
     case "range":
-      return <p className={base}><span className="font-semibold">{formatPKR(price.min)} – {price.max.toLocaleString("en-PK")}</span></p>;
+      return <p className={base}><span className="font-semibold">{f(price.min)} – {price.max.toLocaleString("en-US")}</span></p>;
     case "consultation":
-      return <p className={base}><span className="font-semibold">Price after consultation</span></p>;
+      return <p className={base}><span className="font-semibold">On consultation</span></p>;
     case "promo":
       return (
         <p className={base}>
-          <span className="font-semibold">{formatPKR(price.promo)}</span>{" "}
-          <s className="text-muted">{price.regular.toLocaleString("en-PK")}</s>
+          <span className="font-semibold">{f(price.promo)}</span> <s className="text-muted">{price.regular.toLocaleString("en-US")}</s>
         </p>
       );
     case "package":
-      return <p className={base}><span className="font-semibold">{formatPKR(price.perSession)}</span><span className="text-muted"> / session</span></p>;
+      return <p className={base}><span className="font-semibold">{f(price.perSession)}</span><span className="text-muted"> / session</span></p>;
   }
 }
 
-/** Full price block for the treatment page. */
-export function PriceBlock({ price }: { price: PriceModel }) {
+/** Full price block for procedure pages. */
+export function PriceBlock({ price, currency = "PKR", note }: { price: PriceModel; currency?: string; note?: string }) {
   return (
     <div>
-      <PriceBody price={price} />
-      <p className="mt-4 flex items-start gap-1.5 text-xs leading-relaxed text-muted">
-        <span aria-hidden="true">✦</span> Demo price for this preview. Final prices are set by the clinic.
-      </p>
+      <PriceBody price={price} currency={currency} />
+      {note && (
+        <p className="mt-4 flex items-start gap-1.5 text-xs leading-relaxed text-muted">
+          <span aria-hidden="true">✦</span> {note}
+        </p>
+      )}
     </div>
   );
 }
@@ -41,38 +43,24 @@ export function PriceBlock({ price }: { price: PriceModel }) {
 function Amount({ children }: { children: React.ReactNode }) {
   return <p className="font-serif text-4xl leading-none text-charcoal">{children}</p>;
 }
+const Unit = ({ unit }: { unit?: string }) => (unit ? <p className="mt-2 text-sm text-muted">{unit}</p> : null);
 
-function Unit({ unit }: { unit?: string }) {
-  return unit ? <p className="mt-2 text-sm text-muted">{unit}</p> : null;
-}
-
-function PriceBody({ price }: { price: PriceModel }) {
+function PriceBody({ price, currency }: { price: PriceModel; currency: string }) {
+  const f = (n: number) => formatMoney(n, currency);
   switch (price.type) {
     case "fixed":
-      return (
-        <>
-          <p className="eyebrow">Price</p>
-          <div className="mt-3"><Amount>{formatPKR(price.amount)}</Amount></div>
-          <Unit unit={price.unit} />
-        </>
-      );
+      return (<><p className="eyebrow">Price</p><div className="mt-3"><Amount>{f(price.amount)}</Amount></div><Unit unit={price.unit} /></>);
     case "from":
       return (
         <>
           <p className="eyebrow">Starting from</p>
-          <div className="mt-3"><Amount>{formatPKR(price.amount)}</Amount></div>
+          <div className="mt-3"><Amount>{f(price.amount)}</Amount></div>
           <Unit unit={price.unit} />
-          <p className="mt-2 text-sm text-muted">Final price depends on the treatment plan agreed with your doctor.</p>
+          <p className="mt-2 text-sm text-muted">Final price depends on the plan agreed with your doctor.</p>
         </>
       );
     case "range":
-      return (
-        <>
-          <p className="eyebrow">Price range</p>
-          <div className="mt-3"><Amount>{formatPKR(price.min)} – {price.max.toLocaleString("en-PK")}</Amount></div>
-          <Unit unit={price.unit} />
-        </>
-      );
+      return (<><p className="eyebrow">Price range</p><div className="mt-3"><Amount>{f(price.min)} – {price.max.toLocaleString("en-US")}</Amount></div><Unit unit={price.unit} /></>);
     case "consultation":
       return (
         <>
@@ -91,8 +79,8 @@ function PriceBody({ price }: { price: PriceModel }) {
             {pct > 0 && <span className="chip bg-champagne-soft text-gold-deep">Save {pct}%</span>}
           </div>
           <div className="mt-3 flex flex-wrap items-baseline gap-3">
-            <Amount>{formatPKR(price.promo)}</Amount>
-            <s className="text-lg text-muted" aria-label={`Regular price ${formatPKR(price.regular)}`}>{formatPKR(price.regular)}</s>
+            <Amount>{f(price.promo)}</Amount>
+            <s className="text-lg text-muted" aria-label={`Regular price ${f(price.regular)}`}>{f(price.regular)}</s>
           </div>
           <Unit unit={price.unit} />
           {price.validUntil && <p className="mt-1 text-sm text-muted">Offer valid until {formatDate(price.validUntil, { day: "numeric", month: "long", year: "numeric" })}</p>}
@@ -103,7 +91,7 @@ function PriceBody({ price }: { price: PriceModel }) {
       return (
         <>
           <p className="eyebrow">Per session</p>
-          <div className="mt-3"><Amount>{formatPKR(price.perSession)}</Amount></div>
+          <div className="mt-3"><Amount>{f(price.perSession)}</Amount></div>
           {price.packages.length > 0 && (
             <ul className="mt-5 divide-y divide-line overflow-hidden rounded-xl border border-line bg-ivory">
               {price.packages.map((p) => {
@@ -112,9 +100,9 @@ function PriceBody({ price }: { price: PriceModel }) {
                   <li key={p.sessions} className="flex items-center justify-between gap-3 px-4 py-3">
                     <div>
                       <p className="font-semibold text-charcoal">{p.sessions} sessions</p>
-                      {save > 0 && <p className="text-xs text-success">Save {formatPKR(save)}</p>}
+                      {save > 0 && <p className="text-xs text-success">Save {f(save)}</p>}
                     </div>
-                    <p className="font-semibold text-charcoal">{formatPKR(p.price)}</p>
+                    <p className="font-semibold text-charcoal">{f(p.price)}</p>
                   </li>
                 );
               })}
