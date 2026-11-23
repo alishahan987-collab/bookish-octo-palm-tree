@@ -2,7 +2,7 @@
 
 **Search date:** 23 November 2026
 **Purpose:** find a research question that a new evidence synthesis could answer without duplicating work that is already published or registered.
-**Data files:** `data/registered_reviews.csv`, `data/published_reviews.csv`, `data/preclinical_candidate_studies.csv`, `data/human_subgroup_feasibility.csv`, `data/search_log.csv`
+**Data files:** `data/registered_reviews.csv`, `data/published_reviews.csv`, `data/preclinical_candidate_studies.csv`, `data/human_subgroup_feasibility.csv`, `data/registered_sex_glp1.csv`, `data/search_log.csv`
 
 ---
 
@@ -28,54 +28,27 @@
 
 ---
 
-## 1A. If the review must use human studies only
+## 1A. Human-only topic check (revised 23 Nov 2026 after full-record review)
 
-I tested five more human candidates against PubMed and PROSPERO on 23 Nov 2026.
+**Correction.** The earlier version of this section said that no registered review asks whether GLP-1 effects on drinking differ by sex. That was wrong. The earlier check screened titles only. The full-record review of the 291 PROSPERO records that match sex, alcohol and GLP-1 terms (`data/registered_sex_glp1.csv`, `data/registered_reviews.csv`) shows:
 
-| Candidate | Human evidence | Registered overlap | Verdict |
-|---|---|---|---|
-| Change in drinking among everyday GLP-1 users without AUD | ~8 studies since mid-2025 | CRD420261384676 includes "adults defined by GLP-1RA exposure in any clinical context" and observational designs; CRD420251182640 covers people with obesity | **Taken** |
-| GLP-1 vs naltrexone or acamprosate in real-world data | 3 studies | The network meta-analysis of RCTs is already registered (CRD420261492273) | Too thin |
-| MetALD (fatty liver disease plus moderate drinking) | No primary human studies | None | Needs primary research first |
-| Effect modification by drug, T2D vs obesity, AUD severity or comparator | ~25 real-world studies + 5 RCTs | CRD420261384676 pre-specifies these subgroups; CRD420261558272 covers BMI | **Taken** |
-| **Effect modification by sex (and age)** | Sex-stratified results in **9 of the 16 full texts I could read** (6 real-world studies, 3 RCTs); age-stratified results in 8 of the 30 papers checked | **None registered with this aim.** CRD420251006597 (sex differences) covers only people with psychiatric diagnoses and **excludes observational and cohort studies**. CRD420261384676 does not list sex as a subgroup. | **Open** |
+- **19 further GLP-1 registrations have sex, gender or women in the title,** but are not about alcohol. They cover weight loss, cardiovascular outcomes, heart failure, type 2 diabetes, children, PCOS and sex-disaggregated adverse-event reporting.
+- **Within alcohol and AUD, sex is already in the plan of six registrations:**
+  - **CRD420251079160**, *Gendersensitive Psychopharmacotherapy of Alcohol Use Disorder* (registered 1 Oct 2025). Its first objective is sex and gender differences in treatment response, adverse events and attrition across AUD drugs. It includes liraglutide, dulaglutide, semaglutide and exenatide. **This is a direct overlap.**
+  - **CRD420251041732**, semaglutide in AUD (28 Apr 2025): asks whether efficacy differs by sex, age and obesity.
+  - **CRD42024507810, CRD42024531982, CRD42024571356, CRD42024578667** (2024): plan male-versus-female subgroup analyses.
+- **Published reviews have not answered it.** Subhani 2024 names limited gender diversity as a limitation and reports no sex-stratified analysis. Völker 2026 names sex-specific treatment responses as a question for future studies, and its full text has no sex-stratified pooled result.
+- CRD420251006597 (sex and gender differences in GLP-1 mental-health effects, including addictions) is also registered, but it covers several outcomes, not alcohol alone.
 
-### Recommended human topic
+**Verdict.** A new systematic review of sex differences in GLP-1 effects on drinking would largely duplicate CRD420251079160 and the six subgroup plans. **Do not register it.**
 
-**Working title:** *Do women and men benefit equally? Sex differences in the effects of GLP-1–based therapies on alcohol outcomes: a systematic review and meta-analysis of within-study sex-stratified estimates.*
+**Options that remain (human only)**
 
-**Why it matters:**
-- AUD treatment trials have historically enrolled mostly men.
-- Women and men differ in how they absorb and process alcohol.
-- An animal study found that the GLP-1 agonist exendin-4 affected alcohol reinforcement differently in male and female mice (PMID 37106129).
-- No published or registered review answers whether the benefit of GLP-1 drugs on drinking differs by sex.
+1. **IPD meta-analysis with a sex-by-treatment interaction.** My PROSPERO search found no registered IPD review on GLP-1 drugs and alcohol. This is the design that can answer the sex question, and feasibility is the constraint. Data-sharing statements in the trial papers vary: Probst 2023 gives data "upon reasonable request"; Hendershot 2025 points to Supplement 3; Klausen 2022 has a data-availability section (wording not captured); Schacht 2026 has no statement in its text; Klausen 2026 has no free full text.
+2. **Meta-research on sex-stratified alcohol outcomes in GLP-1 trials.** Six registrations plan sex subgroups, but the trials may not report results by sex. An audit of how many GLP-1 alcohol trials report sex-specific outcomes would show whether those plans can be carried out. Among the sex-focused registrations, the only reporting audit is for adverse events across all GLP-1 trials (CRD420261426020), not alcohol outcomes.
+3. **Coordinate with the CRD420251079160 team.** Its question is broader than ours (all AUD drugs). Offering GLP-1-specific sex-stratified extraction is more useful than a parallel review.
 
-**Design essentials:**
-- **Studies:** RCTs and real-world studies (cohorts, target trial emulations) of any GLP-1–based drug that report alcohol outcomes separately for women and men, or report a sex-by-treatment interaction.
-- **Outcome families:**
-  1. drinking quantity (heavy drinking days, drinks, AUDIT/AUDIT-C)
-  2. new or recurrent AUD
-  3. alcohol-related hospital or emergency visits
-  4. liver outcomes (secondary)
-- **Effect measure:** a within-study ratio of effects for women vs men (for example, a ratio of hazard ratios), pooled with a random-effects model. Comparing women and men inside each study avoids the bias of comparing averages across different studies.
-- **Secondary analysis:** age (≥65 vs younger), using the same method.
-- **Quality and certainty:** RoB 2 for RCTs, ROBINS-I for observational studies, GRADE for certainty.
-- **Author contact:** ask authors for sex-stratified results they did not publish. For example, Klausen 2026 enrolled 53 women and 55 men but did not show sex-specific results in its abstract.
-
-**Feasibility:**
-- About 9 studies with sex-stratified results were found in freely available full texts. The 14 paywalled papers may add more.
-- Every "yes" in `data/human_subgroup_feasibility.csv` came from text matching and needs a manual check.
-- Expect about 3–5 months with two reviewers.
-
-**Risks:**
-- There may be only 4–8 studies per outcome family, which would give imprecise estimates.
-- One of the broad registered reviews could add a sex subgroup later, so register quickly.
-
-**Runner-up (human): IPD meta-analysis of the AUD RCTs (Gap 3).** This is the strongest way to answer the sex question. Data-sharing statements exist for Probst 2023 (data "available upon reasonable request"), Hendershot 2025 (statement in Supplement 3) and Klausen 2022. None was found in the Schacht 2026 text. Klausen 2026 could not be checked because it has no free full text.
-
-**Quick human alternatives:**
-- The scoping review of interactions and safety in people who drink (Gap 4).
-- A pharmacovigilance study (FAERS or VigiBase) of alcohol-related adverse-event reports with GLP-1–based drugs. This uses public human data but is primary research, not a meta-analysis.
+The other human options still stand: the safety and interaction scoping review (Gap 4, now partly registered; see Section 5), and drug-class and indication moderators (already registered; CRD420261384676).
 
 ---
 
@@ -124,6 +97,7 @@ PROSPERO marks 60 of its 63 records as "Ongoing", but that status is often out o
 | Other RCT-only GLP-1 meta-analyses in AUD | CRD420261386025 (Bayesian), CRD420261420111, CRD420261534373, CRD420261557391 |
 | Semaglutide-only RCT meta-analysis | CRD420261534054, CRD420261575261 (17 Nov 2026), **OSF wmvd3**. The OSF review was registered retrospectively with data extraction already done, so it is likely to be published soon. |
 | BMI ≥30 as a moderator of the effect in AUD | **CRD420261558272** (31 Oct 2026) |
+| Sex and gender differences in GLP-1 effects on alcohol (all AUD drugs, including GLP-1s) | **CRD420251079160** (1 Oct 2025); sex subgroup or question planned in CRD420251041732, CRD42024507810, CRD42024531982, CRD42024571356, CRD42024578667 |
 | Network meta-analysis vs naltrexone, acamprosate, topiramate, gabapentin and nalmefene | **CRD420261492273** (30 Aug 2026) |
 | RCTs plus observational studies, including dual agonists; primary outcome % heavy drinking days | CRD420261501310, CRD420261384676 |
 | Incident AUD in cohort studies (GLP-1RA vs DPP-4i/SGLT2i) | CRD420261503118 |
@@ -246,6 +220,8 @@ Scores run from 1 (worst) to 5 (best).
 
 ### Gap 4: scoping review of GLP-1–alcohol interactions and safety in people who drink
 
+**Update (23 Nov 2026):** CRD420261549225 (completed, registered 23 Oct 2026) covers alcohol pharmacokinetics after bariatric surgery, with GLP-1 drugs as a separate stratum, so the pharmacokinetic part of this gap is partly registered. The earlier pancreatitis and blood-alcohol registry searches found no other registration.
+
 The evidence is spread thinly across different study types:
 - a human alcohol-challenge pilot (*Sci Rep* 2025)
 - a hepatic ethanol-metabolism study (2025)
@@ -295,6 +271,8 @@ A scoping review following PRISMA-ScR fits this evidence; a meta-analysis does n
   - The number of eligible animal studies (~33). This comes from PubMed titles and abstracts; a full multi-database search will change it, probably upward.
 - **Not covered:** Embase, Scopus, Web of Science, PsycINFO, CENTRAL, the Cochrane Library (blocked), WHO ICTRP, and conference abstracts.
 - **Corrections to earlier work in this project:**
+  - The uploaded PROSPERO export (261 records) is the full result of a sex, alcohol and GLP-1 search: re-running that search returns the same 261 IDs. My earlier reading that it was a partial download was wrong. The 57 registrations in my list that are missing from it do not match that search, because the search needs a sex term in the record.
+  - Section 1A previously stated that no registered review asks about sex differences. That was wrong, as set out in Section 1A.
   - The first overlap report found 14 reviews and 7 registrations; the true number of registrations is 77.
   - The "living RCT meta-analysis including co-agonists" recommended earlier is now largely covered by CRD420261517725 and CRD420261521645, and by 2 OSF scoping reviews.
 

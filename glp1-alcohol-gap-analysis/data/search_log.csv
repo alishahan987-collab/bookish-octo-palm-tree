@@ -57,3 +57,14 @@ Europe PMC (incl. preprints),2026-11-23,preclinical MA check,meta-analysis AND G
 Europe PMC (incl. preprints),2026-11-23,animal SR/MA titles,title: systematic review/meta-analysis AND GLP-class AND animal/preclinical,8
 "Europe PMC (preprints only, SRC:PPR)",2026-11-23,preprints,GLP-class AND alcohol/addiction terms,39
 OpenAlex,2026-11-23,preclinical MA check,meta-analysis animal studies GLP-1 receptor agonists alcohol intake; preclinical meta-analysis exendin-4 ethanol consumption rodents,screened top 25 each; 0 relevant
+"PROSPERO (website search, headless browser)",2026-11-23,V0_validation_title_gender,(GLP-1 OR semaglutide OR incretin*) AND (sex OR gender):TI,18
+"PROSPERO (website search, headless browser)",2026-11-23,Q1_drug_sex_alcohol_anyfield,(GLP-1 OR GLP1 OR glucagon-like peptide OR incretin* OR semaglutide OR tirzepatide OR liraglutide OR exenatide OR dulaglutide) AND (sex OR gender OR women OR female* OR men OR male*) AND (alcohol* OR drinking OR alcohol use disorder),261
+"PROSPERO (website search, headless browser)",2026-11-23,Q1b_all_drugs_sex_alcohol_anyfield,"as Q1 with 20 further drug and brand names; AUD, ethanol, binge added",291
+"PROSPERO (website search, headless browser)",2026-11-23,Q2_sex_wording_no_drug,"(""sex differences"" OR ""sex-specific"" OR ""sex-stratified"" OR ""gender differences"" OR ""sex-disaggregated"") AND (alcohol* OR drinking OR addiction OR substance use)",483
+"PROSPERO (website search, headless browser)",2026-11-23,Q3a_IV_drug_RQ_sex,(GLP-1 OR semaglutide OR tirzepatide OR incretin*):IV AND (sex OR gender OR women OR female* OR men OR male*):RQ,244
+"PROSPERO (website search, headless browser)",2026-11-23,Q3b_IV_drug_KW_sex,as Q3a with :KW,47
+"PROSPERO (website search, headless browser)",2026-11-23,Q3c_IV_drug_PA_sex,as Q3a with :PA,742
+"PROSPERO (website search, headless browser)",2026-11-23,Q3d_IV_drug_OP_sex,as Q3a with :OP,104
+"PROSPERO (website search, headless browser)",2026-11-23,Q4a_withdrawn,GLP-1 AND sex AND alcohol AND withdrawn:es,0
+"PROSPERO (website search, headless browser)",2026-11-23,Q4b_living,GLP-1 AND sex AND alcohol AND living:il,1
+PROSPERO full records read,2026-11-23,candidate records,"Full record text read for all 291 candidates from Q1 and Q1b; classified on review question, objectives, keywords, intervention and subgroup plan",291
