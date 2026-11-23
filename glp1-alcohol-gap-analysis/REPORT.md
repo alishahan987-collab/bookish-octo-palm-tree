@@ -2,7 +2,7 @@
 
 **Search date:** 23 November 2026
 **Purpose:** find a research question that a new evidence synthesis could answer without duplicating work that is already published or registered.
-**Data files:** `data/registered_reviews.csv`, `data/published_reviews.csv`, `data/preclinical_candidate_studies.csv`, `data/search_log.csv`
+**Data files:** `data/registered_reviews.csv`, `data/published_reviews.csv`, `data/preclinical_candidate_studies.csv`, `data/human_subgroup_feasibility.csv`, `data/search_log.csv`
 
 ---
 
@@ -24,6 +24,58 @@
    - Run **Gap 2** as a quick companion paper.
    - Pursue **Gap 3** only if data-sharing partners can be secured.
    - Do **not** register another clinical RCT meta-analysis.
+   - **If the review must use human studies only, see Section 1A.**
+
+---
+
+## 1A. If the review must use human studies only
+
+I tested five more human candidates against PubMed and PROSPERO on 23 Nov 2026.
+
+| Candidate | Human evidence | Registered overlap | Verdict |
+|---|---|---|---|
+| Change in drinking among everyday GLP-1 users without AUD | ~8 studies since mid-2025 | CRD420261384676 includes "adults defined by GLP-1RA exposure in any clinical context" and observational designs; CRD420251182640 covers people with obesity | **Taken** |
+| GLP-1 vs naltrexone or acamprosate in real-world data | 3 studies | The network meta-analysis of RCTs is already registered (CRD420261492273) | Too thin |
+| MetALD (fatty liver disease plus moderate drinking) | No primary human studies | None | Needs primary research first |
+| Effect modification by drug, T2D vs obesity, AUD severity or comparator | ~25 real-world studies + 5 RCTs | CRD420261384676 pre-specifies these subgroups; CRD420261558272 covers BMI | **Taken** |
+| **Effect modification by sex (and age)** | Sex-stratified results in **9 of the 16 full texts I could read** (6 real-world studies, 3 RCTs); age-stratified results in 8 of the 30 papers checked | **None registered with this aim.** CRD420251006597 (sex differences) covers only people with psychiatric diagnoses and **excludes observational and cohort studies**. CRD420261384676 does not list sex as a subgroup. | **Open** |
+
+### Recommended human topic
+
+**Working title:** *Do women and men benefit equally? Sex differences in the effects of GLP-1–based therapies on alcohol outcomes: a systematic review and meta-analysis of within-study sex-stratified estimates.*
+
+**Why it matters:**
+- AUD treatment trials have historically enrolled mostly men.
+- Women and men differ in how they absorb and process alcohol.
+- An animal study found that the GLP-1 agonist exendin-4 affected alcohol reinforcement differently in male and female mice (PMID 37106129).
+- No published or registered review answers whether the benefit of GLP-1 drugs on drinking differs by sex.
+
+**Design essentials:**
+- **Studies:** RCTs and real-world studies (cohorts, target trial emulations) of any GLP-1–based drug that report alcohol outcomes separately for women and men, or report a sex-by-treatment interaction.
+- **Outcome families:**
+  1. drinking quantity (heavy drinking days, drinks, AUDIT/AUDIT-C)
+  2. new or recurrent AUD
+  3. alcohol-related hospital or emergency visits
+  4. liver outcomes (secondary)
+- **Effect measure:** a within-study ratio of effects for women vs men (for example, a ratio of hazard ratios), pooled with a random-effects model. Comparing women and men inside each study avoids the bias of comparing averages across different studies.
+- **Secondary analysis:** age (≥65 vs younger), using the same method.
+- **Quality and certainty:** RoB 2 for RCTs, ROBINS-I for observational studies, GRADE for certainty.
+- **Author contact:** ask authors for sex-stratified results they did not publish. For example, Klausen 2026 enrolled 53 women and 55 men but did not show sex-specific results in its abstract.
+
+**Feasibility:**
+- About 9 studies with sex-stratified results were found in freely available full texts. The 14 paywalled papers may add more.
+- Every "yes" in `data/human_subgroup_feasibility.csv` came from text matching and needs a manual check.
+- Expect about 3–5 months with two reviewers.
+
+**Risks:**
+- There may be only 4–8 studies per outcome family, which would give imprecise estimates.
+- One of the broad registered reviews could add a sex subgroup later, so register quickly.
+
+**Runner-up (human): IPD meta-analysis of the AUD RCTs (Gap 3).** This is the strongest way to answer the sex question. Data-sharing statements exist for Probst 2023 (data "available upon reasonable request"), Hendershot 2025 (statement in Supplement 3) and Klausen 2022. None was found in the Schacht 2026 text. Klausen 2026 could not be checked because it has no free full text.
+
+**Quick human alternatives:**
+- The scoping review of interactions and safety in people who drink (Gap 4).
+- A pharmacovigilance study (FAERS or VigiBase) of alcohol-related adverse-event reports with GLP-1–based drugs. This uses public human data but is primary research, not a meta-analysis.
 
 ---
 

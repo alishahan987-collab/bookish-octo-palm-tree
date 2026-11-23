@@ -1,0 +1,31 @@
+pmid,study,design,text_checked,sex_stratified_signal,age_stratified_signal
+35968738,Danish register cohort + SCCS 2022,observational,fulltext,no,no
+38806481,"Nat Commun 2024, semaglutide (TriNetX)",observational,fulltext,yes,yes
+39535805,"JAMA Psychiatry 2025, Swedish within-individual",observational,fulltext,no,no
+39415416,"Addiction 2025, GIP/GLP-1 prescriptions",observational,fulltext,no,yes
+39891379,"Aliment Pharmacol Ther 2025, ALD in AUD",observational,abstract only,not shown in abstract,not shown in abstract
+40223043,"Drugs 2025, cirrhosis/admissions in AUD",observational,abstract only,not shown in abstract,not shown in abstract
+40855971,"Obesity 2025, RYGB patients",observational,abstract only,not shown in abstract,not shown in abstract
+41552778,"Biol Psychiatry Glob Open Sci 2025, integrated health system",observational,fulltext,yes,yes
+41632137,"JAMA Netw Open 2025, post-bariatric",observational,fulltext,no,no
+41058240,"Diabetes Obes Metab 2026, GLP-1 vs GLP-1/GIP TTE",observational,fulltext,yes,no
+40488647,"Am J Gastroenterol 2026, harmful alcohol use",observational,abstract only,not shown in abstract,not shown in abstract
+41883728,"Front Psychiatry 2026, All of Us case-control",observational,fulltext,yes,no
+41781010,"BMJ 2026, US veterans with T2D",observational,fulltext,yes,yes
+41813606,"Aliment Pharmacol Ther 2026, vs FDA-approved AUD drugs",observational,abstract only,not shown in abstract,not shown in abstract
+42423024,"Alcohol Clin Exp Res 2026, All of Us AUDIT-C",observational,fulltext,yes,no
+42481079,"BMJ Open 2026, multi-target trial emulation",observational,fulltext,no,no
+42456704,"Lancet Psychiatry 2026, during/after discontinuation",observational,abstract only,not shown in abstract,not shown in abstract
+42486225,"Mayo Clin Proc 2026, Cooper Center",observational,abstract only,not shown in abstract,not shown in abstract
+40954547,"Obesity 2026, older adults TTE",observational,abstract only,not shown in abstract,yes
+42977546,"Diabetes Obes Metab 2026, semaglutide/tirzepatide in T2D",observational,abstract only,not shown in abstract,not shown in abstract
+43034104,"Eur J Intern Med 2026, obesity + AUD cohort",observational,abstract only,not shown in abstract,not shown in abstract
+41784422,"2026, cirrhosis in T2D + AUD",observational,abstract only,not shown in abstract,not shown in abstract
+40792626,"J Addict Med 2026, prospective observational",observational,abstract only,not shown in abstract,not shown in abstract
+42873517,"JAMA Psychiatry 2026, patient-reported changes",observational,fulltext,no,yes
+43008461,"Addict Behav 2026, post hoc analysis",observational,abstract only,not shown in abstract,not shown in abstract
+36066977,Klausen 2022 JCI Insight (exenatide),RCT,fulltext,yes,yes
+37991022,Probst 2023 JCI Insight (dulaglutide),RCT,fulltext,no,no
+39937469,Hendershot 2025 JAMA Psychiatry (semaglutide),RCT,fulltext,yes,yes
+42070571,Klausen 2026 Lancet (semaglutide),RCT,abstract only,not shown in abstract,not shown in abstract
+42522065,Schacht 2026 Am J Psychiatry (oral semaglutide),RCT,fulltext,yes,no
