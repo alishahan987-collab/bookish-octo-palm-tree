@@ -4,6 +4,7 @@ import type {
   BookingInput,
   BookingStatus,
   ClinicSettings,
+  DayAvailability,
   Doctor,
   HHmm,
   ISODate,
@@ -36,6 +37,9 @@ export interface DataSource {
   // Settings
   getSettings(): Promise<ClinicSettings>;
   updateSettings(patch: Partial<ClinicSettings>): Promise<ClinicSettings>;
+
+  // Availability (public: returns slot states only, never other patients' details)
+  getAvailability(doctorId: string, opts?: { days?: number; ignoreBookingId?: string }): Promise<DayAvailability[]>;
 
   // Bookings
   getBookings(filters?: BookingFilters): Promise<Booking[]>;

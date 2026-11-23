@@ -21,6 +21,7 @@ export const getDoctors = source.getDoctors;
 export const getSettings = source.getSettings;
 export const updateSettings = source.updateSettings;
 
+export const getAvailability = source.getAvailability;
 export const getBookings = source.getBookings;
 export const createBooking = source.createBooking;
 export const setBookingStatus = source.setBookingStatus;

@@ -1,0 +1,29 @@
+import { addDays } from "./dates";
+import type { Booking, ClinicSettings } from "./data/types";
+
+/** Build an .ics calendar file so patients can save the appointment locally. */
+export function bookingToICS(b: Booking, s: ClinicSettings, durationMin = 30): string {
+  const [h, m] = b.time.split(":").map(Number);
+  const endMin = h * 60 + m + durationMin;
+  const d = b.date.replace(/-/g, "");
+  const endDate = endMin >= 1440 ? addDays(b.date, 1).replace(/-/g, "") : d;
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const start = `${d}T${pad(h)}${pad(m)}00`;
+  const end = `${endDate}T${pad(Math.floor(endMin / 60) % 24)}${pad(endMin % 60)}00`;
+  const esc = (t: string) => t.replace(/[,;\\]/g, (c) => `\\${c}`).replace(/\n/g, "\\n");
+  return [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Aesthetica design preview//EN",
+    "BEGIN:VEVENT",
+    `UID:${b.id}@aesthetica-preview`,
+    `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, "").slice(0, 15)}Z`,
+    `DTSTART;TZID=Asia/Karachi:${start}`,
+    `DTEND;TZID=Asia/Karachi:${end}`,
+    `SUMMARY:${esc(`${b.treatmentName} – ${s.clinicName}`)}`,
+    `LOCATION:${esc(`${s.addressLine}, ${s.city}`)}`,
+    `DESCRIPTION:${esc(`Reference ${b.reference}. Awaiting confirmation from the clinic.`)}`,
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ].join("\r\n");
+}

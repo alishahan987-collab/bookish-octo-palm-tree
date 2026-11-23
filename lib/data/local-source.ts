@@ -4,7 +4,7 @@ import { isValidEmail, normalisePkMobile } from "../phone";
 import { validatePrice } from "../pricing";
 import { suggestJourneySteps } from "../journey";
 import { DEMO_PATIENT_NAMES, SEED_DOCTORS, SEED_SETTINGS, SEED_TREATMENTS } from "./seed";
-import { baseTimes, closedReason, getDayAvailability } from "./slots";
+import { baseTimes, closedReason, getAvailabilityRange, getDayAvailability } from "./slots";
 import { DataError, type DataSource } from "./source";
 import type {
   Booking,
@@ -312,6 +312,11 @@ export const localSource: DataSource = {
     db.settings = next;
     write(db);
     return clone(next);
+  },
+
+  async getAvailability(doctorId, opts = {}) {
+    const db = read();
+    return getAvailabilityRange(db.settings, db.bookings, doctorId, opts);
   },
 
   async getBookings(filters = {}) {
