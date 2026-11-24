@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Bodoni_Moda, Cormorant_Garamond, DM_Sans, Inter, Manrope, Playfair_Display } from "next/font/google";
 import type { CSSProperties } from "react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { FloatingActions } from "@/components/layout/FloatingActions";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
@@ -58,6 +59,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </HideOnAdmin>
           <FloatingActions />
         </SiteProvider>
+        <SpeedInsights />
       </body>
     </html>
   );
