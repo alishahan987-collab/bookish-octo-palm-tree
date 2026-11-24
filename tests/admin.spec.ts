@@ -259,3 +259,24 @@ test("booking hours: closed weekday, holiday and blocked slot remove availabilit
   await expect(page.locator('[data-testid=time-grid] [data-time="11:30"]')).toHaveCount(0);
   await expect(page.locator('[data-testid=time-grid] [data-time="12:00"]')).toHaveCount(1);
 });
+
+test("homepage: add a brand-new custom section with image and button", async ({ page }) => {
+  await demoLogin(page, "site");
+  await page.getByRole("button", { name: "Add a new section" }).click();
+  const item = page.locator('[data-section-admin^="custom-"]').last();
+  await item.getByLabel("Heading", { exact: true }).fill("Our new laser suite");
+  await item.getByLabel("Text", { exact: true }).fill("Opening this winter with the latest technology.");
+  await item.getByLabel("Button text").fill("Book a visit");
+  await item.getByLabel("Button link").fill("/book");
+  await item.locator('input[type=file]').setInputFiles(IMG("s-clinic.jpg"));
+  await expect(item.getByRole("button", { name: "Remove" })).toBeVisible();
+  for (let i = 0; i < 9; i++) await item.getByRole("button", { name: /Move .* up/ }).click();
+  await page.getByTestId("save-content").click();
+  await expect(page.getByText("All changes saved.")).toBeVisible();
+  await page.goto("/");
+  const sec = page.locator('[data-section^="custom-"]');
+  await expect(sec.getByRole("heading", { name: "Our new laser suite" })).toBeVisible();
+  await expect(sec.getByRole("link", { name: "Book a visit" })).toHaveAttribute("href", "/book");
+  const order = await page.locator("[data-section]").evaluateAll((els) => els.map((e) => e.getAttribute("data-section")));
+  expect(order.findIndex((s) => s!.startsWith("custom-"))).toBeLessThan(order.indexOf("beforeAfter"));
+});

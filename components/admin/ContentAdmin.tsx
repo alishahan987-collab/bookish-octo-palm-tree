@@ -4,7 +4,8 @@ import { useState } from "react";
 import { getContent, saveContent } from "@/lib/data";
 import { useData } from "@/lib/data/hooks";
 import { SEED_CONTENT } from "@/lib/data/seed";
-import type { SectionId, SiteContent, ThemeConfig } from "@/lib/data/types";
+import type { CustomSection, SectionId, SiteContent, ThemeConfig } from "@/lib/data/types";
+import { uid } from "@/lib/id";
 import { normalisePkMobile, toWhatsAppDigits } from "@/lib/phone";
 import { FONT_LABELS, THEME_PRESETS, contrast } from "@/lib/theme";
 import { Icon } from "../ui/Icon";
@@ -74,14 +75,33 @@ type SetDraft = React.Dispatch<React.SetStateAction<SiteContent>>;
 /* ------------------------------- Homepage ------------------------------- */
 
 function SiteSections({ c, setDraft, patch }: { c: SiteContent; setDraft: SetDraft; patch: Patch }) {
-  const ordered = (Object.keys(c.sections) as SectionId[]).sort((a, b) => c.sections[a].order - c.sections[b].order);
+  type Item = { key: string; builtIn?: SectionId; custom?: CustomSection; order: number };
+  const ordered: Item[] = [
+    ...(Object.keys(c.sections) as SectionId[]).map((id) => ({ key: id, builtIn: id, order: c.sections[id].order })),
+    ...(c.customSections ?? []).map((cs) => ({ key: `custom-${cs.id}`, custom: cs, order: cs.order })),
+  ].sort((a, b) => a.order - b.order);
   const setSection = (id: SectionId, v: Partial<SiteContent["sections"][SectionId]>) =>
     setDraft((d) => ({ ...d, sections: { ...d.sections, [id]: { ...d.sections[id], ...v } } }));
+  const setCustom = (id: string, v: Partial<CustomSection>) =>
+    setDraft((d) => ({ ...d, customSections: d.customSections.map((x) => (x.id === id ? { ...x, ...v } : x)) }));
+  const setOrder = (it: Item, order: number) => (it.builtIn ? setSection(it.builtIn, { order }) : setCustom(it.custom!.id, { order }));
   const move = (i: number, dir: -1 | 1) => {
-    const a = ordered[i], b = ordered[i + dir];
-    setDraft((d) => ({ ...d, sections: { ...d.sections, [a]: { ...d.sections[a], order: d.sections[b].order }, [b]: { ...d.sections[b], order: d.sections[a].order } } }));
+    // Renumber everything so orders stay unique, then swap the two neighbours.
+    const list = ordered.map((it, idx) => ({ it, order: idx + 1 }));
+    const a = list[i], b = list[i + dir];
+    [a.order, b.order] = [b.order, a.order];
+    list.forEach(({ it, order }) => setOrder(it, order));
   };
-  const [open, setOpen] = useState<SectionId | null>(null);
+  const addCustom = () => {
+    const id = uid("sec");
+    setDraft((d) => ({
+      ...d,
+      customSections: [...(d.customSections ?? []), { id, visible: true, order: ordered.length + 1, eyebrow: "", title: "New section", body: "", imageSide: "right", ctaLabel: "", ctaHref: "", tone: "light" }],
+    }));
+    setOpen(`custom-${id}`);
+  };
+  const label = (it: Item) => (it.builtIn ? SECTION_NAMES[it.builtIn] : `Custom: ${it.custom!.title || "Untitled"}`);
+  const [open, setOpen] = useState<string | null>(null);
 
   return (
     <>
@@ -108,31 +128,65 @@ function SiteSections({ c, setDraft, patch }: { c: SiteContent; setDraft: SetDra
         <p className="hint">The doctor&apos;s portrait is managed under <strong>Doctor profile</strong>.</p>
       </Card>
 
-      <Card title="Homepage sections" description="Show or hide sections, change their order and edit their headings.">
+      <Card title="Homepage sections" description="Show, hide, reorder and edit sections, or add your own.">
         <ul className="divide-y divide-line rounded-2xl border border-line" data-testid="section-list">
-          {ordered.map((id, i) => {
-            const s = c.sections[id];
+          {ordered.map((it, i) => {
+            const visible = it.builtIn ? c.sections[it.builtIn].visible : it.custom!.visible;
+            const setVisible = (v: boolean) => (it.builtIn ? setSection(it.builtIn, { visible: v }) : setCustom(it.custom!.id, { visible: v }));
             return (
-              <li key={id} className="p-3" data-section-admin={id}>
+              <li key={it.key} className="p-3" data-section-admin={it.key}>
                 <div className="flex flex-wrap items-center gap-2">
-                  <MoveButtons label={SECTION_NAMES[id]} onUp={i > 0 ? () => move(i, -1) : undefined} onDown={i < ordered.length - 1 ? () => move(i, 1) : undefined} />
-                  <span className={`flex-1 font-medium ${s.visible ? "text-charcoal" : "text-muted line-through"}`}>{SECTION_NAMES[id]}</span>
-                  <Switch label="Visible" checked={s.visible} onChange={(v) => setSection(id, { visible: v })} testId={`visible-${id}`} />
-                  <button type="button" className="btn btn-ghost btn-sm" aria-expanded={open === id} onClick={() => setOpen(open === id ? null : id)}>
-                    Edit text<span className="sr-only"> for {SECTION_NAMES[id]}</span><Icon name="chevron" size={14} className={open === id ? "rotate-180" : ""} />
+                  <MoveButtons label={label(it)} onUp={i > 0 ? () => move(i, -1) : undefined} onDown={i < ordered.length - 1 ? () => move(i, 1) : undefined} />
+                  <span className={`flex-1 font-medium ${visible ? "text-charcoal" : "text-muted line-through"}`}>{label(it)}</span>
+                  <Switch label="Visible" checked={visible} onChange={setVisible} testId={`visible-${it.key}`} />
+                  <button type="button" className="btn btn-ghost btn-sm" aria-expanded={open === it.key} onClick={() => setOpen(open === it.key ? null : it.key)}>
+                    Edit<span className="sr-only"> {label(it)}</span><Icon name="chevron" size={14} className={open === it.key ? "rotate-180" : ""} />
                   </button>
+                  {it.custom && (
+                    <button type="button" className="rounded-full p-2 text-muted hover:bg-cream hover:text-danger" aria-label={`Delete ${label(it)}`}
+                      onClick={() => setDraft((d) => ({ ...d, customSections: d.customSections.filter((x) => x.id !== it.custom!.id) }))}>
+                      <Icon name="trash" size={16} />
+                    </button>
+                  )}
                 </div>
-                {open === id && (
+                {open === it.key && it.builtIn && (
                   <div className="mt-3 grid gap-3 rounded-2xl bg-cream/50 p-3">
-                    <TextInput id={`s-${id}-eyebrow`} label="Small heading" value={s.eyebrow} onChange={(v) => setSection(id, { eyebrow: v })} />
-                    <TextInput id={`s-${id}-title`} label="Heading" value={s.title} onChange={(v) => setSection(id, { title: v })} />
-                    <TextArea id={`s-${id}-intro`} label="Paragraph" value={s.intro} onChange={(v) => setSection(id, { intro: v })} rows={3} />
+                    <TextInput id={`s-${it.key}-eyebrow`} label="Small heading" value={c.sections[it.builtIn].eyebrow} onChange={(v) => setSection(it.builtIn!, { eyebrow: v })} />
+                    <TextInput id={`s-${it.key}-title`} label="Heading" value={c.sections[it.builtIn].title} onChange={(v) => setSection(it.builtIn!, { title: v })} />
+                    <TextArea id={`s-${it.key}-intro`} label="Paragraph" value={c.sections[it.builtIn].intro} onChange={(v) => setSection(it.builtIn!, { intro: v })} rows={3} />
+                  </div>
+                )}
+                {open === it.key && it.custom && (
+                  <div className="mt-3 grid gap-3 rounded-2xl bg-cream/50 p-3">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <TextInput id={`cs-${it.key}-eyebrow`} label="Small heading" value={it.custom.eyebrow} onChange={(v) => setCustom(it.custom!.id, { eyebrow: v })} />
+                      <TextInput id={`cs-${it.key}-title`} label="Heading" value={it.custom.title} onChange={(v) => setCustom(it.custom!.id, { title: v })} />
+                    </div>
+                    <TextArea id={`cs-${it.key}-body`} label="Text" value={it.custom.body} onChange={(v) => setCustom(it.custom!.id, { body: v })} rows={4} />
+                    <ImageUpload label="Image (optional)" value={it.custom.image} onChange={(v) => setCustom(it.custom!.id, { image: v })} folder="site" testId={`cs-image-${it.custom.id}`} />
+                    <div className="grid gap-3 sm:grid-cols-4">
+                      <TextInput id={`cs-${it.key}-cta`} label="Button text" value={it.custom.ctaLabel} onChange={(v) => setCustom(it.custom!.id, { ctaLabel: v })} />
+                      <TextInput id={`cs-${it.key}-href`} label="Button link" value={it.custom.ctaHref} onChange={(v) => setCustom(it.custom!.id, { ctaHref: v })} placeholder="/book" />
+                      <div>
+                        <label htmlFor={`cs-${it.key}-tone`} className="label">Background</label>
+                        <select id={`cs-${it.key}-tone`} className="field" value={it.custom.tone} onChange={(e) => setCustom(it.custom!.id, { tone: e.target.value as CustomSection["tone"] })}>
+                          <option value="light">Light</option><option value="cream">Cream</option><option value="dark">Dark</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label htmlFor={`cs-${it.key}-side`} className="label">Image side</label>
+                        <select id={`cs-${it.key}-side`} className="field" value={it.custom.imageSide} onChange={(e) => setCustom(it.custom!.id, { imageSide: e.target.value as CustomSection["imageSide"] })}>
+                          <option value="left">Left</option><option value="right">Right</option>
+                        </select>
+                      </div>
+                    </div>
                   </div>
                 )}
               </li>
             );
           })}
         </ul>
+        <button type="button" className="btn btn-ghost btn-sm" onClick={addCustom}><Icon name="plus" size={16} /> Add a new section</button>
       </Card>
 
       <Card title="Why choose us">

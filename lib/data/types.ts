@@ -159,6 +159,21 @@ export interface SectionConfig {
   intro: string;
 }
 
+/** A section the clinic adds itself (e.g. "Our promise", "New: laser suite"). */
+export interface CustomSection {
+  id: string;
+  visible: boolean;
+  order: number;
+  eyebrow: string;
+  title: string;
+  body: string;
+  image?: ImageRef;
+  imageSide: "left" | "right";
+  ctaLabel: string;
+  ctaHref: string;
+  tone: "light" | "cream" | "dark";
+}
+
 export interface ThemeConfig {
   preset: string;
   background: string;
@@ -199,6 +214,7 @@ export interface SiteContent {
   };
   announcement: { enabled: boolean; text: string; linkLabel: string; href: string };
   sections: Record<SectionId, SectionConfig>;
+  customSections: CustomSection[];
   why: { title: string; text: string }[];
   faqs: FAQ[];
   contact: {

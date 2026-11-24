@@ -50,6 +50,7 @@ export const SEED_CONTENT: SiteContent = {
     faq: { visible: true, order: 10, eyebrow: "FAQ", title: "Questions, answered", intro: "Anything else? Message us on WhatsApp." },
     contact: { visible: true, order: 11, eyebrow: "Visit us", title: "Location & contact", intro: "" },
   },
+  customSections: [],
   why: [
     { title: "Diagnosis first", text: "Your skin is examined by a doctor before any treatment is recommended." },
     { title: "Honest, personalised plans", text: "Realistic expectations, explained clearly. Sometimes the right advice is to do less." },

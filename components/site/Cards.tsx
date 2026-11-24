@@ -17,8 +17,8 @@ export function ConditionCard({ c, headingLevel = 3 }: { c: Condition; headingLe
       <div className="flex flex-1 flex-col p-5">
         <H className="text-[1.55rem]">{c.name}</H>
         <p className="mt-1.5 line-clamp-3 flex-1 text-sm leading-relaxed text-muted">{c.summary}</p>
-        <Link href={`/conditions/${c.slug}`} className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-gold after:absolute after:inset-0" aria-label={`Learn more about ${c.name}`}>
-          Learn more <Icon name="arrow" size={16} className="transition-transform group-hover:translate-x-1" />
+        <Link href={`/conditions/${c.slug}`} className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-gold after:absolute after:inset-0" >
+          Learn more<span className="sr-only"> about {c.name}</span> <Icon name="arrow" size={16} className="transition-transform group-hover:translate-x-1" />
         </Link>
       </div>
     </article>

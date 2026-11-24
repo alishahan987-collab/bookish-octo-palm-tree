@@ -1,211 +1,250 @@
-# Aesthetica by Dr. Sajjad: Pitch Prototype (Phase 1)
+# Dermatology & Aesthetic Clinic Website
 
-A clickable, frontend-only prototype of a website and booking system for **Aesthetica by Dr. Sajjad**, a skin and laser clinic at Jadoon Plaza, Phase 2 Road, Abbottabad.
+A premium, fully responsive website for a dermatologist and aesthetic medicine specialist, with online booking and a complete admin dashboard (CMS). It is pre-filled for **Aesthetica by Dr. Sajjad, Abbottabad**, and every name, text, image, price and colour is editable in the admin.
 
-> **Design preview.** This is not the official website. Every page shows a banner saying so and is marked `noindex`. No real patient data, no backend, no API keys. All data is mock data saved in the visitor's own browser (`localStorage`). No messages are ever sent.
-
-**Stack:** Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS 4 · Framer Motion · Vitest · Playwright
+**Stack:** Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS 4 · Supabase (Postgres, Auth, Storage) · Resend (email) · WhatsApp Business Cloud API · Vitest · Playwright
 
 ---
 
-## What's inside
+## Contents
 
-| Area | Route | Highlights |
+1. [What's included](#whats-included)
+2. [Two modes: demo and live](#two-modes-demo-and-live)
+3. [Run it locally](#run-it-locally)
+4. [Go live: step by step](#go-live-step-by-step)
+5. [Using the admin dashboard](#using-the-admin-dashboard)
+6. [Security & patient privacy](#security--patient-privacy)
+7. [Tests](#tests)
+8. [Architecture](#architecture)
+9. [Known limitations & recommended next steps](#known-limitations--recommended-next-steps)
+
+---
+
+## What's included
+
+### Public website
+
+| Page | Route | Notes |
 |---|---|---|
-| Homepage | `/` | Hero, introduction, doctor (placeholder bio), featured treatments, categories, why Aesthetica, technology (placeholders), before/after slider demo (abstract images), reviews placeholder, live offers, FAQ, location (Google Maps link), floating WhatsApp + Book |
-| Catalogue | `/treatments` | Category filter (shareable `?category=` URLs) |
-| Treatment page | `/treatments/[slug]` | Description, how it works, benefits, who it suits, downtime, sessions, side effects, FAQ, price block, Book button |
-| Booking | `/book` | Treatment → doctor → date & time → details (PK mobile validation, contact preference, consent) → review → confirmation with reference `AES-2026-0001`, add-to-calendar file and **Message preview** |
-| Skin Concern Finder | `/skin-finder` | Multi-select concerns → relevant treatments + "Book a consultation". Clear "This is not a diagnosis" note |
-| Admin | `/admin` | Appointments (today / upcoming / all, search, filters, confirm / cancel / reschedule / arrived / completed, notification previews), treatments & pricing editor, clinic settings, treatment journeys, reset demo data |
+| Home | `/` | Hero with large doctor portrait (placeholder until uploaded), plus 11 sections. Admins can show, hide, reorder and edit every section and **add their own sections**. |
+| About the Doctor | `/about` | Photo, name, qualifications, specialization, experience, certifications, achievements, expertise, biography, registration |
+| Skin / Hair / Aesthetic | `/skin-treatments`, `/hair-treatments`, `/aesthetic-procedures` | Procedure galleries by group (plus `/treatments` for all) |
+| Procedure page | `/treatments/[slug]` | Image, overview, how it works, benefits, suitable candidates, duration, recovery, sessions, price, FAQ, Book button |
+| Skin conditions | `/conditions`, `/conditions/[slug]` | 14 conditions; each page answers: what it is, symptoms, causes, treatments, when to see a dermatologist |
+| Before & After | `/before-after` | Comparison sliders, filter by category and treatment. **Consent is enforced.** |
+| Pricing | `/pricing` | Every procedure with image, description, price, discount and Book Now. Prices come only from the database. |
+| Blog | `/blog`, `/blog/[slug]` | Articles with topics; drafts are never public |
+| Contact | `/contact` | Address, timings, phone, email, WhatsApp, social links, embedded Google Map |
+| Search | header + `/search` | Searches treatments, conditions, articles and pages. Understands patient language ("hair fall", "pimples", "dark spots") and typos. |
+| Booking | `/book` | Treatment → date → time → name, phone, email, notes → submit |
+| Skin Concern Finder | `/skin-finder` | Guided suggestions with a "not a diagnosis" notice |
+| Privacy notice | `/privacy` | Template for the clinic to review |
 
-### Pricing models
-Every treatment uses one of six price models, each rendered in its own style:
-`fixed` · `from` (starting from) · `range` · `consultation` (price after consultation) · `promo` (regular + promotional, feeds the homepage offers) · `package` (per-session price + multi-session packages, e.g. PRP: PKR 12,000/session, 3 sessions PKR 32,000).
+Also included: a floating WhatsApp button and a floating Book button, a mobile menu, an announcement bar, SEO metadata per page, social preview images, security headers, and optimised images (AVIF/WebP, responsive sizes, lazy loading).
 
-### Content honesty rules (built in)
-- No reviews, before/after photos, credentials, equipment claims or clinic phone numbers are invented. Each has a clearly labelled placeholder.
-- Clinical copy is general patient information ("may", "aims to", "results vary") and is marked for review by Dr. Sajjad.
-- All prices are labelled **Demo price** in the admin, and as demo prices on the public site.
-- The WhatsApp button explains that the number is pending until one is entered in **Admin → Clinic settings**; then it opens WhatsApp for real.
+### Admin dashboard (`/admin`)
+
+| Area | What the clinic can do |
+|---|---|
+| **Appointments** | View today / upcoming / all; search by name, phone, email or reference; filter; **accept, reject (with a message), reschedule, cancel**, mark arrived or completed; see each patient notification and whether it was sent |
+| **Booking hours & slots** | Working days, opening hours, slot length, breaks (per weekday), holidays, **blocked time ranges**, maximum per day, booking window, minimum notice, email required or optional, with a live 14-day availability preview |
+| **Procedures & prices** | Add, edit, delete, reorder, show/hide, feature; image upload; six price types (fixed, from, range, on consultation, **discounted**, session packages); duration, recovery, sessions, FAQs; link to conditions |
+| **Skin conditions** | Add, edit, delete, reorder, show/hide, image upload; include in the Skin Concern Finder |
+| **Before & after** | Upload before/after photos, edit, delete, reorder, filter category. A real photo **cannot be published until written consent is confirmed** (also enforced by the database). |
+| **Blog** | Write with a formatting toolbar and live preview, cover image, topics, draft or publish, unpublish, delete |
+| **Homepage & sections** | Every heading and paragraph, hero texts and badges, hero background, show/hide/reorder sections, **add custom sections**, "why choose us" items, FAQs, announcement bar, SEO title and description, footer text, preview banner |
+| **Doctor profile** | Photo, name, designation, specialization, experience, registration, qualifications, certifications, achievements, expertise, biography |
+| **Contact & social** | Address, city, map location, phone, email, WhatsApp number, new-booking alert email, Instagram, Facebook, YouTube, TikTok |
+| **Branding & appearance** | Clinic name, logo upload, tagline, currency, 5 colour presets or custom colours (with a live accessibility contrast check), heading and body fonts |
+| Treatment journeys | Week-by-week treatment plans per patient (internal) |
 
 ---
 
-## Run locally
+## Two modes: demo and live
 
-Requirements: Node.js 20.9 or newer.
+The same code runs in two modes, chosen automatically:
+
+| | **Demo mode** (no Supabase keys) | **Live mode** (Supabase keys set) |
+|---|---|---|
+| Data | Stored in the visitor's own browser | Postgres database (Supabase) |
+| Admin login | Password `demo1234`, clearly labelled as demo | Real staff accounts (email + password) |
+| Image uploads | Kept in the browser (IndexedDB) | Supabase Storage (public CDN) |
+| Email & WhatsApp | **Never sent.** The exact message is shown as a preview. | Sent via Resend and the WhatsApp Cloud API; delivery is logged on each appointment |
+| Use for | Showing the clinic, design review | The real clinic |
+
+Nothing is faked. In demo mode the screens say plainly that messages are not sent. In live mode, a channel that isn't configured is reported as "skipped" with the reason.
+
+---
+
+## Run it locally
+
+Requirements: **Node.js 20.9+**.
 
 ```bash
 npm install
-npm run dev          # http://localhost:3000
+npm run dev            # http://localhost:3000  (demo mode)
 ```
 
-Production build:
+Open `/admin` and use password **`demo1234`**. **Reset demo data** is in the admin sidebar.
+
+---
+
+## Go live: step by step
+
+Allow about an hour, plus waiting time for Meta's WhatsApp verification.
+
+### 1. Create the database (Supabase)
+
+1. Create a free project at [supabase.com](https://supabase.com). Choose a region close to Pakistan (e.g. Mumbai or Singapore).
+2. In **SQL Editor**, paste the contents of `supabase/migrations/20261124000000_init.sql` and run it.
+   (Or with the CLI: `npx supabase link --project-ref <ref>` then `npx supabase db push`.)
+3. In **Project Settings → API**, copy the **Project URL**, the **anon public** key and the **service_role** key.
+4. Create `.env.local` from `.env.local.example` and fill in the three Supabase values.
+
+### 2. Load the starter content and create the admin login
 
 ```bash
-npm run build
-npm start            # http://localhost:3000
+npm run db:seed                                            # procedures, conditions, articles, site text
+npm run create-admin -- doctor@yourclinic.com 'a-strong-password' owner
 ```
 
-To view it on your phone over Wi-Fi, run `npm run dev -- -H 0.0.0.0` and open `http://<your-computer-ip>:3000`.
+Add more staff the same way (role `admin` or `reception`).
+In Supabase **Authentication → Providers → Email**, turn **off** "Allow new users to sign up", so only accounts you create can exist.
 
-## Deploy to Vercel
+### 3. Email (Resend)
 
-1. Push this repository to GitHub.
-2. In Vercel, choose **Add New → Project**, import the repository and keep the defaults (framework: Next.js; build command `next build`).
-3. Click **Deploy**. No environment variables are needed for Phase 1.
+1. Create an account at [resend.com](https://resend.com) and **verify the clinic's domain** (add the DNS records it gives you).
+2. Create an API key. Set `RESEND_API_KEY` and `EMAIL_FROM` (e.g. `Aesthetica <appointments@yourclinic.com>`).
+3. In the admin, under **Contact & social**, set the **email for new-booking alerts**.
 
-The `X-Robots-Tag: noindex, nofollow` header (in `next.config.ts`) and the `robots` meta tag keep the preview out of search engines. Only share the URL privately.
+### 4. WhatsApp (Meta Cloud API)
 
-## Demo admin
+WhatsApp only allows businesses to start conversations with **pre-approved templates**.
 
-- Open `/admin` (also linked in the footer and mobile menu).
-- Password: **`demo1234`** (shown on the login screen and labelled demo-only).
-- The login is a browser-side demo gate, **not security**. Phase 2 replaces it with Supabase Auth.
+1. In Meta Business Manager, complete **business verification** and add a phone number to the WhatsApp Business Platform (Cloud API). A number used by the Cloud API can't be used in the normal WhatsApp app at the same time unless you use Meta's coexistence option.
+2. Create a **permanent access token** (System User) with `whatsapp_business_messaging` permission.
+3. Create these message templates (category *Utility*, language English). Each uses the variables `{{1}}` name, `{{2}}` treatment, `{{3}}` date & time, `{{4}}` reference:
 
-## Reset demo data
+| Env variable | Suggested template text |
+|---|---|
+| `WHATSAPP_TEMPLATE_CONFIRMATION` | Assalam-o-Alaikum {{1}}, we have received your request for {{2}} on {{3}}. Ref: {{4}}. We will confirm shortly. |
+| `WHATSAPP_TEMPLATE_ACCEPTED` | {{1}}, your {{2}} appointment on {{3}} is confirmed. Ref: {{4}}. Please arrive 10 minutes early. |
+| `WHATSAPP_TEMPLATE_REJECTED` | {{1}}, unfortunately we cannot accommodate {{2}} on {{3}} (Ref: {{4}}). Please book another time or reply to this message. |
+| `WHATSAPP_TEMPLATE_CANCELLED` | {{1}}, your {{2}} appointment on {{3}} (Ref: {{4}}) has been cancelled. |
+| `WHATSAPP_TEMPLATE_RESCHEDULED` | {{1}}, your {{2}} appointment has moved to {{3}}. Ref: {{4}}. |
+| `WHATSAPP_TEMPLATE_CLINIC_ALERT` | New booking request: {{1}}, {{2}}, {{3}}. Ref: {{4}}. |
 
-- **Admin → Reset demo data** (top bar) restores the original treatments, prices, settings and demo appointments.
-- Or clear the site data in the browser (the key is `aesthetica-demo:v1`).
+4. Set `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_TEMPLATE_LANG` (e.g. `en`) and the template names.
 
-Demo appointments are generated relative to *today*, so the "Today" and "Upcoming" views always look alive.
+Until WhatsApp is configured, bookings still work, emails still go out, and the floating WhatsApp button still opens a normal chat with the clinic's number.
+
+### 5. Deploy (Vercel)
+
+1. Push the repository to GitHub and import it at [vercel.com](https://vercel.com) (framework: Next.js).
+2. Add every variable from `.env.local` under **Settings → Environment Variables**, plus `NEXT_PUBLIC_SITE_URL` (your domain).
+3. Deploy, then add the clinic's domain under **Settings → Domains**.
+
+### 6. Final checks
+
+- In the admin, under **Homepage & sections → Search engines & footer**, switch **off** the preview banner. This also allows Google to index the site.
+- Upload the doctor's photo and logo, and fill in the biography, qualifications, phone, email and WhatsApp number.
+- Review every procedure, condition and price; the starter content is general patient information, not the clinic's own approved text.
+- Make a test booking, then accept it in the admin and check that the email and WhatsApp messages arrive.
+
+---
+
+## Using the admin dashboard
+
+- **New booking:** the clinic gets an email (and WhatsApp alert, if configured), and the patient gets a "request received" message. Open **Appointments → Upcoming** and press **Accept** or **Reject**. Either way the patient is notified, and a rejected or cancelled slot becomes bookable again.
+- **Change a price or add a discount:** **Procedures & prices → Price**, then choose "Discounted price", enter the regular and discounted amounts, and optionally a label and end date. The website updates immediately.
+- **Close the clinic for a day or a few hours:** **Booking hours & slots → Holidays** (whole days) or **Blocked time slots** (part of a day).
+- **Add a section to the homepage:** **Homepage & sections → Add a new section**, then use the arrows to position it.
+- **Photos:** any JPG, PNG or WebP up to 15 MB. Images are automatically resized, compressed and stripped of location metadata before upload.
+
+---
+
+## Security & patient privacy
+
+- **Row Level Security on every table.** Website visitors can read only published content. Bookings, journeys and drafts are readable only by signed-in staff (verified in `tests/live.spec.ts`).
+- **Patients never touch the database directly.** Booking and availability go through server API routes that validate everything again. Availability responses contain slot states only, never other patients' details.
+- **Double booking is impossible:** a unique database index on (doctor, date, time) for active bookings, plus re-validation at write time.
+- **Gallery consent** is enforced in the interface *and* by a database constraint.
+- **Spam protection:** a hidden honeypot field and a per-IP rate limit on bookings.
+- **Staff-only admin:** Supabase Auth plus a `staff` role table. Admin API routes verify the session token on every request.
+- **Uploads:** staff-only Storage policies, an image MIME allow-list, a 15 MB limit, and EXIF stripping.
+- **Headers:** `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`, `Permissions-Policy`; the admin is `noindex`.
+- **Content safety:** article Markdown is rendered without raw HTML, so admin text cannot inject scripts.
+- Secrets (`SUPABASE_SERVICE_ROLE_KEY`, Resend and WhatsApp tokens) are server-only and never sent to the browser.
+
+---
 
 ## Tests
 
 ```bash
-npm test                 # unit tests: slot engine, double booking, validation, pricing
-npm run build            # e2e tests run against the production build
-npx playwright install chromium   # first time only
-npm run test:e2e         # end-to-end on 375px mobile and desktop
-MOTION=reduce npm run test:e2e    # same, with prefers-reduced-motion
+npm test                 # 24 unit tests: slot engine, double booking, validation, pricing, consent, search
+npm run build
+npx playwright install chromium    # first time only
+npm run test:e2e         # 37 end-to-end tests on a 375px phone and desktop (demo mode)
 ```
 
-The end-to-end suite covers the acceptance criteria: a full booking at 375px and desktop; a booked slot can't be booked again (including two tabs racing for the same slot); an admin price edit shows on the treatment page and in homepage offers; closing a weekday or adding a holiday removes those slots; every internal link resolves with no console errors; admin status actions and previews; add treatment, journey and reset; and the banner plus `noindex` on every page.
+**Live-backend tests** (real Supabase plus stand-in email/WhatsApp servers that record every message):
 
-**Last verified results** (production build, Lighthouse 12 mobile preset):
+```bash
+npx supabase start                              # local Supabase (Docker)
+# put the local keys from `npx supabase status` in your shell, plus the test values from .env.local.example
+npx supabase db reset && npm run db:seed && npm run create-admin -- admin@example.com 'test-password-123'
+NEXT_DIST_DIR=.next-supa npm run build
+npm run test:live                               # 10 tests
+```
 
-| Page | Performance | Accessibility | Best practices |
-|---|---|---|---|
-| `/` | 96 | 100 | 100 |
-| `/treatments` | 98 | 100 | 100 |
-| `/treatments/prp-hair-treatment` | 97 | 100 | 100 |
-| `/book` | 93 | 100 | 100 |
-| `/skin-finder` | 98 | 100 | 100 |
-| `/admin` | 98 | 100 | 100 |
+What's covered: every navigation link and internal link; no console errors; no horizontal scroll at 375px; search; condition and procedure page structure; booking validation; double booking (UI and API); accept/reject/reschedule/cancel, with the exact email and WhatsApp payloads checked; every admin editor, including real file uploads; theme changes; custom sections; anonymous-access security; SSR pages refreshing after edits.
 
-Scores were measured locally; scores on Vercel's CDN are usually similar or better.
+Lighthouse (mobile, production build): homepage **Performance 91–96, Accessibility 100, Best Practices 100**; procedure, condition, pricing, blog and booking pages **94–98**. (Demo mode scores lower on SEO by design, because the preview banner sets `noindex`.)
 
 ---
 
 ## Architecture
 
 ```
-app/                      Routes (App Router)
+app/                       Pages and API routes
+  api/availability         GET  public slot states (no patient data)
+  api/bookings             POST create booking → validate → insert → notify
+  api/admin/bookings/[id]  PATCH accept/reject/cancel/reschedule (staff token)
+  api/revalidate           POST refresh server-rendered pages after edits (staff token)
 components/
-  layout/                 Banner, header, footer, floating buttons, WhatsApp link
-  home/                   Homepage sections
-  treatments/             Cards, catalogue, detail page, Skin Finder
-  booking/                Booking flow, slot picker, message preview
-  admin/                  Dashboard, appointments, pricing, settings, journeys
-  ui/                     Icons, abstract artwork, price display, dialog, reveal
+  home/ site/ layout/      Public UI
+  admin/                   CMS
+  booking/                 Booking flow, slot picker, message preview
 lib/
-  data/
-    types.ts              Domain types: the contract for Phase 2
-    source.ts             DataSource interface (every backend implements this)
-    local-source.ts       localStorage implementation (Phase 1)
-    index.ts              ← the ONLY module the UI imports for data
-    slots.ts              Pure slot engine (hours, breaks, holidays, max/day, notice)
-    seed.ts               Mock catalogue, settings and doctor
-    hooks.ts              useData(): load + live-update on change (incl. other tabs)
-  messages.ts             WhatsApp/email templates (rendered as previews only)
-  phone.ts · pricing.ts · dates.ts · journey.ts · ics.ts
-tests/                    Playwright end-to-end tests
+  data/types.ts            Domain model (the contract)
+  data/source.ts           DataSource interface
+  data/local-source.ts     Demo backend (browser)
+  data/supabase-source.ts  Live backend (browser side)
+  data/rules.ts            Shared validation and status rules
+  data/slots.ts            Slot engine (shared by browser and server)
+  data/seed*.ts            Starter content
+  server/                  Server-only: bookings, notifications, SSR reads
+  supabase/                Clients and row mappers
+  search.ts messages.ts theme.ts tz.ts ...
+supabase/migrations/       Database schema, RLS, storage
+scripts/                   Seeding and admin creation
+tests/                     Playwright (demo, admin, live) + mock providers
 ```
 
-**Why it swaps cleanly to a real backend:**
-- The UI calls async functions only (`getTreatments`, `getAvailability`, `createBooking`, `updatePrice`, `setBookingStatus`, `rescheduleBooking`, …) from `lib/data`.
-- `lib/data/index.ts` delegates to a `DataSource`. Phase 2 adds `supabase-source.ts` implementing the same interface and changes one line.
-- The public booking page never receives other patients' bookings, only slot states from `getAvailability()`, mirroring how the real API must behave.
-- Double booking is re-checked at write time (`createBooking`), which in Phase 2 becomes a database constraint.
-- `subscribe()` (localStorage events today) maps to Supabase Realtime.
-- Pages are statically rendered from seed data for speed, then hydrate from the data layer.
+**Design choices**
+- **Content as JSON documents, bookings as strict relational rows.** The clinic can add fields and sections without database migrations, while patient data keeps hard constraints.
+- **Server-rendered pages** (SEO and speed), refreshed within 60 seconds or immediately after an admin edit.
+- **Clinic time zone** (`Asia/Karachi` by default; set `NEXT_PUBLIC_CLINIC_TIMEZONE`): "today" and same-day slots are correct even though servers run in UTC.
+- **Modular:** new procedures, conditions, articles and homepage sections need no code. A new *type* of page or section is one component plus one entry in the content model.
+
+**Images:** stock photography from Pexels under the Pexels License (see `IMAGE_CREDITS.md`). No stock photo is presented as the doctor or as a patient result.
 
 ---
 
-## Phase 2 plan
+## Known limitations & recommended next steps
 
-Phase 2 turns the prototype into the clinic's live system once Dr. Sajjad approves it. The UI stays; the data source, auth and messaging are added.
-
-### 1. Supabase database (Postgres)
-
-| Table | Key columns |
-|---|---|
-| `treatments` | id, slug (unique), name, category, content fields (jsonb for lists/FAQs), `price` (jsonb, validated by a check constraint or trigger), featured, active, updated_at |
-| `doctors` | id, name, role, bio, active |
-| `treatment_doctors` | treatment_id, doctor_id |
-| `clinic_settings` | single row: hours, slot length, max per day, booking window, notice, contact details |
-| `breaks`, `holidays` | clinic closures |
-| `patients` | id, name, phone (E.164, unique), email |
-| `bookings` | id, reference (unique), patient_id, treatment_id, treatment_name (snapshot), doctor_id, date, time, status, notes, created_at |
-| `booking_events` | audit trail: booking_id, action, note, actor, at |
-| `consents` | patient_id, booking_id, channel(s), consent text version, given_at, withdrawn_at, source (web/staff) |
-| `messages` | booking_id, channel, template, status (queued/sent/delivered/failed), provider id, sent_at |
-| `journeys`, `journey_steps` | treatment plans |
-| `staff` | user_id (auth.users), role |
-
-**Double booking at database level:**
-```sql
-create unique index bookings_no_double_booking
-  on bookings (doctor_id, date, time)
-  where status <> 'cancelled';
-```
-Bookings are created through a `create_booking()` Postgres function (security definer) that validates the slot against settings, inserts the patient and booking, records consent and generates the reference (`AES-YYYY-NNNN` from a per-year sequence) in one transaction.
-
-**Row Level Security (RLS)**, enabled on every table:
-- **Public (anon):** read active treatments, doctors, public settings; call `get_availability()` (returns slot states only) and `create_booking()`. **No direct read access to bookings or patients.**
-- **Staff:** policies based on `staff.role` (via a JWT custom claim or a `has_role()` helper).
-
-### 2. Supabase Auth and roles
-- Staff sign in with email + password or magic link; MFA for the owner.
-- Roles: **owner/admin** (everything, including prices and settings), **reception** (appointments, patients), **doctor** (appointments, journeys, read-only prices).
-- Replaces the demo password gate in `components/admin/AdminApp.tsx`.
-
-### 3. WhatsApp Business Platform (Cloud API)
-- Requires the clinic's **Meta Business account and business verification**, a dedicated phone number registered to the Cloud API, and an approved display name. Verification can take days to weeks, so start early.
-- Appointment confirmations, reminders, cancellations and reschedules are **business-initiated messages**, so they must use **pre-approved message templates** (the templates in `lib/messages.ts` are written for this).
-- Meta charges per template message; check current rates for Pakistan before quoting running costs to the clinic.
-- Sending runs server-side (Supabase Edge Function or a Next.js route handler). The access token is never exposed to the browser.
-- Delivery status webhooks update the `messages` table.
-
-### 4. Email with Resend
-- Send from the clinic's own domain (e.g. `appointments@<clinic-domain>`). This needs the domain's DNS records (SPF/DKIM) verified in Resend.
-- The same templates are used, with an unsubscribe/withdraw-consent link.
-
-### 5. Reminders via scheduled jobs
-- A scheduled job (Supabase `pg_cron` calling an Edge Function, or Vercel Cron) runs every 15–60 minutes and queues reminders, e.g. 24 hours and 2 hours before each confirmed appointment, respecting each patient's consent and channel.
-- Idempotent: each reminder is recorded in `messages` so it is never sent twice.
-- All times are computed in **Asia/Karachi** on the server.
-
-### 6. Consent records
-- Store who consented, to what (channel + text version), when, and from where; support withdrawal (patient reply "STOP" or staff action).
-- Collect only what's needed; booking notes warn patients not to enter sensitive medical details.
-- Confirm current Pakistani data-protection and medical-advertising requirements (e.g. PMDC guidance) with the clinic before launch.
-
-### 7. Also before go-live
-- Real content from the clinic: doctor bio and qualifications, approved treatment copy, prices, equipment details, clinic photos, consented before/after photos.
-- Clinic domain, Google Business Profile link, analytics (privacy-friendly), error monitoring, backups.
-- Remove the preview banner and `noindex`.
-
----
-
-## Pitch demo script (about 5 minutes)
-
-1. **Phone first.** Open the site on your phone: hero, treatments, offers. Point out the banner: "this is a preview I built for you."
-2. **Book an appointment** for HydraFacial. Show the Pakistani number check and the consent box; confirm. Show the reference number and the **message preview**: "this is exactly what your patients will receive on WhatsApp."
-3. **Open `/admin`** (on a laptop beside the phone): the new booking appears instantly. Confirm it; reschedule it to show the reschedule notice.
-4. **Change a price** (e.g. HydraFacial offer). Refresh the phone: the new price is on the treatment page and homepage offers.
-5. **Clinic settings:** close Sunday or add an Eid holiday. The booking page no longer offers those days.
-6. **Skin Finder** and **Treatment journey:** show how patients find the right treatment and how a PRP course is planned week by week.
-7. End on the Phase 2 plan: "Everything you saw is ready to connect to a real database, WhatsApp and email."
-
-Tip: press **Reset demo data** before each demo.
+- **Appointment reminders** (e.g. 24 hours before) are not scheduled yet. The template exists (`reminder`); add a Supabase `pg_cron` job or Vercel Cron that calls a reminder endpoint.
+- **Rate limiting** is per server instance. For heavier traffic, add Vercel Firewall rules or a shared store (e.g. Upstash).
+- **Content review:** the starter medical text is general patient information. The doctor should review every page, and the clinic should confirm compliance with PMDC guidance on medical advertising and with applicable data-protection law before launch.
+- **Single practitioner:** the data model supports several doctors (`doctorId`), but the interface currently assumes one. Adding a doctor selector is a small change if the clinic grows.
+- **No contact form:** the site uses WhatsApp, phone, email and booking instead, which avoids collecting unstructured medical information.

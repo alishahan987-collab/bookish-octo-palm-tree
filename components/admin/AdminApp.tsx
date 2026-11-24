@@ -195,9 +195,9 @@ function Dashboard({ onLogout, email }: { onLogout: () => void; email: string | 
   );
 
   return (
-    <div className="min-h-dvh bg-cream/50">
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col overflow-y-auto border-r border-line bg-ivory p-4 lg:flex">
-        <div className="px-2 py-3"><Logo /></div>
+    <div className="min-h-dvh bg-cream/50 lg:flex">
+      <aside className="z-30 hidden w-64 flex-none flex-col overflow-y-auto border-r border-line bg-ivory p-4 lg:sticky lg:top-0 lg:flex lg:h-dvh">
+        <div className="px-2 py-3"><Logo compact /></div>
         <div className="mt-6 flex-1">{nav}</div>
         <AdminFooter email={email} onLogout={onLogout} onReset={() => setConfirmReset(true)} />
       </aside>
@@ -210,13 +210,13 @@ function Dashboard({ onLogout, email }: { onLogout: () => void; email: string | 
       </header>
       {navOpen && (
         <div id="admin-mobile-nav" className="fixed inset-0 z-40 overflow-y-auto bg-ivory p-4 lg:hidden">
-          <div className="mb-6 flex items-center justify-between"><Logo /><button type="button" onClick={() => setNavOpen(false)} className="rounded-full p-2 hover:bg-cream" aria-label="Close menu"><Icon name="close" /></button></div>
+          <div className="mb-6 flex items-center justify-between"><Logo compact /><button type="button" onClick={() => setNavOpen(false)} className="rounded-full p-2 hover:bg-cream" aria-label="Close menu"><Icon name="close" /></button></div>
           {nav}
           <div className="mt-8"><AdminFooter email={email} onLogout={onLogout} onReset={() => setConfirmReset(true)} /></div>
         </div>
       )}
 
-      <div className="lg:pl-64">
+      <div className="min-w-0 flex-1">
         <div className="mx-auto max-w-6xl px-4 py-6 pb-32 sm:px-6 sm:py-8">
           {dataMode === "demo" && (
             <p className="mb-6 flex items-start gap-2 rounded-2xl border border-dashed border-champagne bg-ivory p-3 text-xs leading-relaxed text-muted">

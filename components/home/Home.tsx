@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { getConditions, getGallery, getPosts, getTreatments } from "@/lib/data";
 import { useData } from "@/lib/data/hooks";
-import type { CategoryId, Condition, GalleryItem, Post, SectionId, SiteContent, Treatment } from "@/lib/data/types";
+import type { CategoryId, Condition, CustomSection, GalleryItem, Post, SectionId, SiteContent, Treatment } from "@/lib/data/types";
 import { formatMoney } from "@/lib/pricing";
 import { mapsUrl, useHours } from "../layout/Footer";
 import { WhatsAppLink } from "../layout/WhatsAppLink";
@@ -31,9 +31,13 @@ export function Home({ initial }: { initial: HomeData }) {
   const posts = useData(() => getPosts(), initial.posts).data;
   const gallery = useData(() => getGallery(), initial.gallery).data;
 
-  const order = (Object.entries(content.sections) as [SectionId, SiteContent["sections"][SectionId]][])
+  const builtIn = (Object.entries(content.sections) as [SectionId, SiteContent["sections"][SectionId]][])
     .filter(([, s]) => s.visible)
-    .sort((a, b) => a[1].order - b[1].order);
+    .map(([id, s]) => ({ key: id, order: s.order, node: () => render[id]() }));
+  const custom = (content.customSections ?? [])
+    .filter((s) => s.visible)
+    .map((s) => ({ key: `custom-${s.id}`, order: s.order, node: () => <CustomBlock s={s} /> }));
+  const order = [...builtIn, ...custom].sort((a, b) => a.order - b.order);
 
   const render: Record<SectionId, () => React.ReactNode> = {
     intro: () => <Intro />,
@@ -52,8 +56,8 @@ export function Home({ initial }: { initial: HomeData }) {
   return (
     <>
       <Hero />
-      {order.map(([id]) => (
-        <div key={id} data-section={id}>{render[id]()}</div>
+      {order.map((o) => (
+        <div key={o.key} data-section={o.key}>{o.node()}</div>
       ))}
     </>
   );
@@ -228,11 +232,13 @@ function ProceduresSection({ treatments }: { treatments: Treatment[] }) {
           </button>
         ))}
       </div>
-      <ul role="tabpanel" className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {list.map((t) => (
-          <li key={t.id}><ProcedureCard t={t} currency={content.currency} /></li>
-        ))}
-      </ul>
+      <div role="tabpanel" aria-label={GROUPS.find((g) => g.id === tab)!.label}>
+        <ul className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {list.map((t) => (
+            <li key={t.id}><ProcedureCard t={t} currency={content.currency} /></li>
+          ))}
+        </ul>
+      </div>
       <div className="mt-10 text-center">
         <Link href={CATEGORY_PAGE[tab]} className="btn btn-ghost">View all {GROUPS.find((g) => g.id === tab)!.label.toLowerCase()}</Link>
       </div>
@@ -412,6 +418,27 @@ function ContactSection() {
           </div>
         </div>
         <MapEmbed query={contact.mapsQuery} />
+      </div>
+    </section>
+  );
+}
+
+function CustomBlock({ s }: { s: CustomSection }) {
+  const dark = s.tone === "dark";
+  return (
+    <section className={s.tone === "cream" ? "bg-cream" : dark ? "bg-charcoal" : ""}>
+      <div className={`container-lux grid items-center gap-10 py-20 sm:py-24 ${s.image ? "lg:grid-cols-2 lg:gap-16" : ""}`}>
+        {s.image && (
+          <Reveal className={s.imageSide === "right" ? "lg:order-2" : ""}>
+            <SmartImage src={s.image} alt="" className="aspect-[4/3] rounded-[2rem]" sizes="(max-width: 1024px) 100vw, 50vw" />
+          </Reveal>
+        )}
+        <Reveal className={s.image ? "" : "mx-auto max-w-3xl text-center"}>
+          {s.eyebrow && <p className={`eyebrow ${dark ? "!text-champagne" : ""}`}>{s.eyebrow}</p>}
+          <h2 className={`mt-3 text-[2.15rem] leading-[1.05] sm:text-5xl ${dark ? "!text-ivory" : ""}`}>{s.title}</h2>
+          {s.body && <p className={`mt-5 whitespace-pre-line text-[1.05rem] leading-relaxed ${dark ? "text-[#d9d1c4]" : "text-muted"}`}>{s.body}</p>}
+          {s.ctaLabel && s.ctaHref && <Link href={s.ctaHref} className={`btn mt-8 ${dark ? "btn-gold" : "btn-primary"}`}>{s.ctaLabel}</Link>}
+        </Reveal>
       </div>
     </section>
   );

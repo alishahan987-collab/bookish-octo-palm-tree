@@ -1,15 +1,18 @@
 {
-  "name": "aesthetica-pitch-prototype",
+  "name": "dermatology-clinic-website",
   "version": "0.1.0",
   "private": true,
-  "description": "Design preview / clickable prototype for Aesthetica by Dr. Sajjad (frontend-only, mock data).",
+  "description": "Premium dermatology & aesthetic clinic website with booking system and admin CMS (Next.js + Supabase).",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:e2e": "playwright test --trace off"
+    "test:e2e": "playwright test --trace off",
+    "test:live": "LIVE=1 playwright test --project live --trace off",
+    "db:seed": "tsx scripts/seed-supabase.ts",
+    "create-admin": "tsx scripts/create-admin.ts"
   },
   "engines": {
     "node": ">=20.9"
