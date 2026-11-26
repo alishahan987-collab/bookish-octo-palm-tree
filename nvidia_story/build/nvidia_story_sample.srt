@@ -1,0 +1,68 @@
+1
+00:00:00,120 --> 00:00:03,218
+Today, Nvidia is worth trillions of dollars.
+
+2
+00:00:03,438 --> 00:00:06,398
+But in 1996, it almost died.
+
+3
+00:00:08,768 --> 00:00:14,177
+It started in 1993, when three engineers sat down at a Denny's in San Jose.
+
+4
+00:00:14,397 --> 00:00:18,517
+Video games will need 3D graphics. Let's build the chip!
+
+5
+00:00:18,987 --> 00:00:22,086
+Their first chip, the NV1, was a disaster.
+
+6
+00:00:22,456 --> 00:00:25,462
+It drew curves, but the industry chose triangles.
+
+7
+00:00:26,132 --> 00:00:30,043
+Even worse, Sega had paid them to build the chip for its next console.
+
+8
+00:00:30,263 --> 00:00:32,608
+So Jensen told Sega's boss the truth.
+
+9
+00:00:32,878 --> 00:00:36,218
+Our design is wrong. You should find another partner.
+
+10
+00:00:36,538 --> 00:00:38,526
+But if you don't pay us, we're finished.
+
+11
+00:00:39,596 --> 00:00:41,545
+...Okay.
+
+12
+00:00:42,115 --> 00:00:46,004
+Sega paid. Those five million dollars kept Nvidia alive.
+
+13
+00:00:46,374 --> 00:00:49,287
+But Nvidia still had to lay off more than half its people.
+
+14
+00:00:49,657 --> 00:00:51,432
+They had money for just one last chip.
+
+15
+00:00:51,902 --> 00:00:54,177
+If it failed, Nvidia was dead.
+
+16
+00:00:54,947 --> 00:01:00,646
+In 1997, the RIVA 128 sold a million units in four months.
+
+17
+00:01:01,116 --> 00:01:03,646
+Nvidia survived. And that was only the beginning.
+
