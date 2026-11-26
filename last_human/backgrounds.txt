@@ -1,0 +1,11 @@
+bedroom|a cozy bedroom with a bed and a big window showing city buildings, morning sunlight, empty wooden floor in front
+street|an empty city street with buildings and shops, no cars, morning, wide empty sidewalk in front
+skyline|a wide view of a quiet empty city skyline seen from a grassy hill, pale sky
+mushroom|a ruined city skyline with a huge mushroom cloud in the distance, orange and grey sky, empty ground in front
+ruins|a destroyed city street with rubble and broken buildings, dusty grey sky, empty ground in front
+kitchen|a small kitchen with an open refrigerator full of food, warm light, empty tiled floor in front
+ash|an empty city street covered in grey ash and dust, gloomy grey-green sky, wide empty road in front
+shelter|a basement shelter with metal shelves full of canned food and water bottles, a hanging light bulb, empty concrete floor in front
+hospital|an empty hospital corridor with empty beds, empty floor in front
+ambulance|an abandoned ambulance parked on an empty road with weeds, empty road in front
+dusk|an empty city street at dusk with a sidewalk curb in front, dark blue and orange sky, street lamps

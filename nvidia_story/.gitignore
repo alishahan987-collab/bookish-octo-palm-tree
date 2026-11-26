@@ -1,0 +1,4 @@
+build/tts/
+build/mix.wav
+build/render.log
+__pycache__/
