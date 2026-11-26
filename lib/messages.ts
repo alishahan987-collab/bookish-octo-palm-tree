@@ -36,7 +36,7 @@ export function buildMessages(
     .join("\n");
   const when = whenText(b);
   const ref = b.reference;
-  const sign = `\n\nWarm regards,\n${clinic}${contactLine ? `\n${contactLine}` : ""}`;
+  const sign = `\n\nWarmly,\n${clinic}${contactLine ? `\n${contactLine}` : ""}`;
 
   let wa = "";
   let subject = "";
@@ -44,36 +44,36 @@ export function buildMessages(
 
   switch (kind) {
     case "confirmation":
-      wa = `Assalam-o-Alaikum ${name}, thank you for booking with ${clinic}.\n\n*${b.treatmentName}*\n${when}\nRef: ${ref}\n\nWe have received your request and will confirm shortly. Location: ${where}.`;
+      wa = `Hi ${name}, thank you for booking with ${clinic}.\n\n*${b.treatmentName}*\n${when}\nRef: ${ref}\n\nWe have received your request and will confirm shortly. Location: ${where}.`;
       subject = `Appointment request received – ${ref}`;
-      body = `Dear ${b.patientName},\n\nThank you for choosing ${clinic}. We have received your appointment request:\n\nTreatment: ${b.treatmentName}\nDate & time: ${when}\nReference: ${ref}\n\nOur team will confirm your appointment shortly.\n\nAddress: ${where}${sign}`;
+      body = `Hi ${name},\n\nThank you for choosing ${clinic}. We have received your appointment request:\n\nTreatment: ${b.treatmentName}\nDate & time: ${when}\nReference: ${ref}\n\nOur team will confirm your appointment shortly.\n\nAddress: ${where}${sign}`;
       break;
     case "accepted":
-      wa = `Assalam-o-Alaikum ${name}, your appointment at ${clinic} is *confirmed*.\n\n*${b.treatmentName}*\n${when}\nRef: ${ref}\n\nLocation: ${where}. Please arrive 10 minutes early.`;
+      wa = `Hi ${name}, your appointment at ${clinic} is *confirmed*.\n\n*${b.treatmentName}*\n${when}\nRef: ${ref}\n\nLocation: ${where}. Please arrive 10 minutes early.`;
       subject = `Appointment confirmed – ${ref}`;
-      body = `Dear ${b.patientName},\n\nYour appointment is confirmed.\n\nTreatment: ${b.treatmentName}\nDate & time: ${when}\nReference: ${ref}\nAddress: ${where}\n\nPlease arrive 10 minutes early. If you need to change your appointment, reply to this email.${sign}`;
+      body = `Hi ${name},\n\nYour appointment is confirmed.\n\nTreatment: ${b.treatmentName}\nDate & time: ${when}\nReference: ${ref}\nAddress: ${where}\n\nPlease arrive 10 minutes early. If you need to change your appointment, reply to this email.${sign}`;
       break;
     case "rejected":
-      wa = `Assalam-o-Alaikum ${name}, unfortunately we are unable to accommodate your request for *${b.treatmentName}* on ${when} (Ref: ${ref}).${extra.reason ? `\n\nNote: ${extra.reason}` : ""}\n\nPlease book another time online or reply to this message.`;
+      wa = `Hi ${name}, unfortunately we are unable to accommodate your request for *${b.treatmentName}* on ${when} (Ref: ${ref}).${extra.reason ? `\n\nNote: ${extra.reason}` : ""}\n\nPlease book another time online or reply to this message.`;
       subject = `About your appointment request – ${ref}`;
-      body = `Dear ${b.patientName},\n\nThank you for your request. Unfortunately we are unable to accommodate ${b.treatmentName} on ${when} (reference ${ref}).${extra.reason ? `\n\nNote from the clinic: ${extra.reason}` : ""}\n\nPlease choose another time on our website or reply to this email and we will help.${sign}`;
+      body = `Hi ${name},\n\nThank you for your request. Unfortunately we are unable to accommodate ${b.treatmentName} on ${when} (reference ${ref}).${extra.reason ? `\n\nNote from the clinic: ${extra.reason}` : ""}\n\nPlease choose another time on our website or reply to this email and we will help.${sign}`;
       break;
     case "cancellation":
-      wa = `Assalam-o-Alaikum ${name}, your appointment for *${b.treatmentName}* on ${when} (Ref: ${ref}) has been cancelled.\n\nTo book a new time, visit our website or reply to this message.`;
+      wa = `Hi ${name}, your appointment for *${b.treatmentName}* on ${when} (Ref: ${ref}) has been cancelled.\n\nTo book a new time, visit our website or reply to this message.`;
       subject = `Appointment cancelled – ${ref}`;
-      body = `Dear ${b.patientName},\n\nYour appointment for ${b.treatmentName} on ${when} (reference ${ref}) has been cancelled.\n\nIf you would like to book another time, reply to this email or book online.${sign}`;
+      body = `Hi ${name},\n\nYour appointment for ${b.treatmentName} on ${when} (reference ${ref}) has been cancelled.\n\nIf you would like to book another time, reply to this email or book online.${sign}`;
       break;
     case "reschedule": {
       const was = extra.previous ? whenText(extra.previous) : "your previous time";
-      wa = `Assalam-o-Alaikum ${name}, your appointment for *${b.treatmentName}* has been moved.\n\nNew time: ${when}\nPreviously: ${was}\nRef: ${ref}\n\nReply to this message if the new time does not suit you.`;
+      wa = `Hi ${name}, your appointment for *${b.treatmentName}* has been moved.\n\nNew time: ${when}\nPreviously: ${was}\nRef: ${ref}\n\nReply to this message if the new time does not suit you.`;
       subject = `Appointment rescheduled – ${ref}`;
-      body = `Dear ${b.patientName},\n\nYour appointment for ${b.treatmentName} has been rescheduled.\n\nNew date & time: ${when}\nPrevious: ${was}\nReference: ${ref}\n\nIf the new time does not suit you, reply to this email.${sign}`;
+      body = `Hi ${name},\n\nYour appointment for ${b.treatmentName} has been rescheduled.\n\nNew date & time: ${when}\nPrevious: ${was}\nReference: ${ref}\n\nIf the new time does not suit you, reply to this email.${sign}`;
       break;
     }
     case "reminder":
       wa = `Reminder: ${name}, your *${b.treatmentName}* appointment at ${clinic} is on ${when}. Ref: ${ref}.`;
       subject = `Reminder: your appointment on ${formatDateLong(b.date)}`;
-      body = `Dear ${b.patientName},\n\nThis is a reminder of your ${b.treatmentName} appointment on ${when}.\n\nAddress: ${where}\nReference: ${ref}${sign}`;
+      body = `Hi ${name},\n\nThis is a reminder of your ${b.treatmentName} appointment on ${when}.\n\nAddress: ${where}\nReference: ${ref}${sign}`;
       break;
   }
 
@@ -93,16 +93,16 @@ export function buildClinicAlert(b: Booking, content: SiteContent, siteUrl?: str
     `Treatment: ${b.treatmentName}`,
     `Requested: ${whenText(b)}`,
     `Patient: ${b.patientName}`,
-    `Mobile: ${b.phone}`,
+    `Phone: ${b.phone}`,
     `Email: ${b.email ?? "—"}`,
-    `Prefers: ${{ whatsapp: "WhatsApp", email: "Email", both: "WhatsApp and email" }[b.contactMethod]}`,
+    `Prefers: ${CONTACT_METHOD_LABEL[b.contactMethod]}`,
     b.notes ? `Notes: ${b.notes}` : "",
     "",
     siteUrl ? `Review and accept or reject: ${siteUrl.replace(/\/$/, "")}/admin` : "Review it in the admin dashboard.",
   ]
     .filter((l) => l !== null)
     .join("\n");
-  const whatsapp = `New booking request ${b.reference}: ${b.patientName}, ${b.treatmentName}, ${whenText(b)}. Mobile ${b.phone}.`;
+  const whatsapp = `New booking request ${b.reference}: ${b.patientName}, ${b.treatmentName}, ${whenText(b)}. Phone ${b.phone}.`;
   return { subject, body, whatsapp };
 }
 
@@ -113,5 +113,12 @@ export function whatsappTemplateParams(b: Booking): string[] {
 export const wantsWhatsApp = (m: ContactMethod) => m === "whatsapp" || m === "both";
 export const wantsEmail = (m: ContactMethod) => m === "email" || m === "both";
 
+export const CONTACT_METHOD_LABEL: Record<ContactMethod, string> = {
+  phone: "Phone call or text",
+  email: "Email",
+  whatsapp: "WhatsApp",
+  both: "WhatsApp and email",
+};
+
 export const CONSENT_TEXT =
-  "I agree that the clinic may store my details to manage this appointment and contact me about it by email and, if selected, WhatsApp. I can withdraw this consent at any time.";
+  "I agree that the clinic may store my details to manage this appointment and contact me about it by phone, text message or email. I can withdraw this consent at any time.";

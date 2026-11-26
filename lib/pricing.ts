@@ -1,10 +1,14 @@
 import type { PriceModel, PriceType } from "./data/types";
 
-export function formatMoney(n: number, currency = "PKR"): string {
-  return `${currency} ${Math.round(n).toLocaleString("en-US")}`;
+/** "$168", "$1,250", "$8.50". Falls back to "CODE 1,234" for unknown currency codes. */
+export function formatMoney(n: number, currency = "USD"): string {
+  const cents = Math.round(n * 100) % 100 !== 0;
+  try {
+    return new Intl.NumberFormat("en-US", { style: "currency", currency, minimumFractionDigits: cents ? 2 : 0, maximumFractionDigits: 2 }).format(n);
+  } catch {
+    return `${currency} ${Math.round(n).toLocaleString("en-US")}`;
+  }
 }
-/** @deprecated use formatMoney */
-export const formatPKR = (n: number) => formatMoney(n);
 
 export const PRICE_TYPE_LABELS: Record<PriceType, string> = {
   fixed: "Fixed price",
@@ -16,7 +20,7 @@ export const PRICE_TYPE_LABELS: Record<PriceType, string> = {
 };
 
 /** One-line summary used on cards and in the admin list. */
-export function priceSummary(p: PriceModel, currency = "PKR"): string {
+export function priceSummary(p: PriceModel, currency = "USD"): string {
   const f = (n: number) => formatMoney(n, currency);
   switch (p.type) {
     case "fixed":
@@ -24,11 +28,11 @@ export function priceSummary(p: PriceModel, currency = "PKR"): string {
     case "from":
       return `From ${f(p.amount)}${p.unit ? ` ${p.unit}` : ""}`;
     case "range":
-      return `${f(p.min)} – ${p.max.toLocaleString("en-US")}${p.unit ? ` ${p.unit}` : ""}`;
+      return `${f(p.min)}–${f(p.max)}${p.unit ? ` ${p.unit}` : ""}`;
     case "consultation":
-      return "Price after consultation";
+      return "Priced at consultation";
     case "promo":
-      return `${f(p.promo)} (was ${p.regular.toLocaleString("en-US")})`;
+      return `${f(p.promo)} (was ${f(p.regular)})`;
     case "package":
       return `${f(p.perSession)} per session`;
   }

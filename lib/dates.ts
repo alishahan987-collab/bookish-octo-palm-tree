@@ -1,10 +1,9 @@
 import type { HHmm, ISODate, Weekday } from "./data/types";
 
 /**
- * Date helpers. All dates are clinic-local calendar dates ("YYYY-MM-DD").
- * The prototype uses the viewer's local clock, which is Asia/Karachi for the
- * clinic and its patients. Phase 2 should compute "today" server-side in
- * Asia/Karachi.
+ * Date helpers. All dates are clinic-local calendar dates ("YYYY-MM-DD"),
+ * formatted the US way ("Thursday, November 26, 2026", "9:30 AM").
+ * "Now" in the clinic's time zone comes from lib/tz.ts.
  */
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -45,13 +44,13 @@ export function formatTime(t: HHmm): string {
   const min = timeToMinutes(t);
   const h = Math.floor(min / 60);
   const m = min % 60;
-  const suffix = h >= 12 ? "pm" : "am";
+  const suffix = h >= 12 ? "PM" : "AM";
   const h12 = h % 12 === 0 ? 12 : h % 12;
   return `${h12}:${pad(m)} ${suffix}`;
 }
 
 export function formatDate(s: ISODate, opts: Intl.DateTimeFormatOptions = { weekday: "short", day: "numeric", month: "short" }): string {
-  return parseISODate(s).toLocaleDateString("en-GB", opts);
+  return parseISODate(s).toLocaleDateString("en-US", opts);
 }
 
 export function formatDateLong(s: ISODate): string {

@@ -18,7 +18,7 @@ export function BlogAdmin() {
   const { data: posts, ready } = useData(() => getPosts({ includeDrafts: true }), [], [], { fresh: true });
   const [editing, setEditing] = useState<PostInput | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Post | null>(null);
-  const blank: PostInput = { slug: "", title: "", excerpt: "", content: "", tags: [], status: "draft", author: content.doctor.name };
+  const blank: PostInput = { slug: "", title: "", excerpt: "", content: "", tags: [], status: "draft", author: `The ${content.brand.clinicName} team` };
   return (
     <div>
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">

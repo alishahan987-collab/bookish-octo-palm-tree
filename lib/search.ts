@@ -3,19 +3,22 @@ import type { Condition, Post, SearchHit, Treatment } from "./data/types";
 /**
  * Lightweight site search (runs in the browser, no external service).
  * Field-weighted scoring, prefix matching, typo tolerance and patient-language
- * synonyms ("hair fall", "pimples", "dark spots"...).
+ * synonyms ("pimples", "hair removal", "wrinkles", "iv drip"...).
  */
 
 const SYNONYMS: Record<string, string[]> = {
-  pimples: ["acne"], pimple: ["acne"], spots: ["acne", "pigmentation"], zits: ["acne"], breakouts: ["acne"],
-  "hair fall": ["hair loss"], hairfall: ["hair loss"], baldness: ["hair loss"], alopecia: ["hair loss"], thinning: ["hair loss"],
-  "dark spots": ["pigmentation", "hyperpigmentation", "melasma"], darkspots: ["hyperpigmentation"], freckles: ["pigmentation"],
-  "dark patches": ["melasma"], chaiyan: ["melasma"], whitening: ["pigmentation"], fairness: ["pigmentation"], tan: ["pigmentation"],
-  wrinkles: ["botox", "anti-ageing", "anti-aging"], lines: ["botox"], ageing: ["anti-ageing", "anti-aging"], aging: ["anti-ageing", "anti-aging"],
-  "anti wrinkle": ["botox"], lips: ["lip fillers"], volume: ["fillers"], glow: ["hydrafacial", "skin boosters"],
-  scars: ["acne scars"], marks: ["hyperpigmentation", "acne scars"], itching: ["eczema", "allergies", "fungal"], rash: ["eczema", "allergies", "fungal"],
-  ringworm: ["fungal"], tinea: ["fungal"], flakes: ["dandruff"], white: ["vitiligo"], patches: ["vitiligo", "melasma"], redness: ["rosacea"],
-  laser: ["laser"], prp: ["prp"], peel: ["peels"], facial: ["hydrafacial"],
+  pimples: ["acne"], pimple: ["acne"], zits: ["acne"], breakouts: ["acne"], blackheads: ["acne"],
+  "hair removal": ["laser hair"], "unwanted hair": ["laser hair"], shaving: ["laser hair"], waxing: ["laser hair"],
+  bikini: ["laser hair"], underarm: ["laser hair"], brazilian: ["laser hair"], ingrown: ["laser hair"],
+  wrinkles: ["botox", "fine lines"], "crow's feet": ["botox"], "crows feet": ["botox"], "frown lines": ["botox"], forehead: ["botox"],
+  tox: ["botox"], neurotoxin: ["botox"], dysport: ["botox"], "anti wrinkle": ["botox"],
+  lips: ["fillers"], lip: ["fillers"], cheeks: ["fillers", "sculptra"], jawline: ["fillers"], volume: ["fillers", "sculptra"], hollow: ["fillers", "sculptra"],
+  collagen: ["sculptra", "microneedling"], glow: ["hydrafacial", "facial"], dull: ["hydrafacial", "facial"], facial: ["hydrafacial", "facial"],
+  scars: ["microneedling"], pores: ["microneedling", "hydrafacial"], texture: ["microneedling", "laser"],
+  "vampire facial": ["prp"], platelet: ["prp"], drip: ["iv wellness"], iv: ["iv wellness"], hydration: ["iv wellness", "hydrafacial"],
+  vitamins: ["vitamin"], b12: ["vitamin"], nad: ["nad"], detox: ["detox"],
+  mole: ["removal"], moles: ["removal"], "skin tag": ["removal"], tags: ["removal"], wart: ["removal"], warts: ["removal"],
+  aging: ["anti-aging", "botox"], ageing: ["anti-aging"], "dark spots": ["laser skin"], pigmentation: ["laser skin"],
 };
 
 export interface SearchDoc {
@@ -64,12 +67,13 @@ export function buildIndex(data: { treatments: Treatment[]; conditions: Conditio
     docs.push({ type: "article", title: p.title, href: `/blog/${p.slug}`, summary: p.excerpt, image: p.cover, keywords: p.tags.join(" "), body: p.content.slice(0, 4000) });
   }
   const pages: [string, string, string][] = [
-    ["About the doctor", "/about", "doctor qualifications experience biography"],
-    ["Book an appointment", "/book", "book appointment booking schedule consultation"],
-    ["Pricing", "/pricing", "price cost fees rates packages discounts offers"],
-    ["Before & after gallery", "/before-after", "results before after photos gallery"],
-    ["Contact us", "/contact", "contact phone email whatsapp address location map timings hours"],
-    ["Skin Concern Finder", "/skin-finder", "which treatment finder quiz concern"],
+    ["About us", "/about", "about clinic team philosophy story"],
+    ["Book an appointment", "/book", "book appointment booking schedule consultation reserve"],
+    ["Pricing", "/pricing", "price prices cost fees rates offers how much"],
+    ["Before & after", "/before-after", "results before after photos gallery"],
+    ["Contact & directions", "/contact", "contact phone call email address location map directions hours open parking"],
+    ["Treatment finder", "/skin-finder", "which treatment finder quiz concern help choose"],
+    ["Accessibility", "/accessibility", "accessibility wheelchair accessible ada"],
   ];
   for (const [title, href, keywords] of pages) docs.push({ type: "page", title, href, summary: "", keywords, body: "" });
   return docs;

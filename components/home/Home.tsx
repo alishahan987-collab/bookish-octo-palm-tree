@@ -1,21 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
 import { getConditions, getGallery, getPosts, getTreatments } from "@/lib/data";
 import { useData } from "@/lib/data/hooks";
-import type { CategoryId, Condition, CustomSection, GalleryItem, Post, SectionId, SiteContent, Treatment } from "@/lib/data/types";
-import { formatMoney } from "@/lib/pricing";
-import { mapsUrl, useHours } from "../layout/Footer";
-import { WhatsAppLink } from "../layout/WhatsAppLink";
+import type { Condition, GalleryItem, HomeSection, Post, Treatment } from "@/lib/data/types";
+import { CATEGORIES } from "@/lib/categories";
+import { weeklyHours } from "@/lib/hours";
+import { telHref } from "@/lib/phone";
+import { clinicNow } from "@/lib/tz";
+import { useEffect, useState } from "react";
 import { BeforeAfterSlider } from "../site/BeforeAfterSlider";
-import { CATEGORY_PAGE, ConditionCard, PostCard, ProcedureCard } from "../site/Cards";
+import { ConditionCard, PostCard, TreatmentCard } from "../site/Cards";
 import { useSite } from "../site/SiteProvider";
-import { Icon } from "../ui/Icon";
+import { directionsUrl, useOpenStatus } from "../site/useClinic";
+import { Icon, type IconName } from "../ui/Icon";
 import { Reveal } from "../ui/Motion";
 import { PriceTag } from "../ui/Price";
 import { SmartImage } from "../ui/SmartImage";
-import { FaqList, MapEmbed } from "./parts";
+import { FaqList, MapEmbed, Stars } from "./parts";
 
 export interface HomeData {
   treatments: Treatment[];
@@ -24,6 +26,7 @@ export interface HomeData {
   gallery: GalleryItem[];
 }
 
+/** Renders the homepage from the ordered, admin-managed list of sections. */
 export function Home({ initial }: { initial: HomeData }) {
   const { content } = useSite();
   const treatments = useData(() => getTreatments(), initial.treatments).data;
@@ -31,101 +34,120 @@ export function Home({ initial }: { initial: HomeData }) {
   const posts = useData(() => getPosts(), initial.posts).data;
   const gallery = useData(() => getGallery(), initial.gallery).data;
 
-  const builtIn = (Object.entries(content.sections) as [SectionId, SiteContent["sections"][SectionId]][])
-    .filter(([, s]) => s.visible)
-    .map(([id, s]) => ({ key: id, order: s.order, node: () => render[id]() }));
-  const custom = (content.customSections ?? [])
-    .filter((s) => s.visible)
-    .map((s) => ({ key: `custom-${s.id}`, order: s.order, node: () => <CustomBlock s={s} /> }));
-  const order = [...builtIn, ...custom].sort((a, b) => a.order - b.order);
+  const sections = content.homeSections.filter((s) => s.visible);
+  const firstHero = sections.findIndex((s) => s.type === "hero");
 
-  const render: Record<SectionId, () => React.ReactNode> = {
-    intro: () => <Intro />,
-    conditions: () => <ConditionsSection conditions={conditions} />,
-    procedures: () => <ProceduresSection treatments={treatments} />,
-    doctor: () => <DoctorSection />,
-    why: () => <WhySection />,
-    beforeAfter: () => <BeforeAfterSection gallery={gallery} />,
-    pricing: () => <PricingSection treatments={treatments} />,
-    blog: () => <BlogSection posts={posts} />,
-    cta: () => <CtaSection />,
-    faq: () => <FaqSection />,
-    contact: () => <ContactSection />,
+  const render = (s: HomeSection, i: number) => {
+    switch (s.type) {
+      case "hero": return <Hero s={s} primary={i === firstHero} />;
+      case "treatments": return <TreatmentsSection s={s} treatments={treatments} />;
+      case "about": return <AboutSection s={s} />;
+      case "why": return <WhySection s={s} />;
+      case "beforeAfter": return <BeforeAfterSection s={s} gallery={gallery} />;
+      case "testimonials": return <TestimonialsSection s={s} />;
+      case "team": return <TeamSection s={s} />;
+      case "booking": return <BookingSection s={s} />;
+      case "location": return <LocationSection s={s} />;
+      case "faq": return <FaqSection s={s} />;
+      case "concerns": return <ConcernsSection s={s} conditions={conditions} />;
+      case "pricing": return <PricingSection s={s} treatments={treatments} />;
+      case "journal": return <JournalSection s={s} posts={posts} />;
+      case "custom": return <CustomSection s={s} />;
+    }
   };
 
   return (
     <>
-      <Hero />
-      {order.map((o) => (
-        <div key={o.key} data-section={o.key}>{o.node()}</div>
+      {firstHero === -1 && <h1 className="sr-only">{content.brand.clinicName}</h1>}
+      {sections.map((s, i) => (
+        <div key={s.id} data-section={s.type} data-section-id={s.id}>{render(s, i)}</div>
       ))}
     </>
   );
 }
 
-function useSection(id: SectionId) {
-  return useSite().content.sections[id];
-}
+/* --------------------------------- shared --------------------------------- */
 
-function SectionHead({ id, align = "left", children }: { id: SectionId; align?: "left" | "center"; children?: React.ReactNode }) {
-  const s = useSection(id);
+const tid = (s: HomeSection) => `${s.id}-title`;
+const PAD = "py-20 sm:py-24 lg:py-32";
+
+function Heading({ s, align = "left", light = false, children }: { s: HomeSection; align?: "left" | "center"; light?: boolean; children?: React.ReactNode }) {
   return (
     <div className={align === "center" ? "mx-auto max-w-2xl text-center" : "max-w-2xl"}>
       {s.eyebrow && <p className="eyebrow">{s.eyebrow}</p>}
-      <h2 id={`${id}-title`} className="mt-3 text-[2.15rem] leading-[1.05] sm:text-5xl">{s.title}</h2>
-      {s.intro && <p className="mt-4 text-[1.03rem] leading-relaxed text-muted">{s.intro}</p>}
+      <h2 id={tid(s)} className={`mt-4 text-[2.4rem] leading-[1.04] sm:text-5xl lg:text-[3.6rem] ${light ? "!text-ivory" : ""}`}>{s.title}</h2>
+      {s.intro && <p className={`mt-5 ${light ? "text-[1.05rem] leading-relaxed text-[#ddd6cc]" : "lead"}`}>{s.intro}</p>}
       {children}
+    </div>
+  );
+}
+
+const toneClass = (tone: HomeSection["tone"], fallback: HomeSection["tone"] = "light") =>
+  ({ light: "bg-ivory", cream: "bg-cream", dark: "on-dark bg-charcoal" })[tone ?? fallback ?? "light"];
+
+/** Shown only while the site is in preview mode, so the clinic can see where verified content will go. */
+function PreviewPlaceholder({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="mt-12 flex flex-col items-center justify-center gap-3 border border-dashed border-sand px-6 py-14 text-center" data-testid="preview-placeholder">
+      <Icon name="sparkle" size={22} className="text-champagne" />
+      <div className="max-w-md text-sm leading-relaxed text-muted">{children}</div>
     </div>
   );
 }
 
 /* ----------------------------------- Hero ----------------------------------- */
 
-function Hero() {
+function Hero({ s, primary }: { s: HomeSection; primary: boolean }) {
   const { content } = useSite();
-  const { hero, doctor } = content;
-  return (
-    <section className="relative overflow-hidden" aria-labelledby="hero-title">
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(55%_60%_at_80%_25%,#efdfc0_0%,transparent_62%),radial-gradient(45%_50%_at_5%_95%,#f3e7d4_0%,transparent_60%)]" />
-      {hero.backgroundImage && (
-        <SmartImage src={hero.backgroundImage} alt="" className="!absolute inset-0 h-full w-full opacity-15" priority sizes="100vw" />
-      )}
-      <svg aria-hidden="true" className="pointer-events-none absolute -left-72 top-40 hidden h-[34rem] w-[34rem] text-champagne/30 xl:block" viewBox="0 0 200 200" fill="none" stroke="currentColor" strokeWidth="0.4">
-        <circle cx="100" cy="100" r="98" />
-        <circle cx="100" cy="100" r="78" />
-      </svg>
-      <div className="container-lux relative grid items-center gap-12 pb-16 pt-10 sm:pt-14 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16 lg:pb-24 lg:pt-16">
-        <div>
-          <p className="eyebrow animate-rise">{hero.eyebrow}</p>
-          <h1 id="hero-title" className="mt-5 text-[2.85rem] leading-[1.02] sm:text-6xl xl:text-[4.6rem]">
-            {hero.title} <em className="text-gold">{hero.highlight}</em>
-          </h1>
-          <p className="mt-6 max-w-xl text-[1.07rem] leading-relaxed text-muted">{hero.intro}</p>
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <Link href="/book" className="btn btn-primary">{hero.primaryCta} <Icon name="arrow" size={18} /></Link>
-            <Link href="/treatments" className="btn btn-ghost">{hero.secondaryCta}</Link>
-          </div>
-          {hero.badges.length > 0 && (
-            <ul className="mt-10 grid max-w-lg grid-cols-3 gap-4 border-t border-line pt-6 text-[0.8rem] leading-snug text-muted">
-              {hero.badges.slice(0, 3).map((b) => (
-                <li key={b.title}><span className="block font-serif text-xl text-charcoal">{b.title}</span>{b.text}</li>
-              ))}
-            </ul>
-          )}
-        </div>
+  const status = useOpenStatus();
+  const H = primary ? "h1" : "h2";
+  const { reviews, contact } = content;
+  const city = contact.city.replace(/\s*\d{5}(-\d{4})?$/, "") || contact.address;
 
-        <div className="relative mx-auto w-full max-w-[27rem] lg:max-w-[30rem]">
-          <div aria-hidden="true" className="absolute -inset-3 translate-x-4 translate-y-4 rounded-t-[999px] rounded-b-[2.5rem] border border-champagne/70" />
-          <div className="relative aspect-[4/5] overflow-hidden rounded-t-[999px] rounded-b-[2.5rem] shadow-[var(--shadow-lift)]" data-testid="doctor-portrait">
-            {doctor.photo ? (
-              <SmartImage src={doctor.photo} alt={`Portrait of ${doctor.name}`} className="absolute inset-0 h-full w-full" priority sizes="(max-width: 1024px) 90vw, 480px" />
-            ) : (
-              <PortraitPlaceholder name={doctor.name} />
-            )}
-          </div>
-          <div className="absolute -bottom-6 left-0 right-6 rounded-2xl border border-line bg-ivory/95 p-4 shadow-[var(--shadow-soft)] backdrop-blur sm:-left-8 sm:right-auto sm:min-w-[17rem]">
-            <p className="font-serif text-2xl leading-tight text-charcoal">{doctor.name}</p>
-            <p className="mt-0.5 text-sm text-gold">{doctor.designation}</p>
+  /*
+   * One markup, two compositions:
+   *  - phones: full-height photograph, message over a soft dark gradient;
+   *  - tablets and up: editorial split, photograph bleeding to the right edge.
+   */
+  return (
+    <section className="relative overflow-hidden bg-ivory" aria-labelledby={tid(s)} data-testid="hero">
+      <div className="relative h-[calc(100svh-4.25rem-3.5rem)] max-h-[46rem] min-h-[36rem] md:absolute md:inset-y-0 md:right-0 md:h-auto md:max-h-none md:min-h-0 md:w-[46%] lg:w-1/2">
+        <div className="hero-zoom absolute inset-0 overflow-hidden">
+          <SmartImage src={s.image} alt={s.imageAlt ?? ""} priority className="h-full w-full" sizes="(max-width: 767px) 100vw, 50vw" style={{ objectPosition: "38% 28%" }} />
+        </div>
+        <div aria-hidden="true" className="absolute inset-0 bg-[linear-gradient(180deg,rgb(37_37_37/0)_12%,rgb(37_37_37/0.62)_36%,rgb(37_37_37/0.88)_58%,rgb(37_37_37/0.95)_100%)] md:hidden" />
+      </div>
+
+      <div className="absolute inset-x-0 bottom-0 md:relative">
+        <div className="container-lux md:flex md:min-h-[clamp(36rem,calc(100svh-7.5rem),58rem)] md:items-center">
+          <div className="hero-copy pb-8 md:w-[54%] md:py-16 md:pr-10 lg:w-1/2 lg:pr-16">
+            <p className="eyebrow animate-rise !text-champagne md:!text-gold">{s.eyebrow}</p>
+            <H id={tid(s)} className="display mt-3 animate-rise text-[2.6rem] !text-ivory min-[390px]:text-[2.85rem] md:mt-5 md:text-[3.1rem] md:!text-charcoal lg:text-[4.3rem] xl:text-[5.1rem]">
+              {s.title} {s.highlight && <em className="text-champagne md:text-gold">{s.highlight}</em>}
+            </H>
+            {s.intro && <p className="mt-3 animate-rise text-[0.98rem] leading-relaxed text-[#ece7df] md:mt-6 md:max-w-md md:text-[1.0625rem] md:text-muted lg:text-lg">{s.intro}</p>}
+            <div className="mt-6 grid gap-2.5 min-[400px]:grid-cols-2 md:mt-9 md:flex md:flex-wrap md:gap-3">
+              {s.ctaLabel && <Link href={s.ctaHref || "/book"} className="btn btn-hero">{s.ctaLabel} <Icon name="arrow" size={16} className="hidden md:block" /></Link>}
+              {s.secondaryLabel && <Link href={s.secondaryHref || "/treatments"} className="btn btn-hero-2">{s.secondaryLabel}</Link>}
+            </div>
+            <ul className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2.5 text-[0.8rem] text-[#e9e4dc] md:mt-10 md:border-t md:border-line md:pt-6 md:text-muted">
+              {reviews.enabled && reviews.count > 0 && (
+                <li>
+                  <a href={reviews.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:underline">
+                    <Stars rating={reviews.rating} className="text-champagne" />
+                    <span><strong className="font-medium text-ivory md:text-charcoal">{reviews.rating.toFixed(1)}</strong> · {reviews.count} {reviews.source} reviews</span>
+                    <span className="sr-only">(opens in a new tab)</span>
+                  </a>
+                </li>
+              )}
+              <li className="hidden items-center gap-2 md:flex"><Icon name="pin" size={15} className="text-champagne" />{city}</li>
+              {status && (
+                <li className="flex items-center gap-2 md:hidden">
+                  <span aria-hidden="true" className={`h-1.5 w-1.5 rounded-full ${status.open ? "bg-[#7fc49a]" : "bg-champagne"}`} />
+                  {status.label}
+                </li>
+              )}
+            </ul>
           </div>
         </div>
       </div>
@@ -133,213 +155,356 @@ function Hero() {
   );
 }
 
-function PortraitPlaceholder({ name }: { name: string }) {
-  const initials = name.replace(/^Dr\.?\s*/i, "").split(/\s+/).map((p) => p[0]).join("").slice(0, 2).toUpperCase();
+/* -------------------------------- Treatments -------------------------------- */
+
+function pickTreatments(all: Treatment[], s: HomeSection): Treatment[] {
+  const cat = s.category ?? "featured";
+  let list = all.filter((t) => t.active !== false);
+  if (cat === "featured") list = [...list.filter((t) => t.featured), ...list.filter((t) => !t.featured)];
+  else if (cat !== "all") list = list.filter((t) => t.category === cat);
+  return list.slice(0, s.limit ?? 6);
+}
+
+function TreatmentsSection({ s, treatments }: { s: HomeSection; treatments: Treatment[] }) {
+  const list = pickTreatments(treatments, s);
+  const viewAll = s.ctaHref || (s.category && s.category !== "featured" && s.category !== "all" ? CATEGORIES[s.category].href : "/treatments");
   return (
-    <div className="absolute inset-0 bg-[linear-gradient(160deg,#f6ecd9_0%,#e9d6b3_55%,#cfae76_100%)]">
-      <svg viewBox="0 0 400 500" className="absolute inset-x-0 bottom-0 h-[88%] w-full" aria-hidden="true">
-        <defs>
-          <linearGradient id="ph-fill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#fffaf0" stopOpacity="0.55" />
-            <stop offset="1" stopColor="#fffaf0" stopOpacity="0.15" />
-          </linearGradient>
-        </defs>
-        <g fill="url(#ph-fill)" stroke="#fffaf0" strokeOpacity="0.85" strokeWidth="1.5">
-          <ellipse cx="200" cy="175" rx="74" ry="90" />
-          <path d="M60 500c6-92 58-150 140-160 82 10 134 68 140 160Z" />
-          <path d="M168 255c6 22 14 36 32 44 18-8 26-22 32-44" fill="none" />
-        </g>
-      </svg>
-      <div className="absolute inset-x-0 top-[11%] text-center">
-        <span className="font-serif text-6xl tracking-wide text-ivory/90">{initials}</span>
+    <section className={`${toneClass(s.tone)} ${PAD}`} aria-labelledby={tid(s)}>
+      <div className="container-lux">
+        <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
+          <Heading s={s} />
+          <Link href={viewAll} className="link-lux hidden flex-none md:inline-flex">{s.ctaLabel || "View all treatments"} <Icon name="arrow" size={14} /></Link>
+        </div>
+        <ul className="no-scrollbar -mx-4 mt-12 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-px-4 px-4 pb-2 sm:-mx-6 sm:scroll-px-6 sm:px-6 md:mx-0 md:grid md:grid-cols-3 md:gap-x-6 md:gap-y-14 md:overflow-visible md:px-0 lg:gap-x-8" data-testid="home-treatments">
+          {list.map((t, i) => (
+            <li key={t.id} className="w-[78%] flex-none snap-start min-[480px]:w-[60%] sm:w-[46%] md:w-auto">
+              <Reveal delay={(i % 3) * 0.08} className="h-full"><TreatmentCard t={t} priority={i < 2} /></Reveal>
+            </li>
+          ))}
+        </ul>
+        <div className="mt-10 md:hidden">
+          <Link href={viewAll} className="btn btn-ghost w-full">{s.ctaLabel || "View all treatments"}</Link>
+        </div>
       </div>
-      <span className="absolute bottom-24 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-ivory/85 px-3 py-1 text-[0.7rem] font-medium text-muted backdrop-blur">
-        Doctor&apos;s portrait · upload in admin
-      </span>
-    </div>
+    </section>
   );
 }
 
-/* --------------------------------- Sections --------------------------------- */
+/* ----------------------------------- About ----------------------------------- */
 
-function Intro() {
-  const s = useSection("intro");
+function AboutSection({ s }: { s: HomeSection }) {
+  const { content } = useSite();
+  const right = s.imageSide === "right";
   return (
-    <section className="container-lux py-20 sm:py-28" aria-labelledby="intro-title">
-      <Reveal className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:gap-16">
+    <section className={`${toneClass(s.tone, "cream")} ${PAD}`} aria-labelledby={tid(s)}>
+      <div className="container-lux grid items-center gap-12 md:grid-cols-2 md:gap-12 lg:gap-24">
+        <Reveal className={`reveal-img ${right ? "md:order-2" : ""}`}>
+          <SmartImage src={s.image} alt={s.imageAlt ?? ""} className="aspect-[4/5] w-full" sizes="(max-width: 768px) 100vw, 50vw" />
+        </Reveal>
         <div>
-          <p className="eyebrow">{s.eyebrow}</p>
-          <h2 id="intro-title" className="mt-3 text-[2.15rem] sm:text-5xl">{s.title}</h2>
+          <Heading s={s} />
+          {content.about.values.length > 0 && (
+            <ol className="mt-10 grid gap-6 border-t border-taupe/60 pt-8 sm:grid-cols-3 md:grid-cols-1 xl:grid-cols-3">
+              {content.about.values.slice(0, 3).map((v, i) => (
+                <li key={v.title}>
+                  <span className="font-serif text-lg text-gold">0{i + 1}</span>
+                  <p className="mt-1 font-serif text-[1.45rem] leading-tight text-charcoal">{v.title}</p>
+                  <p className="mt-1.5 text-sm leading-relaxed text-muted">{v.text}</p>
+                </li>
+              ))}
+            </ol>
+          )}
+          {s.ctaLabel && <Link href={s.ctaHref || "/about"} className="link-lux mt-10">{s.ctaLabel} <Icon name="arrow" size={14} /></Link>}
         </div>
+      </div>
+    </section>
+  );
+}
+
+/* ---------------------------------- Why us ---------------------------------- */
+
+const ICONS: IconName[] = ["star", "sparkle", "clock", "accessible", "shield", "heart", "leaf", "user"];
+
+function WhySection({ s }: { s: HomeSection }) {
+  const { content } = useSite();
+  if (content.why.length === 0) return null;
+  return (
+    <section className={`${s.tone ? toneClass(s.tone) : "bg-surface"} ${PAD}`} aria-labelledby={tid(s)}>
+      <div className="container-lux">
+        <Heading s={s} align="center" />
+        <ul className="mt-12 grid gap-px bg-line sm:mt-16 sm:grid-cols-2 lg:grid-cols-4">
+          {content.why.map((p, i) => {
+            const icon = (ICONS as string[]).includes(p.icon ?? "") ? (p.icon as IconName) : ICONS[i % ICONS.length];
+            return (
+              <li key={`${p.title}-${i}`} className={s.tone ? toneClass(s.tone) : "bg-surface"}>
+                <Reveal delay={i * 0.07} className="flex h-full gap-5 px-1 py-7 sm:flex-col sm:items-center sm:px-8 sm:py-10 sm:text-center">
+                  <span className="flex h-12 w-12 flex-none items-center justify-center rounded-full border border-champagne text-gold sm:h-14 sm:w-14"><Icon name={icon} size={22} /></span>
+                  <div>
+                    <h3 className="text-[1.5rem] sm:mt-6 sm:text-[1.6rem]">{p.title}</h3>
+                    <p className="mt-1.5 max-w-xs text-[0.92rem] leading-relaxed text-muted sm:mt-2.5">{p.text}</p>
+                  </div>
+                </Reveal>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------- Before & after ------------------------------- */
+
+function BeforeAfterSection({ s, gallery }: { s: HomeSection; gallery: GalleryItem[] }) {
+  const { content } = useSite();
+  const items = gallery.filter((g) => g.published).slice(0, 2);
+  if (items.length === 0 && !content.previewBanner.enabled) return null;
+  return (
+    <section className={`${toneClass(s.tone)} ${PAD}`} aria-labelledby={tid(s)}>
+      <div className="container-lux">
+        <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
+          <Heading s={s} />
+          {items.length > 0 && <Link href={s.ctaHref || "/before-after"} className="link-lux flex-none">{s.ctaLabel || "View the gallery"} <Icon name="arrow" size={14} /></Link>}
+        </div>
+        {items.length > 0 ? (
+          <ul className="mt-12 grid gap-10 md:grid-cols-2 md:gap-8">
+            {items.map((g) => <li key={g.id}><Reveal><BeforeAfterSlider item={g} /></Reveal></li>)}
+          </ul>
+        ) : (
+          <PreviewPlaceholder>
+            <strong className="font-medium text-charcoal">Your before &amp; after gallery appears here.</strong> Upload genuine client photographs in
+            Admin → Before &amp; after. A photo can only be published once written consent is recorded. This note is visible only in preview mode; on the live site an empty gallery is hidden.
+          </PreviewPlaceholder>
+        )}
+      </div>
+    </section>
+  );
+}
+
+/* -------------------------------- Testimonials -------------------------------- */
+
+function TestimonialsSection({ s }: { s: HomeSection }) {
+  const { content } = useSite();
+  const { reviews } = content;
+  const quotes = content.testimonials.filter((t) => t.permission && t.visible).slice(0, s.limit ?? 6);
+  const showRating = reviews.enabled && reviews.count > 0;
+  if (!showRating && quotes.length === 0 && !content.previewBanner.enabled) return null;
+  const asOf = reviews.asOf ? new Date(`${reviews.asOf}T12:00:00`).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : "";
+  return (
+    <section className={`${toneClass(s.tone, "cream")} ${PAD}`} aria-labelledby={tid(s)}>
+      <div className="container-lux grid gap-14 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
         <div>
-          <p className="text-[1.08rem] leading-relaxed text-muted">{s.intro}</p>
-          <div className="mt-8 grid grid-cols-2 gap-3">
-            <SmartImage src="/images/s-clinic.jpg" alt="Modern treatment room" className="aspect-[4/3] rounded-2xl" sizes="(max-width: 1024px) 50vw, 30vw" />
-            <SmartImage src="/images/s-serum.jpg" alt="Hands holding a skincare serum bottle" className="aspect-[4/3] rounded-2xl" sizes="(max-width: 1024px) 50vw, 30vw" />
+          <Heading s={s} />
+          {showRating && (
+            <div className="mt-10 border-t border-taupe/60 pt-8" data-testid="rating-summary">
+              <p className="flex items-end gap-4">
+                <span className="font-serif text-[5.5rem] leading-[0.8] text-charcoal">{reviews.rating.toFixed(1)}</span>
+                <span className="pb-1">
+                  <Stars rating={reviews.rating} size={18} className="text-gold" />
+                  <span className="mt-1.5 block text-sm text-muted">{reviews.count} reviews on {reviews.source}</span>
+                </span>
+              </p>
+              {asOf && <p className="mt-4 text-xs text-muted">Rating and review count as of {asOf}.</p>}
+              {reviews.url && (
+                <a href={reviews.url} target="_blank" rel="noopener noreferrer" className="link-lux mt-6">Read our reviews <Icon name="arrow" size={14} /><span className="sr-only"> on {reviews.source} (opens in a new tab)</span></a>
+              )}
+            </div>
+          )}
+        </div>
+        {quotes.length > 0 ? (
+          <ul className="grid gap-6 sm:grid-cols-2" data-testid="testimonials">
+            {quotes.map((q, i) => (
+              <li key={q.id}>
+                <Reveal delay={(i % 2) * 0.08} className="h-full">
+                  <figure className="flex h-full flex-col bg-ivory p-7 sm:p-8">
+                    <Icon name="quote" size={26} className="text-champagne" />
+                    <blockquote className="mt-4 flex-1 font-serif text-[1.35rem] leading-snug text-charcoal">{q.quote}</blockquote>
+                    <figcaption className="mt-6 border-t border-line pt-4 text-sm">
+                      <span className="font-medium text-charcoal">{q.author}</span>
+                      <span className="text-muted"> · {q.source}{q.date ? `, ${new Date(`${q.date}T12:00:00`).toLocaleDateString("en-US", { month: "short", year: "numeric" })}` : ""}</span>
+                    </figcaption>
+                  </figure>
+                </Reveal>
+              </li>
+            ))}
+          </ul>
+        ) : content.previewBanner.enabled ? (
+          <PreviewPlaceholder>
+            <strong className="font-medium text-charcoal">Client testimonials appear here.</strong> Add real reviews in Admin → Reviews &amp; team, with the
+            client&apos;s permission. Reviews are never written for the clinic. This note is visible only in preview mode.
+          </PreviewPlaceholder>
+        ) : (
+          <div className="flex items-center">
+            <p className="font-serif text-[2rem] leading-snug text-charcoal sm:text-[2.4rem]">
+              &ldquo;Every treatment is personalized to help you achieve healthy, radiant, long-lasting results.&rdquo;
+              <span className="mt-4 block font-sans text-sm text-muted">Our promise to every client</span>
+            </p>
           </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+/* ----------------------------------- Team ----------------------------------- */
+
+function TeamSection({ s }: { s: HomeSection }) {
+  const { content } = useSite();
+  const team = content.team.filter((m) => m.visible);
+  if (team.length === 0 && !content.previewBanner.enabled) return null;
+  return (
+    <section className={`${toneClass(s.tone)} ${PAD}`} aria-labelledby={tid(s)}>
+      <div className="container-lux">
+        <Heading s={s} align="center" />
+        {team.length > 0 ? (
+          <ul className={`mx-auto mt-14 grid gap-x-6 gap-y-12 sm:grid-cols-2 ${team.length >= 3 ? "lg:grid-cols-3" : "max-w-3xl"} ${team.length >= 4 ? "xl:grid-cols-4" : ""}`} data-testid="team">
+            {team.map((m, i) => (
+              <li key={m.id}>
+                <Reveal delay={(i % 4) * 0.07}>
+                  <div className="reveal-img is-visible">
+                    <SmartImage src={m.photo} alt={m.photoAlt || `Portrait of ${m.name}`} palette={i} className="aspect-[4/5] w-full" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" />
+                  </div>
+                  <p className="eyebrow mt-5">{m.role}</p>
+                  <h3 className="mt-2 text-[1.7rem]">{m.name}</h3>
+                  {m.credentials && <p className="mt-1 text-sm text-charcoal">{m.credentials}</p>}
+                  {m.bio && <p className="mt-3 text-sm leading-relaxed text-muted">{m.bio}</p>}
+                </Reveal>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <PreviewPlaceholder>
+            <strong className="font-medium text-charcoal">Team portraits, qualifications and biographies appear here.</strong> Add each team member in
+            Admin → Reviews &amp; team once their credentials have been verified. This note is visible only in preview mode; on the live site the section stays hidden until it has content.
+          </PreviewPlaceholder>
+        )}
+      </div>
+    </section>
+  );
+}
+
+/* ---------------------------------- Booking ---------------------------------- */
+
+function BookingSection({ s }: { s: HomeSection }) {
+  const { content } = useSite();
+  return (
+    <section className="on-dark relative overflow-hidden bg-charcoal" aria-labelledby={tid(s)}>
+      {s.image && <SmartImage src={s.image} alt="" className="!absolute inset-0 h-full w-full opacity-35" sizes="100vw" />}
+      <div aria-hidden="true" className="absolute inset-0 bg-[linear-gradient(180deg,rgb(37_37_37/0.55),rgb(37_37_37/0.88))]" />
+      <Reveal className="container-lux relative py-24 text-center sm:py-32 lg:py-40">
+        <p className="eyebrow">{s.eyebrow}</p>
+        <h2 id={tid(s)} className="display mx-auto mt-5 max-w-3xl text-[2.6rem] !text-ivory sm:text-6xl lg:text-[4.4rem]">{s.title}</h2>
+        {s.intro && <p className="mx-auto mt-6 max-w-xl text-[1.05rem] leading-relaxed text-[#e2dcd3]">{s.intro}</p>}
+        <div className="mt-10 flex flex-col justify-center gap-3 sm:flex-row">
+          <Link href={s.ctaHref || "/book"} className="btn btn-gold">{s.ctaLabel || "Book an Appointment"} <Icon name="arrow" size={16} /></Link>
+          {content.contact.phone && <a href={telHref(content.contact.phone)} className="btn btn-light"><Icon name="phone" size={16} /> Call {content.contact.phone}</a>}
         </div>
       </Reveal>
     </section>
   );
 }
 
-function ConditionsSection({ conditions }: { conditions: Condition[] }) {
-  const [showAll, setShowAll] = useState(false);
-  const list = showAll ? conditions : conditions.slice(0, 8);
+/* ---------------------------------- Location ---------------------------------- */
+
+function LocationSection({ s }: { s: HomeSection }) {
+  const { content, settings } = useSite();
+  const { contact } = content;
+  const week = weeklyHours(settings);
+  const [today, setToday] = useState<number | null>(null);
+  useEffect(() => setToday(clinicNow().getDay()), []);
+  const status = useOpenStatus();
   return (
-    <section className="bg-cream py-20 sm:py-28" aria-labelledby="conditions-title">
-      <div className="container-lux">
-        <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
-          <SectionHead id="conditions" />
-          <Link href="/conditions" className="inline-flex flex-none items-center gap-2 text-sm font-semibold text-gold">All conditions <Icon name="arrow" size={16} /></Link>
+    <section id="visit" className={`${toneClass(s.tone)} ${PAD}`} aria-labelledby={tid(s)}>
+      <div className="container-lux grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
+        <div>
+          <Heading s={s} />
+          <address className="mt-10 not-italic">
+            <p className="font-serif text-[1.7rem] leading-snug text-charcoal">{contact.address}<br />{contact.city}</p>
+          </address>
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+            <a href={directionsUrl(contact.mapsQuery)} target="_blank" rel="noopener noreferrer" className="btn btn-primary"><Icon name="directions" size={16} /> Get directions</a>
+            {contact.phone && <a href={telHref(contact.phone)} className="btn btn-ghost"><Icon name="phone" size={16} /> {contact.phone}</a>}
+          </div>
+          <div className="mt-10 border-t border-line pt-8">
+            <div className="flex items-baseline justify-between gap-4">
+              <h3 className="text-2xl">Opening hours</h3>
+              {status && <p className={`text-sm ${status.open ? "text-success" : "text-muted"}`}>{status.label}</p>}
+            </div>
+            <dl className="mt-4 text-[0.95rem]" data-testid="hours">
+              {week.map((d) => (
+                <div key={d.id} className={`flex justify-between gap-4 border-b border-line py-2.5 ${today === d.id ? "font-medium text-charcoal" : "text-muted"}`}>
+                  <dt>{d.day}{today === d.id && <span className="sr-only"> (today)</span>}</dt>
+                  <dd>{d.time}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+          {content.visitInfo.length > 0 && (
+            <dl className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+              {content.visitInfo.map((v) => (
+                <div key={v.title}>
+                  <dt className="eyebrow">{v.title}</dt>
+                  <dd className="mt-1.5 text-sm leading-relaxed text-muted">{v.text}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
         </div>
-        <ul className="mt-10 grid grid-cols-1 gap-5 min-[480px]:grid-cols-2 lg:grid-cols-4">
-          {list.map((c, i) => (
+        <div className="lg:pt-4">
+          <MapEmbed query={contact.mapsQuery} className="aspect-[4/5] sm:aspect-[4/3] lg:aspect-auto lg:h-full lg:min-h-[36rem]" />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------ Optional sections ------------------------------ */
+
+function FaqSection({ s }: { s: HomeSection }) {
+  const { content } = useSite();
+  return (
+    <section className={`${toneClass(s.tone)} ${PAD}`} aria-labelledby={tid(s)}>
+      <div className="container-lux grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
+        <Heading s={s} />
+        <FaqList items={content.faqs} />
+      </div>
+    </section>
+  );
+}
+
+function ConcernsSection({ s, conditions }: { s: HomeSection; conditions: Condition[] }) {
+  return (
+    <section className={`${toneClass(s.tone)} ${PAD}`} aria-labelledby={tid(s)}>
+      <div className="container-lux">
+        <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
+          <Heading s={s} />
+          <Link href="/conditions" className="link-lux flex-none">All skin concerns <Icon name="arrow" size={14} /></Link>
+        </div>
+        <ul className="mt-12 grid grid-cols-1 gap-6 min-[480px]:grid-cols-2 lg:grid-cols-4">
+          {conditions.slice(0, s.limit ?? 8).map((c, i) => (
             <li key={c.id}><Reveal delay={(i % 4) * 0.05} className="h-full"><ConditionCard c={c} /></Reveal></li>
           ))}
         </ul>
-        {conditions.length > 8 && !showAll && (
-          <div className="mt-10 text-center">
-            <button type="button" className="btn btn-ghost" onClick={() => setShowAll(true)}>Show all {conditions.length} conditions</button>
-          </div>
-        )}
       </div>
     </section>
   );
 }
 
-const GROUPS: { id: CategoryId; label: string }[] = [
-  { id: "skin", label: "Skin procedures" },
-  { id: "aesthetic", label: "Aesthetic procedures" },
-  { id: "hair", label: "Hair procedures" },
-];
-
-function ProceduresSection({ treatments }: { treatments: Treatment[] }) {
+function PricingSection({ s, treatments }: { s: HomeSection; treatments: Treatment[] }) {
   const { content } = useSite();
-  const [tab, setTab] = useState<CategoryId>("skin");
-  const list = useMemo(
-    () => treatments.filter((t) => t.category === tab).sort((a, b) => Number(b.featured) - Number(a.featured) || a.order - b.order).slice(0, 6),
-    [treatments, tab],
-  );
+  const priced = treatments.filter((t) => t.price.type !== "consultation");
+  const list = (priced.length ? priced : treatments).slice(0, s.limit ?? 8);
   return (
-    <section className="container-lux py-20 sm:py-28" aria-labelledby="procedures-title">
-      <SectionHead id="procedures" />
-      <div role="tablist" aria-label="Procedure categories" className="no-scrollbar mt-8 flex gap-2 overflow-x-auto">
-        {GROUPS.map((g) => (
-          <button key={g.id} role="tab" type="button" aria-selected={tab === g.id} onClick={() => setTab(g.id)}
-            className={`flex-none rounded-full border px-5 py-2.5 text-sm font-semibold transition-colors ${tab === g.id ? "border-charcoal bg-charcoal text-ivory" : "border-sand text-ink hover:bg-cream"}`}>
-            {g.label}
-          </button>
-        ))}
-      </div>
-      <div role="tabpanel" aria-label={GROUPS.find((g) => g.id === tab)!.label}>
-        <ul className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {list.map((t) => (
-            <li key={t.id}><ProcedureCard t={t} currency={content.currency} /></li>
-          ))}
-        </ul>
-      </div>
-      <div className="mt-10 text-center">
-        <Link href={CATEGORY_PAGE[tab]} className="btn btn-ghost">View all {GROUPS.find((g) => g.id === tab)!.label.toLowerCase()}</Link>
-      </div>
-    </section>
-  );
-}
-
-function DoctorSection() {
-  const { content } = useSite();
-  const s = useSection("doctor");
-  const d = content.doctor;
-  return (
-    <section id="doctor" className="bg-cream py-20 sm:py-28" aria-labelledby="doctor-title">
-      <div className="container-lux grid items-center gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
-        <Reveal>
-          <div className="relative mx-auto aspect-[4/5] w-full max-w-sm overflow-hidden rounded-[2rem] shadow-[var(--shadow-soft)]">
-            {d.photo ? <SmartImage src={d.photo} alt={`Portrait of ${d.name}`} className="absolute inset-0 h-full w-full" sizes="400px" /> : <PortraitPlaceholder name={d.name} />}
-          </div>
-        </Reveal>
-        <Reveal delay={0.1}>
-          <p className="eyebrow">{s.eyebrow}</p>
-          <h2 id="doctor-title" className="mt-3 text-[2.3rem] sm:text-5xl">{d.name}</h2>
-          <p className="mt-2 text-sm font-semibold uppercase tracking-[0.16em] text-gold">{d.designation}</p>
-          <p className="mt-6 text-[1.05rem] leading-relaxed text-muted">{d.bio || d.shortIntro}</p>
-          {d.expertise.length > 0 && (
-            <ul className="mt-6 flex flex-wrap gap-2">
-              {d.expertise.slice(0, 6).map((e) => <li key={e} className="chip border border-sand bg-ivory text-ink">{e}</li>)}
-            </ul>
-          )}
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Link href="/about" className="btn btn-primary">About the doctor</Link>
-            <Link href="/book" className="btn btn-ghost">Book a consultation</Link>
-          </div>
-        </Reveal>
-      </div>
-    </section>
-  );
-}
-
-const WHY_ICONS = ["user", "leaf", "tag", "shield"] as const;
-
-function WhySection() {
-  const { content } = useSite();
-  const s = useSection("why");
-  return (
-    <section className="bg-charcoal py-20 text-[#e8e0d3] sm:py-28" aria-labelledby="why-title">
-      <div className="container-lux">
-        <p className="eyebrow !text-champagne">{s.eyebrow}</p>
-        <h2 id="why-title" className="mt-3 max-w-2xl text-[2.15rem] !text-ivory sm:text-5xl">{s.title}</h2>
-        {s.intro && <p className="mt-4 max-w-2xl text-[#c9bfb0]">{s.intro}</p>}
-        <ul className="mt-12 grid gap-px overflow-hidden rounded-3xl bg-white/10 sm:grid-cols-2 lg:grid-cols-4">
-          {content.why.map((p, i) => (
-            <li key={p.title} className="bg-charcoal p-6 sm:p-8">
-              <Reveal delay={i * 0.06}>
-                <span className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-champagne/40 text-champagne"><Icon name={WHY_ICONS[i % 4]} /></span>
-                <h3 className="mt-5 text-2xl !text-ivory">{p.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-[#c9bfb0]">{p.text}</p>
-              </Reveal>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </section>
-  );
-}
-
-function BeforeAfterSection({ gallery }: { gallery: GalleryItem[] }) {
-  return (
-    <section className="container-lux py-20 sm:py-28" aria-labelledby="beforeAfter-title">
-      <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
+    <section className={`${toneClass(s.tone, "cream")} ${PAD}`} aria-labelledby={tid(s)}>
+      <div className="container-lux grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
         <div>
-          <SectionHead id="beforeAfter" />
-          <Link href="/before-after" className="btn btn-ghost mt-8">View the gallery</Link>
-        </div>
-        {gallery[0] ? (
-          <Reveal><BeforeAfterSlider item={gallery[0]} /></Reveal>
-        ) : (
-          <p className="rounded-3xl border border-dashed border-sand bg-cream p-8 text-center text-muted">Results will appear here once consented photographs are added.</p>
-        )}
-      </div>
-    </section>
-  );
-}
-
-function PricingSection({ treatments }: { treatments: Treatment[] }) {
-  const { content } = useSite();
-  const list = treatments.filter((t) => t.price.type !== "consultation").sort((a, b) => Number(b.price.type === "promo") - Number(a.price.type === "promo") || Number(b.featured) - Number(a.featured)).slice(0, 8);
-  return (
-    <section className="bg-cream py-20 sm:py-28" aria-labelledby="pricing-title">
-      <div className="container-lux grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
-        <div>
-          <SectionHead id="pricing" />
+          <Heading s={s} />
           <Link href="/pricing" className="btn btn-primary mt-8">Full price list</Link>
         </div>
-        <ul className="divide-y divide-line rounded-3xl border border-line bg-surface px-5 sm:px-7" data-testid="home-pricing">
+        <ul className="divide-y divide-line border-y border-line" data-testid="home-pricing">
           {list.map((t) => (
             <li key={t.id} className="flex items-center justify-between gap-4 py-4">
-              <Link href={`/treatments/${t.slug}`} className="min-w-0 font-medium text-charcoal hover:text-gold">
-                {t.name}
-                {t.price.type === "promo" && <span className="chip ml-2 bg-charcoal align-middle text-ivory">Offer</span>}
-              </Link>
+              <Link href={`/treatments/${t.slug}`} className="min-w-0 font-serif text-xl text-charcoal hover:text-gold">{t.name}</Link>
               <PriceTag price={t.price} currency={content.currency} className="flex-none text-right" />
             </li>
           ))}
@@ -349,111 +514,40 @@ function PricingSection({ treatments }: { treatments: Treatment[] }) {
   );
 }
 
-function BlogSection({ posts }: { posts: Post[] }) {
+function JournalSection({ s, posts }: { s: HomeSection; posts: Post[] }) {
   if (posts.length === 0) return null;
   return (
-    <section className="container-lux py-20 sm:py-28" aria-labelledby="blog-title">
-      <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
-        <SectionHead id="blog" />
-        <Link href="/blog" className="inline-flex flex-none items-center gap-2 text-sm font-semibold text-gold">All articles <Icon name="arrow" size={16} /></Link>
-      </div>
-      <ul className="mt-10 grid gap-8 md:grid-cols-3">
-        {posts.slice(0, 3).map((p) => <li key={p.id}><PostCard p={p} /></li>)}
-      </ul>
-    </section>
-  );
-}
-
-function CtaSection() {
-  const s = useSection("cta");
-  return (
-    <section className="container-lux py-16 sm:py-20" aria-labelledby="cta-title">
-      <Reveal className="relative overflow-hidden rounded-[2rem] bg-charcoal px-6 py-16 text-center sm:px-12 sm:py-20">
-        <SmartImage src="/images/s-clinic-room.jpg" alt="" className="!absolute inset-0 h-full w-full opacity-25" sizes="100vw" />
-        <div className="absolute inset-0 bg-gradient-to-b from-charcoal/40 to-charcoal/80" aria-hidden="true" />
-        <div className="relative">
-          <p className="eyebrow !text-champagne">{s.eyebrow}</p>
-          <h2 id="cta-title" className="mx-auto mt-4 max-w-2xl text-[2.3rem] !text-ivory sm:text-6xl">{s.title}</h2>
-          <p className="mx-auto mt-4 max-w-lg text-[#e2dace]">{s.intro}</p>
-          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-            <Link href="/book" className="btn btn-gold">Book online <Icon name="arrow" size={18} /></Link>
-            <WhatsAppLink className="btn border border-white/30 text-ivory hover:bg-white/10"><Icon name="whatsapp" size={18} /> WhatsApp</WhatsAppLink>
-          </div>
+    <section className={`${toneClass(s.tone)} ${PAD}`} aria-labelledby={tid(s)}>
+      <div className="container-lux">
+        <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
+          <Heading s={s} />
+          <Link href="/blog" className="link-lux flex-none">All articles <Icon name="arrow" size={14} /></Link>
         </div>
-      </Reveal>
-    </section>
-  );
-}
-
-function FaqSection() {
-  const { content } = useSite();
-  return (
-    <section className="container-lux py-20 sm:py-28" aria-labelledby="faq-title">
-      <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
-        <SectionHead id="faq" />
-        <FaqList items={content.faqs} />
+        <ul className="mt-12 grid gap-10 md:grid-cols-3">
+          {posts.slice(0, s.limit ?? 3).map((p) => <li key={p.id}><PostCard p={p} /></li>)}
+        </ul>
       </div>
     </section>
   );
 }
 
-function ContactSection() {
-  const { content } = useSite();
-  const { contact } = content;
-  const hours = useHours();
-  return (
-    <section id="contact" className="container-lux py-20 sm:py-28" aria-labelledby="contact-title">
-      <div className="grid gap-10 lg:grid-cols-2">
-        <div>
-          <SectionHead id="contact" />
-          <ul className="mt-8 space-y-5">
-            <ContactRow icon="pin" title={content.brand.clinicName}>{contact.address}{contact.city && `, ${contact.city}`}</ContactRow>
-            <ContactRow icon="clock" title="Clinic hours">{hours.days}: {hours.time}{hours.closed.length > 0 && <><br />Closed {hours.closed.join(", ")}</>}</ContactRow>
-            {contact.phone && <ContactRow icon="phone" title="Phone"><a href={`tel:${contact.phone.replace(/[^\d+]/g, "")}`} className="hover:text-gold">{contact.phone}</a></ContactRow>}
-            {contact.email && <ContactRow icon="mail" title="Email"><a href={`mailto:${contact.email}`} className="hover:text-gold">{contact.email}</a></ContactRow>}
-          </ul>
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <a href={mapsUrl(contact.mapsQuery)} target="_blank" rel="noopener noreferrer" className="btn btn-primary"><Icon name="pin" size={18} /> Get directions</a>
-            <WhatsAppLink className="btn btn-ghost"><Icon name="whatsapp" size={18} className="text-whatsapp" /> WhatsApp</WhatsAppLink>
-          </div>
-        </div>
-        <MapEmbed query={contact.mapsQuery} />
-      </div>
-    </section>
-  );
-}
-
-function CustomBlock({ s }: { s: CustomSection }) {
+function CustomSection({ s }: { s: HomeSection }) {
   const dark = s.tone === "dark";
   return (
-    <section className={s.tone === "cream" ? "bg-cream" : dark ? "bg-charcoal" : ""}>
-      <div className={`container-lux grid items-center gap-10 py-20 sm:py-24 ${s.image ? "lg:grid-cols-2 lg:gap-16" : ""}`}>
+    <section className={`${toneClass(s.tone)} ${PAD}`} aria-labelledby={tid(s)}>
+      <div className={`container-lux grid items-center gap-12 ${s.image ? "md:grid-cols-2 lg:gap-24" : ""}`}>
         {s.image && (
-          <Reveal className={s.imageSide === "right" ? "lg:order-2" : ""}>
-            <SmartImage src={s.image} alt="" className="aspect-[4/3] rounded-[2rem]" sizes="(max-width: 1024px) 100vw, 50vw" />
+          <Reveal className={`reveal-img ${s.imageSide === "right" ? "md:order-2" : ""}`}>
+            <SmartImage src={s.image} alt={s.imageAlt ?? ""} className="aspect-[4/5] w-full" sizes="(max-width: 768px) 100vw, 50vw" />
           </Reveal>
         )}
         <Reveal className={s.image ? "" : "mx-auto max-w-3xl text-center"}>
-          {s.eyebrow && <p className={`eyebrow ${dark ? "!text-champagne" : ""}`}>{s.eyebrow}</p>}
-          <h2 className={`mt-3 text-[2.15rem] leading-[1.05] sm:text-5xl ${dark ? "!text-ivory" : ""}`}>{s.title}</h2>
-          {s.body && <p className={`mt-5 whitespace-pre-line text-[1.05rem] leading-relaxed ${dark ? "text-[#d9d1c4]" : "text-muted"}`}>{s.body}</p>}
-          {s.ctaLabel && s.ctaHref && <Link href={s.ctaHref} className={`btn mt-8 ${dark ? "btn-gold" : "btn-primary"}`}>{s.ctaLabel}</Link>}
+          {s.eyebrow && <p className="eyebrow">{s.eyebrow}</p>}
+          <h2 id={tid(s)} className={`mt-4 text-[2.4rem] leading-[1.04] sm:text-5xl lg:text-[3.6rem] ${dark ? "!text-ivory" : ""}`}>{s.title}</h2>
+          {s.intro && <p className={`mt-6 whitespace-pre-line ${dark ? "text-[1.05rem] leading-relaxed text-[#ddd6cc]" : "lead"}`}>{s.intro}</p>}
+          {s.ctaLabel && s.ctaHref && <Link href={s.ctaHref} className={`btn mt-9 ${dark ? "btn-gold" : "btn-primary"}`}>{s.ctaLabel}</Link>}
         </Reveal>
       </div>
     </section>
   );
 }
-
-function ContactRow({ icon, title, children }: { icon: "pin" | "clock" | "phone" | "mail"; title: string; children: React.ReactNode }) {
-  return (
-    <li className="flex gap-4">
-      <span className="flex h-11 w-11 flex-none items-center justify-center rounded-full bg-cream text-gold"><Icon name={icon} /></span>
-      <div>
-        <p className="font-semibold text-charcoal">{title}</p>
-        <p className="text-muted">{children}</p>
-      </div>
-    </li>
-  );
-}
-
-export { formatMoney };

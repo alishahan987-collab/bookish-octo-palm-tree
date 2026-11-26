@@ -76,39 +76,39 @@ test("staff auth: wrong password, non-staff account and real login", async ({ pa
 test("admin sets the clinic alert email (saved to the database)", async ({ page }) => {
   await staffLogin(page, "contact");
   await page.getByLabel("Email for new-booking alerts").fill("frontdesk@example.com");
-  await page.getByLabel("WhatsApp number").fill("0300 7654321");
+  await page.getByLabel("WhatsApp number (optional)").fill("(909) 555-0199");
   await page.getByTestId("save-content").click();
   await expect(page.getByText("All changes saved.")).toBeVisible();
   const { data } = await admin.from("site_config").select("data").eq("key", "content").single();
   expect(data!.data.contact.bookingAlertEmail).toBe("frontdesk@example.com");
-  expect(data!.data.contact.whatsapp).toBe("923007654321");
+  expect(data!.data.contact.whatsapp).toBe("19095550199");
 });
 
 let bookedRef = "";
 let bookedSlot = { date: "", time: "" };
 
-test("patient books online: stored in DB, confirmation email + WhatsApp sent, clinic alerted", async ({ page }) => {
+test("client books online: stored in DB, confirmation email + WhatsApp sent, clinic alerted", async ({ page }) => {
   const errors = trackErrors(page);
   await mock.reset();
   bookedSlot = await pickSlot(page, "hydrafacial", 1);
-  await fillDetails(page, { name: "Ayesha Live", email: "ayesha@example.com" });
+  await fillDetails(page, { name: "Emily Live", email: "emily@example.com", method: "WhatsApp me" });
   await page.getByTestId("confirm").click();
   await expect(page.getByTestId("confirmation")).toBeVisible();
   bookedRef = (await page.getByTestId("reference").textContent())!;
-  await expect(page.getByTestId("notification-status")).toContainText("Email confirmation sent to ayesha@example.com");
+  await expect(page.getByTestId("notification-status")).toContainText("Email confirmation sent to emily@example.com");
   await expect(page.getByTestId("notification-status")).toContainText("WhatsApp confirmation sent");
 
   const { data } = await admin.from("bookings").select("*").eq("reference", bookedRef).single();
-  expect(data).toMatchObject({ patient_name: "Ayesha Live", phone: "+92 300 1234567", email: "ayesha@example.com", status: "pending", date: bookedSlot.date, time: bookedSlot.time });
+  expect(data).toMatchObject({ patient_name: "Emily Live", phone: "+1 (909) 555-0142", email: "emily@example.com", contact_method: "whatsapp", status: "pending", date: bookedSlot.date, time: bookedSlot.time });
   expect(data!.consent.given).toBe(true);
 
   const emails = await mock.emails();
-  expect(emails.map((e) => e.body.to).flat()).toEqual(expect.arrayContaining(["ayesha@example.com", "frontdesk@example.com"]));
-  expect(emails.find((e) => (e.body.to as string[]).includes("frontdesk@example.com"))!.body.subject).toContain("New appointment request: Ayesha Live");
+  expect(emails.map((e) => e.body.to).flat()).toEqual(expect.arrayContaining(["emily@example.com", "frontdesk@example.com"]));
+  expect(emails.find((e) => (e.body.to as string[]).includes("frontdesk@example.com"))!.body.subject).toContain("New appointment request: Emily Live");
   const wa = await mock.whatsapp();
   expect(wa.map((w) => w.body.template!.name).sort()).toEqual(["appointment_received", "new_booking_alert"]);
-  expect(wa.find((w) => w.body.to === "923001234567")!.body.template!.components[0].parameters.map((p) => p.text)).toEqual(
-    expect.arrayContaining(["Ayesha", "HydraFacial", bookedRef]),
+  expect(wa.find((w) => w.body.to === "19095550142")!.body.template!.components[0].parameters.map((p) => p.text)).toEqual(
+    expect.arrayContaining(["Emily", "HydraFacial", bookedRef]),
   );
   expect(errors).toEqual([]);
 });
@@ -118,12 +118,12 @@ test("double booking is impossible: UI hides the slot and the API refuses it", a
   await page.locator(`[data-date="${bookedSlot.date}"]`).click();
   await expect(page.locator(`[data-testid=time-grid] [data-time="${bookedSlot.time}"]`)).toHaveAttribute("data-state", "booked");
   const res = await request.post("/api/bookings", {
-    data: { treatmentId: "t-hydrafacial", doctorId: "main", ...bookedSlot, patientName: "Racer", phone: "03001112222", email: "r@example.com", contactMethod: "email", consent: true },
+    data: { treatmentId: "t-hydrafacial", doctorId: "main", ...bookedSlot, patientName: "Racer", phone: "(909) 555-0177", email: "r@example.com", contactMethod: "email", consent: true },
   });
   expect(res.status()).toBe(409);
 });
 
-test("admin accepts, reschedules and cancels: patient notified each time", async ({ page }) => {
+test("admin accepts, reschedules and cancels: client notified each time", async ({ page }) => {
   await mock.reset();
   await staffLogin(page);
   await page.getByRole("button", { name: "all", exact: true }).click();
@@ -155,8 +155,8 @@ test("admin accepts, reschedules and cancels: patient notified each time", async
   expect(data!.notifications.filter((n: { status: string }) => n.status === "sent").length).toBeGreaterThanOrEqual(6);
 });
 
-test("reject frees the slot and tells the patient why", async ({ page }) => {
-  const slot = await pickSlot(page, "skin-consultation", 2);
+test("reject frees the slot and tells the client why", async ({ page }) => {
+  const slot = await pickSlot(page, "consultation", 2);
   await fillDetails(page, { name: "Reject Live", email: "reject@example.com" });
   await page.getByTestId("confirm").click();
   const ref = (await page.getByTestId("reference").textContent())!;
@@ -165,48 +165,51 @@ test("reject frees the slot and tells the patient why", async ({ page }) => {
   await page.getByRole("button", { name: "all", exact: true }).click();
   await page.getByLabel("Search appointments").fill(ref);
   await page.locator(`[data-ref="${ref}"]`).getByRole("button", { name: /^Reject/ }).click();
-  await page.getByLabel(/Message to the patient/).fill("The doctor is at a conference that day.");
+  await page.getByLabel(/Message to the client/).fill("Our provider is at a conference that day.");
   await page.getByRole("button", { name: "Reject request" }).click();
   await page.getByRole("button", { name: "Done" }).click();
   const mail = (await mock.emails()).find((e) => (e.body.to as string[]).includes("reject@example.com"))!;
   expect(mail.body.subject).toContain(ref);
-  expect(JSON.stringify(mail.body)).toContain("The doctor is at a conference that day.");
-  await page.goto("/book?treatment=skin-consultation");
+  expect(JSON.stringify(mail.body)).toContain("Our provider is at a conference that day.");
+  await page.goto("/book?treatment=consultation");
   await page.locator(`[data-date="${slot.date}"]`).click();
   await expect(page.locator(`[data-testid=time-grid] [data-time="${slot.time}"]`)).toHaveAttribute("data-state", "available");
 });
 
 test("price edit in admin updates the server-rendered public pages", async ({ page }) => {
   await staffLogin(page, "procedures");
-  const row = page.locator('[data-slug="microneedling"]');
+  const row = page.locator('[data-slug="laser-hair-removal"]');
   await row.getByRole("button", { name: /Price/ }).click();
-  await page.locator("#p-amount").fill("8800");
+  await page.locator("#p-amount").fill("175");
   await page.getByTestId("save-price").click();
-  await expect(row.getByTestId("admin-price")).toContainText("8,800");
+  await expect(row.getByTestId("admin-price")).toContainText("$175");
   await expect
     .poll(async () => {
-      const html = await (await page.request.get("/treatments/microneedling")).text();
-      return html.includes("PKR 8,800");
+      const html = await (await page.request.get("/treatments/laser-hair-removal")).text();
+      return html.includes("$175");
     }, { timeout: 20_000 })
     .toBe(true);
   await page.goto("/pricing");
-  await expect(page.locator("[data-price-item=microneedling]")).toContainText("8,800");
+  await expect(page.locator("[data-price-item=laser-hair-removal]")).toContainText("$175");
 });
 
-test("doctor photo upload goes to Supabase Storage and appears on the homepage", async ({ page }) => {
-  await staffLogin(page, "doctor");
-  await page.getByTestId("doctor-photo").setInputFiles(IMG("p-consultation.jpg"));
-  await expect(page.getByRole("button", { name: "Remove" })).toBeVisible({ timeout: 15_000 });
+test("team portrait upload goes to Supabase Storage and appears on the homepage", async ({ page }) => {
+  await staffLogin(page, "team");
+  await page.getByTestId("add-team-member").click();
+  await page.getByLabel("Full name").fill("Live Provider");
+  await page.getByLabel("Role").fill("Nurse Injector");
+  await page.getByTestId("team-photo-0").setInputFiles(IMG("p-consultation.jpg"));
+  await expect(page.locator("[data-team-admin]").getByRole("button", { name: "Remove", exact: true }).nth(1)).toBeVisible({ timeout: 15_000 });
   await page.getByTestId("save-content").click();
   await expect(page.getByText("All changes saved.")).toBeVisible();
   const { data } = await admin.from("site_config").select("data").eq("key", "content").single();
-  const photo: string = data!.data.doctor.photo;
-  expect(photo).toMatch(/\/storage\/v1\/object\/public\/media\/doctor\/.+\.webp$/);
+  const photo: string = data!.data.team[0].photo;
+  expect(photo).toMatch(/\/storage\/v1\/object\/public\/media\/team\/.+\.webp$/);
   expect((await fetch(photo)).status).toBe(200);
   await expect
     .poll(async () => {
       await page.goto("/");
-      return page.getByTestId("doctor-portrait").locator("img").getAttribute("src");
+      return page.getByTestId("team").locator("img").first().getAttribute("src");
     }, { timeout: 20_000 })
     .toContain("/_next/image?url=");
 });

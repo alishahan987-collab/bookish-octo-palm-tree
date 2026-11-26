@@ -15,6 +15,7 @@ import {
   SEED_TREATMENTS,
 } from "./seed";
 import { baseTimes, closedReason, getAvailabilityRange, getDayAvailability } from "./slots";
+import { normalizeContent } from "./content";
 import { DataError, type DataSource } from "./source";
 import type {
   Booking,
@@ -37,8 +38,8 @@ import type {
  * browser and no messages are sent.
  */
 
-export const STORAGE_KEY = "aesthetica-site:v2";
-const SCHEMA_VERSION = 2;
+export const STORAGE_KEY = "vvip-site:v1";
+const SCHEMA_VERSION = 3;
 
 interface DB {
   version: number;
@@ -79,7 +80,7 @@ function seedBookings(db: DB, now: Date): Booking[] {
   const today = todayISO(now);
   const nowMin = now.getHours() * 60 + now.getMinutes();
   const bookable = db.treatments.filter((t) => t.active);
-  const methods: ContactMethod[] = ["whatsapp", "both", "email", "both", "whatsapp"];
+  const methods: ContactMethod[] = ["phone", "email", "phone", "email", "phone"];
   const out: Booking[] = [];
   let nameIdx = 0;
 
@@ -118,7 +119,8 @@ function seedBookings(db: DB, now: Date): Booking[] {
         date,
         time,
         patientName: name,
-        phone: `+92 300 ${String(100 + nameIdx).padStart(7, "0")}`,
+        // 555-0100 to 555-0199 are reserved for fictional use.
+        phone: `+1 (909) 555-${String(100 + (nameIdx % 100)).padStart(4, "0")}`,
         email: `${name.toLowerCase().replace(" ", ".")}@example.com`,
         contactMethod: pick(methods),
         consent: { given: true, at: createdAt, text: CONSENT_TEXT },
@@ -150,15 +152,15 @@ function createSeedDB(now = new Date()): DB {
     counters: {},
   };
   db.bookings = seedBookings(db, now);
-  const prp = db.treatments.find((t) => t.slug === "prp-hair-treatment")!;
+  const laser = db.treatments.find((t) => t.slug === "laser-hair-removal")!;
   const start = addDays(todayISO(now), -14);
   db.journeys.push({
     id: uid("jr"),
-    patientName: "Hamza Ali",
-    treatmentId: prp.id,
-    treatmentName: prp.name,
+    patientName: DEMO_PATIENT_NAMES[1],
+    treatmentId: laser.id,
+    treatmentName: laser.name,
     startDate: start,
-    steps: suggestJourneySteps(prp).map((s, i) => ({ ...s, done: i === 0 })),
+    steps: suggestJourneySteps(laser).map((s, i) => ({ ...s, done: i === 0 })),
     createdAt: new Date(`${start}T09:00:00`).toISOString(),
   });
   return db;
@@ -239,7 +241,7 @@ export const localSource: DataSource = {
   mode: "demo",
 
   async getContent() {
-    return clone(read().content);
+    return normalizeContent(clone(read().content));
   },
   async saveContent(next) {
     const db = read();

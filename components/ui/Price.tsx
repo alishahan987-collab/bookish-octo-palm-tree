@@ -3,31 +3,31 @@ import { formatMoney, packageSaving, promoSavingPercent } from "@/lib/pricing";
 import type { PriceModel } from "@/lib/data/types";
 
 /** Compact price for cards and lists. */
-export function PriceTag({ price, currency = "PKR", className = "" }: { price: PriceModel; currency?: string; className?: string }) {
+export function PriceTag({ price, currency = "USD", className = "" }: { price: PriceModel; currency?: string; className?: string }) {
   const f = (n: number) => formatMoney(n, currency);
   const base = `text-sm text-charcoal ${className}`;
   switch (price.type) {
     case "fixed":
-      return <p className={base}><span className="font-semibold">{f(price.amount)}</span></p>;
+      return <p className={base}><span className="font-medium">{f(price.amount)}</span>{price.unit && <span className="text-muted"> {price.unit}</span>}</p>;
     case "from":
-      return <p className={base}><span className="text-muted">From </span><span className="font-semibold">{f(price.amount)}</span></p>;
+      return <p className={base}><span className="text-muted">From </span><span className="font-medium">{f(price.amount)}</span>{price.unit && <span className="text-muted"> {price.unit}</span>}</p>;
     case "range":
-      return <p className={base}><span className="font-semibold">{f(price.min)} – {price.max.toLocaleString("en-US")}</span></p>;
+      return <p className={base}><span className="font-medium">{f(price.min)}–{f(price.max)}</span></p>;
     case "consultation":
-      return <p className={base}><span className="font-semibold">On consultation</span></p>;
+      return <p className={`${base} text-muted`}>Priced at consultation</p>;
     case "promo":
       return (
         <p className={base}>
-          <span className="font-semibold">{f(price.promo)}</span> <s className="text-muted">{price.regular.toLocaleString("en-US")}</s>
+          <span className="font-medium">{f(price.promo)}</span> <s className="text-muted">{f(price.regular)}</s>
         </p>
       );
     case "package":
-      return <p className={base}><span className="font-semibold">{f(price.perSession)}</span><span className="text-muted"> / session</span></p>;
+      return <p className={base}><span className="font-medium">{f(price.perSession)}</span><span className="text-muted"> / session</span></p>;
   }
 }
 
 /** Full price block for procedure pages. */
-export function PriceBlock({ price, currency = "PKR", note }: { price: PriceModel; currency?: string; note?: string }) {
+export function PriceBlock({ price, currency = "USD", note }: { price: PriceModel; currency?: string; note?: string }) {
   return (
     <div>
       <PriceBody price={price} currency={currency} />
@@ -56,16 +56,15 @@ function PriceBody({ price, currency }: { price: PriceModel; currency: string })
           <p className="eyebrow">Starting from</p>
           <div className="mt-3"><Amount>{f(price.amount)}</Amount></div>
           <Unit unit={price.unit} />
-          <p className="mt-2 text-sm text-muted">Final price depends on the plan agreed with your doctor.</p>
         </>
       );
     case "range":
-      return (<><p className="eyebrow">Price range</p><div className="mt-3"><Amount>{f(price.min)} – {price.max.toLocaleString("en-US")}</Amount></div><Unit unit={price.unit} /></>);
+      return (<><p className="eyebrow">Price range</p><div className="mt-3"><Amount>{f(price.min)}–{f(price.max)}</Amount></div><Unit unit={price.unit} /></>);
     case "consultation":
       return (
         <>
-          <p className="eyebrow">Consultation required</p>
-          <p className="mt-3 font-serif text-3xl leading-tight text-charcoal">Price confirmed after your consultation</p>
+          <p className="eyebrow">Pricing</p>
+          <p className="mt-3 font-serif text-3xl leading-tight text-charcoal">Priced at your consultation</p>
           {price.note && <p className="mt-2 text-sm text-muted">{price.note}</p>}
         </>
       );
@@ -93,7 +92,7 @@ function PriceBody({ price, currency }: { price: PriceModel; currency: string })
           <p className="eyebrow">Per session</p>
           <div className="mt-3"><Amount>{f(price.perSession)}</Amount></div>
           {price.packages.length > 0 && (
-            <ul className="mt-5 divide-y divide-line overflow-hidden rounded-xl border border-line bg-ivory">
+            <ul className="mt-5 divide-y divide-line overflow-hidden border border-line bg-ivory">
               {price.packages.map((p) => {
                 const save = packageSaving(price.perSession, p);
                 return (

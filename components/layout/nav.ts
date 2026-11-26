@@ -1,20 +1,28 @@
-/** Main navigation. `short` is shown in the desktop bar; the full label everywhere else. */
+import { CATEGORIES, MENU_CATEGORIES } from "@/lib/categories";
+
+/** Main navigation. "Treatments" opens the treatment menu; everything else is a plain link. */
 export const NAV_LINKS = [
-  { href: "/", label: "Home", short: "Home" },
-  { href: "/about", label: "About the Doctor", short: "About" },
-  { href: "/skin-treatments", label: "Skin Treatments", short: "Skin" },
-  { href: "/hair-treatments", label: "Hair Treatments", short: "Hair" },
-  { href: "/aesthetic-procedures", label: "Aesthetic Procedures", short: "Aesthetics" },
-  { href: "/before-after", label: "Before & After", short: "Results" },
-  { href: "/pricing", label: "Pricing", short: "Pricing" },
-  { href: "/blog", label: "Blog & Skincare Education", short: "Journal" },
-  { href: "/contact", label: "Contact Us", short: "Contact" },
+  { href: "/before-after", label: "Results" },
+  { href: "/about", label: "About" },
+  { href: "/pricing", label: "Pricing" },
+  { href: "/contact", label: "Contact" },
+];
+
+export const TREATMENT_GROUPS = MENU_CATEGORIES.map((id) => ({ id, label: CATEGORIES[id].label, href: CATEGORIES[id].href }));
+
+export const FOOTER_CLINIC_LINKS = [
+  { href: "/about", label: "About us" },
+  { href: "/before-after", label: "Results" },
+  { href: "/pricing", label: "Pricing" },
+  { href: "/conditions", label: "Skin concerns" },
+  { href: "/skin-finder", label: "Treatment finder" },
+  { href: "/blog", label: "Journal" },
+  { href: "/contact", label: "Contact" },
 ];
 
 export const EXTRA_LINKS = [
-  { href: "/conditions", label: "Skin Conditions" },
-  { href: "/treatments", label: "All Treatments" },
-  { href: "/skin-finder", label: "Skin Concern Finder" },
-  { href: "/book", label: "Book Appointment" },
-  { href: "/privacy", label: "Privacy Notice" },
+  { href: "/treatments", label: "All treatments" },
+  { href: "/book", label: "Book an appointment" },
+  { href: "/privacy", label: "Privacy notice" },
+  { href: "/accessibility", label: "Accessibility" },
 ];

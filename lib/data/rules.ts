@@ -1,5 +1,5 @@
 import { CONSENT_TEXT } from "../messages";
-import { isValidEmail, normalisePkMobile } from "../phone";
+import { isValidEmail, normalisePhone } from "../phone";
 import { validatePrice } from "../pricing";
 import { getDayAvailability } from "./slots";
 import { DataError } from "./source";
@@ -59,13 +59,13 @@ export function validateBooking(
   if (!treatment) throw new DataError("NOT_FOUND", "Please choose a treatment.");
   const patientName = (input.patientName ?? "").trim().replace(/\s+/g, " ");
   if (patientName.length < 2 || patientName.length > 80) throw new DataError("VALIDATION", "Please enter your full name.");
-  const phone = normalisePkMobile(input.phone ?? "");
-  if (!phone) throw new DataError("VALIDATION", "Please enter a valid Pakistani mobile number.");
+  const phone = normalisePhone(input.phone ?? "");
+  if (!phone) throw new DataError("VALIDATION", "Please enter a valid phone number, e.g. (909) 555-0142.");
   const email = input.email?.trim() || undefined;
   if (email && (!isValidEmail(email) || email.length > 120)) throw new DataError("VALIDATION", "Please enter a valid email address.");
-  if (!email && (ctx.settings.requireEmail || input.contactMethod !== "whatsapp"))
+  if (!["phone", "whatsapp", "email", "both"].includes(input.contactMethod)) throw new DataError("VALIDATION", "Choose how we should contact you.");
+  if (!email && (ctx.settings.requireEmail || input.contactMethod === "email" || input.contactMethod === "both"))
     throw new DataError("VALIDATION", "Please enter your email address.");
-  if (!["whatsapp", "email", "both"].includes(input.contactMethod)) throw new DataError("VALIDATION", "Choose how we should contact you.");
   if (input.consent !== true) throw new DataError("VALIDATION", "Please agree to be contacted about your appointment.");
   const notes = input.notes?.trim().slice(0, 500) || undefined;
   if (!/^\d{4}-\d{2}-\d{2}$/.test(input.date) || !/^\d{2}:\d{2}$/.test(input.time)) throw new DataError("VALIDATION", "Please choose a date and time.");
@@ -108,7 +108,7 @@ export function applyStatus(b: Booking, status: Exclude<BookingStatus, "pending"
 }
 
 export function referenceFor(year: number, n: number) {
-  return `AES-${year}-${String(n).padStart(4, "0")}`;
+  return `VIP-${year}-${String(n).padStart(4, "0")}`;
 }
 
 /* ------------------------------ content validation ------------------------------ */
@@ -122,6 +122,9 @@ export function assertTreatment(t: { name: string; shortDescription: string; pri
 
 export function assertSettings(s: ClinicSettings) {
   if (s.openTime >= s.closeTime) throw new DataError("VALIDATION", "Opening time must be before closing time.");
+  for (const [day, h] of Object.entries(s.dayHours ?? {})) {
+    if (h && h.open >= h.close) throw new DataError("VALIDATION", `Opening time must be before closing time (${["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][Number(day)]}).`);
+  }
   if (!(s.slotMinutes >= 10 && s.slotMinutes <= 180)) throw new DataError("VALIDATION", "Slot length must be 10–180 minutes.");
   if (!(s.maxPerDay >= 1)) throw new DataError("VALIDATION", "Maximum appointments per day must be at least 1.");
   for (const b of s.breaks) if (b.start >= b.end) throw new DataError("VALIDATION", `Break "${b.label || "Untitled"}" must end after it starts.`);

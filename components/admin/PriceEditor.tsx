@@ -24,8 +24,8 @@ function convert(p: PriceModel, type: PriceType): PriceModel {
   }
 }
 
-export function PriceEditor({ value, onChange, currency = "PKR" }: { value: PriceModel; onChange: (p: PriceModel) => void; currency?: string }) {
-  const formatPKR = (n: number) => formatMoney(n, currency);
+export function PriceEditor({ value, onChange, currency = "USD" }: { value: PriceModel; onChange: (p: PriceModel) => void; currency?: string }) {
+  const money = (n: number) => formatMoney(n, currency);
   const err = validatePrice(value);
   const num = (v: string) => (v === "" ? 0 : Math.max(0, Number(v)));
 
@@ -87,7 +87,7 @@ export function PriceEditor({ value, onChange, currency = "PKR" }: { value: Pric
               </div>
             ))}
             {value.packages.map((pkg, i) => packageSaving(value.perSession, pkg) > 0 && (
-              <p key={`s${i}`} className="text-xs text-success">{pkg.sessions} sessions saves patients {formatPKR(packageSaving(value.perSession, pkg))}</p>
+              <p key={`s${i}`} className="text-xs text-success">{pkg.sessions} sessions saves clients {money(packageSaving(value.perSession, pkg))}</p>
             ))}
             <button type="button" className="btn btn-ghost btn-sm" onClick={() => onChange({ ...value, packages: [...value.packages, { sessions: 6, price: value.perSession * 5 }] })}>
               <Icon name="plus" size={16} /> Add package

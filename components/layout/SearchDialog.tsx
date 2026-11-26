@@ -8,8 +8,8 @@ import { Icon } from "../ui/Icon";
 import { SmartImage } from "../ui/SmartImage";
 import { useSearchIndex } from "./useSearchIndex";
 
-const TYPE_LABEL = { procedure: "Treatment", condition: "Condition", article: "Article", page: "Page" } as const;
-const SUGGESTIONS = ["Acne", "Hair fall", "Melasma", "Botox", "HydraFacial", "Pigmentation"];
+const TYPE_LABEL = { procedure: "Treatment", condition: "Skin concern", article: "Article", page: "Page" } as const;
+const SUGGESTIONS = ["Botox", "HydraFacial", "Laser hair removal", "Fillers", "IV therapy", "Acne"];
 
 export function SearchDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const ref = useRef<HTMLDialogElement>(null);
@@ -43,7 +43,7 @@ export function SearchDialog({ open, onClose }: { open: boolean; onClose: () => 
       onClose={onClose}
       onClick={(e) => e.target === ref.current && onClose()}
       aria-label="Search the website"
-      className="mx-auto mt-[8vh] w-[calc(100%-2rem)] max-w-2xl rounded-3xl border border-line bg-ivory p-0 text-ink shadow-[var(--shadow-lift)] backdrop:bg-charcoal/40 backdrop:backdrop-blur-sm"
+      className="mx-auto mt-[8vh] w-[calc(100%-2rem)] max-w-2xl border border-line bg-ivory p-0 text-ink shadow-[var(--shadow-lift)] backdrop:bg-charcoal/40 backdrop:backdrop-blur-sm"
     >
       <form
         role="search"
@@ -55,13 +55,13 @@ export function SearchDialog({ open, onClose }: { open: boolean; onClose: () => 
         className="flex items-center gap-3 border-b border-line px-5 py-4"
       >
         <Icon name="search" size={20} className="flex-none text-gold" />
-        <label htmlFor="site-search" className="sr-only">Search treatments, conditions and articles</label>
+        <label htmlFor="site-search" className="sr-only">Search treatments, skin concerns and articles</label>
         <input
           ref={inputRef}
           id="site-search"
           type="search"
           autoComplete="off"
-          placeholder="Search treatments, conditions, articles…"
+          placeholder="Search treatments, concerns, articles…"
           className="w-full bg-transparent text-lg text-charcoal placeholder:text-muted focus:outline-none"
           value={q}
           onChange={(e) => setQ(e.target.value)}
@@ -82,7 +82,7 @@ export function SearchDialog({ open, onClose }: { open: boolean; onClose: () => 
             <p className="text-xs font-semibold uppercase tracking-wider text-muted">Popular searches</p>
             <div className="mt-3 flex flex-wrap gap-2">
               {SUGGESTIONS.map((s) => (
-                <button key={s} type="button" onClick={() => setQ(s)} className="rounded-full border border-sand px-3.5 py-1.5 text-sm hover:bg-cream">{s}</button>
+                <button key={s} type="button" onClick={() => setQ(s)} className="min-h-11 border border-sand px-3.5 py-1.5 text-sm hover:border-charcoal">{s}</button>
               ))}
             </div>
           </div>

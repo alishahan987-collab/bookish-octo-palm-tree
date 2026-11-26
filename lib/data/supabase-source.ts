@@ -20,6 +20,7 @@ import { clinicNow } from "../tz";
 import { assertSettings, assertTreatment, uniqueSlug } from "./rules";
 import { SEED_CONTENT, SEED_SETTINGS } from "./seed";
 import { DataError, type DataErrorCode, type DataSource } from "./source";
+import { normalizeContent } from "./content";
 import type { BookingResult, ClinicSettings, Condition, GalleryItem, Journey, Post, SiteContent, Treatment } from "./types";
 
 /**
@@ -98,7 +99,7 @@ async function freeSlug(table: string, base: string, id?: string) {
 export const supabaseSource: DataSource = {
   mode: "supabase",
 
-  getContent: () => readConfig<SiteContent>("content", SEED_CONTENT),
+  getContent: async () => normalizeContent(await readConfig<Partial<SiteContent>>("content", {})),
   async saveContent(next) {
     await writeConfig("content", next);
     return next;

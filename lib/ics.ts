@@ -1,7 +1,8 @@
 import { addDays } from "./dates";
 import type { Booking, SiteContent } from "./data/types";
+import { CLINIC_TIME_ZONE } from "./tz";
 
-/** Build an .ics calendar file so patients can save the appointment locally. */
+/** Build an .ics calendar file so clients can save the appointment locally (times in the clinic time zone). */
 export function bookingToICS(b: Booking, c: SiteContent, durationMin = 30): string {
   const [h, m] = b.time.split(":").map(Number);
   const endMin = h * 60 + m + durationMin;
@@ -18,8 +19,8 @@ export function bookingToICS(b: Booking, c: SiteContent, durationMin = 30): stri
     "BEGIN:VEVENT",
     `UID:${b.id}@clinic-website`,
     `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, "").slice(0, 15)}Z`,
-    `DTSTART;TZID=Asia/Karachi:${start}`,
-    `DTEND;TZID=Asia/Karachi:${end}`,
+    `DTSTART;TZID=${CLINIC_TIME_ZONE}:${start}`,
+    `DTEND;TZID=${CLINIC_TIME_ZONE}:${end}`,
     `SUMMARY:${esc(`${b.treatmentName} – ${c.brand.clinicName}`)}`,
     `LOCATION:${esc([c.contact.address, c.contact.city].filter(Boolean).join(", "))}`,
     `DESCRIPTION:${esc(`Reference ${b.reference}. Awaiting confirmation from the clinic.`)}`,

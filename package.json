@@ -1,8 +1,8 @@
 {
-  "name": "dermatology-clinic-website",
+  "name": "vvip-beauty-skin-care-website",
   "version": "0.1.0",
   "private": true,
-  "description": "Premium dermatology & aesthetic clinic website with booking system and admin CMS (Next.js + Supabase).",
+  "description": "VVIP Beauty & Skin Care (Chino, CA): premium clinic website with online booking and admin CMS (Next.js + Supabase).",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

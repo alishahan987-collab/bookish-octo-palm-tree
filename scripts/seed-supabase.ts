@@ -1,6 +1,8 @@
 /**
- * Loads the starter content (site text, settings, procedures, conditions,
- * articles, demo gallery) into Supabase. Safe to re-run: existing rows are
+ * Loads the starter content (site text, settings, treatments, skin concerns,
+ * articles) into Supabase. The site starts in preview mode (not indexed, with
+ * placeholders for team, reviews and results); turn it off in the admin when
+ * the clinic is ready to launch. Safe to re-run: existing rows are
  * kept unless you pass --force.
  *
  *   NEXT_PUBLIC_SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... npx tsx scripts/seed-supabase.ts [--force]
@@ -19,6 +21,7 @@ const force = process.argv.includes("--force");
 const db = createClient(url, key, { auth: { persistSession: false } });
 
 async function upsert(table: string, rows: object[], conflict = "id") {
+  if (rows.length === 0) return console.log(`– ${table} (nothing to add)`);
   const { error } = await db.from(table).upsert(rows, { onConflict: conflict, ignoreDuplicates: !force });
   if (error) throw new Error(`${table}: ${error.message}`);
   console.log(`✓ ${table} (${rows.length})`);
@@ -26,7 +29,7 @@ async function upsert(table: string, rows: object[], conflict = "id") {
 
 (async () => {
   await upsert("site_config", [
-    { key: "content", data: { ...SEED_CONTENT, previewBanner: { ...SEED_CONTENT.previewBanner, enabled: false } } },
+    { key: "content", data: SEED_CONTENT },
     { key: "settings", data: SEED_SETTINGS },
   ], "key");
   await upsert("procedures", SEED_TREATMENTS.map(treatmentToRow));

@@ -31,13 +31,13 @@ const TABS: Tab[] = [
   { id: "appointments", label: "Appointments", icon: "calendar", group: "Clinic" },
   { id: "availability", label: "Booking hours & slots", icon: "clock", group: "Clinic" },
   { id: "journeys", label: "Treatment journeys", icon: "route", group: "Clinic" },
-  { id: "procedures", label: "Procedures & prices", icon: "tag", group: "Content" },
-  { id: "conditions", label: "Skin conditions", icon: "heartPulse", group: "Content" },
+  { id: "procedures", label: "Treatments & prices", icon: "tag", group: "Content" },
+  { id: "conditions", label: "Skin concerns", icon: "heartPulse", group: "Content" },
   { id: "gallery", label: "Before & after", icon: "image", group: "Content" },
   { id: "blog", label: "Blog articles", icon: "doc", group: "Content" },
-  { id: "site", label: "Homepage & sections", icon: "layout", group: "Website" },
-  { id: "doctor", label: "Doctor profile", icon: "user", group: "Website" },
-  { id: "contact", label: "Contact & social", icon: "phone", group: "Website" },
+  { id: "site", label: "Homepage & pages", icon: "layout", group: "Website" },
+  { id: "team", label: "Team & reviews", icon: "user", group: "Website" },
+  { id: "contact", label: "Contact & visit", icon: "phone", group: "Website" },
   { id: "appearance", label: "Branding & appearance", icon: "palette", group: "Website" },
 ];
 
@@ -197,7 +197,7 @@ function Dashboard({ onLogout, email }: { onLogout: () => void; email: string | 
   return (
     <div className="min-h-dvh bg-cream/50 lg:flex">
       <aside className="z-30 hidden w-64 flex-none flex-col overflow-y-auto border-r border-line bg-ivory p-4 lg:sticky lg:top-0 lg:flex lg:h-dvh">
-        <div className="px-2 py-3"><Logo compact /></div>
+        <div className="px-2 py-3"><Logo /></div>
         <div className="mt-6 flex-1">{nav}</div>
         <AdminFooter email={email} onLogout={onLogout} onReset={() => setConfirmReset(true)} />
       </aside>
@@ -210,7 +210,7 @@ function Dashboard({ onLogout, email }: { onLogout: () => void; email: string | 
       </header>
       {navOpen && (
         <div id="admin-mobile-nav" className="fixed inset-0 z-40 overflow-y-auto bg-ivory p-4 lg:hidden">
-          <div className="mb-6 flex items-center justify-between"><Logo compact /><button type="button" onClick={() => setNavOpen(false)} className="rounded-full p-2 hover:bg-cream" aria-label="Close menu"><Icon name="close" /></button></div>
+          <div className="mb-6 flex items-center justify-between"><Logo /><button type="button" onClick={() => setNavOpen(false)} className="rounded-full p-2 hover:bg-cream" aria-label="Close menu"><Icon name="close" /></button></div>
           {nav}
           <div className="mt-8"><AdminFooter email={email} onLogout={onLogout} onReset={() => setConfirmReset(true)} /></div>
         </div>
@@ -221,7 +221,7 @@ function Dashboard({ onLogout, email }: { onLogout: () => void; email: string | 
           {dataMode === "demo" && (
             <p className="mb-6 flex items-start gap-2 rounded-2xl border border-dashed border-champagne bg-ivory p-3 text-xs leading-relaxed text-muted">
               <Icon name="info" size={16} className="mt-px flex-none text-gold" />
-              Demo mode: patients and appointments are fictional, changes are saved only in this browser and no messages are sent. Connect Supabase to go live.
+              Demo mode: clients and appointments are fictional, changes are saved only in this browser and no messages are sent. Connect Supabase to go live.
             </p>
           )}
           <div data-admin-panel={tab}>
@@ -232,7 +232,7 @@ function Dashboard({ onLogout, email }: { onLogout: () => void; email: string | 
             {tab === "conditions" && <ConditionsAdmin />}
             {tab === "gallery" && <GalleryAdmin />}
             {tab === "blog" && <BlogAdmin />}
-            {(tab === "site" || tab === "doctor" || tab === "contact" || tab === "appearance") && <ContentAdmin section={tab} />}
+            {(tab === "site" || tab === "team" || tab === "contact" || tab === "appearance") && <ContentAdmin section={tab} />}
           </div>
         </div>
       </div>

@@ -51,11 +51,11 @@ export function TreatmentsAdmin() {
           <h1 className="text-4xl sm:text-5xl">Procedures & prices</h1>
           <p className="mt-1 max-w-xl text-sm text-muted">Every change appears immediately on the website: procedure pages, pricing, homepage and booking.</p>
         </div>
-        <button type="button" className="btn btn-primary" onClick={() => setEditing({ ...BLANK, order: treatments.length, palette: treatments.length % 8 })}><Icon name="plus" size={18} /> Add procedure</button>
+        <button type="button" className="btn btn-primary" onClick={() => setEditing({ ...BLANK, order: treatments.length, palette: treatments.length % 8 })}><Icon name="plus" size={18} /> Add treatment</button>
       </div>
 
       <div role="group" aria-label="Filter" className="no-scrollbar mt-6 flex gap-2 overflow-x-auto">
-        {(["all", "skin", "aesthetic", "hair", "consultation"] as const).map((c) => (
+        {(["all", "skin", "injectables", "laser", "wellness", "consultation"] as const).map((c) => (
           <button key={c} type="button" aria-pressed={filter === c} onClick={() => setFilter(c)} className={`flex-none rounded-full border px-4 py-1.5 text-sm font-medium ${filter === c ? "border-charcoal bg-charcoal text-ivory" : "border-sand hover:bg-cream"}`}>
             {c === "all" ? "All" : CATEGORY_LABEL[c]}
           </button>
@@ -154,7 +154,7 @@ function TreatmentEditor({ initial, onClose }: { initial: TreatmentInput; onClos
   };
 
   return (
-    <Dialog open onClose={onClose} title={isNew ? "Add procedure" : `Edit: ${initial.name}`} wide>
+    <Dialog open onClose={onClose} title={isNew ? "Add treatment" : `Edit: ${initial.name}`} wide>
       <div className="space-y-8">
         <Group title="Basics">
           <div className="grid gap-4 sm:grid-cols-2">
@@ -169,7 +169,7 @@ function TreatmentEditor({ initial, onClose }: { initial: TreatmentInput; onClos
             <TextInput id="e-tag" label="Tagline" value={t.tagline} onChange={(v) => set("tagline", v)} />
           </div>
           <TextInput id="e-short" label="Short description *" value={t.shortDescription} onChange={(v) => set("shortDescription", v)} hint="Shown on cards and the pricing page." />
-          <TextArea id="e-desc" label="Procedure overview" value={t.description} onChange={(v) => set("description", v)} rows={5} />
+          <TextArea id="e-desc" label="Overview" value={t.description} onChange={(v) => set("description", v)} rows={5} />
           <div className="grid gap-4 sm:grid-cols-2">
             <ImageUpload label="Procedure image" value={t.image} onChange={(v) => set("image", v)} folder="procedures" testId="procedure-image" />
             <TextInput id="e-alt" label="Image description (for accessibility)" value={t.imageAlt ?? ""} onChange={(v) => set("imageAlt", v)} />
@@ -230,7 +230,7 @@ function TreatmentEditor({ initial, onClose }: { initial: TreatmentInput; onClos
       {error && <p role="alert" className="mt-6 rounded-xl border border-danger/30 bg-danger/5 p-3 text-sm text-danger">{error}</p>}
       <div className="sticky bottom-0 -mx-5 mt-6 flex justify-end gap-3 border-t border-line bg-ivory px-5 py-4 sm:-mx-7 sm:px-7">
         <button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button>
-        <button type="button" className="btn btn-primary" disabled={saving} onClick={save}>{saving ? "Saving…" : isNew ? "Add procedure" : "Save changes"}</button>
+        <button type="button" className="btn btn-primary" disabled={saving} onClick={save}>{saving ? "Saving…" : isNew ? "Add treatment" : "Save changes"}</button>
       </div>
     </Dialog>
   );

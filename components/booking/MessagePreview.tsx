@@ -6,13 +6,13 @@ import { Icon } from "../ui/Icon";
  */
 export function MessagePreview({ preview, title = "Message preview" }: { preview: Preview; title?: string }) {
   return (
-    <section className="rounded-3xl border border-dashed border-champagne bg-cream/60 p-5 sm:p-6" aria-label={title} data-testid="message-preview">
+    <section className="border border-dashed border-champagne bg-cream/60 p-5 sm:p-6" aria-label={title} data-testid="message-preview">
       <div className="flex flex-wrap items-center gap-2">
         <h3 className="font-sans text-base font-semibold text-charcoal">{title}</h3>
         <span className="chip border border-champagne bg-ivory text-gold-deep">Preview only · not sent</span>
       </div>
       <p className="mt-2 text-sm leading-relaxed text-muted">
-        This is the message the system will send automatically once WhatsApp Business and email are connected (Phase 2). In this design preview, nothing is sent.
+        This is the message the system sends automatically once email (and optionally WhatsApp) is connected. In this design preview, nothing is sent.
       </p>
 
       <div className="mt-5 grid gap-4 md:grid-cols-2">

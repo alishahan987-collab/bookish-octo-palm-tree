@@ -1,22 +1,22 @@
-# Dermatology & Aesthetic Clinic Website
+# VVIP Beauty & Skin Care — website
 
-A premium, fully responsive website for a dermatologist and aesthetic medicine specialist, with online booking and a complete admin dashboard (CMS). It is pre-filled for **Aesthetica by Dr. Sajjad, Abbottabad**, and every name, text, image, price and colour is editable in the admin.
+A premium, fully responsive website for **VVIP Beauty & Skin Care**, a skin care clinic at 13788 Roswell Ave, #118, Chino, CA 91710, with online booking and a complete admin dashboard (CMS).
 
-**Stack:** Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS 4 · Supabase (Postgres, Auth, Storage) · Resend (email) · WhatsApp Business Cloud API · Vitest · Playwright
+**Stack:** Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS 4 · Supabase (Postgres, Auth, Storage) · Resend (email) · optional WhatsApp Cloud API · Vitest · Playwright
 
 ---
 
 ## Contents
 
 1. [What's included](#whats-included)
-2. [Two modes: demo and live](#two-modes-demo-and-live)
-3. [Run it locally](#run-it-locally)
-4. [Go live: step by step](#go-live-step-by-step)
-5. [Using the admin dashboard](#using-the-admin-dashboard)
-6. [Security & patient privacy](#security--patient-privacy)
-7. [Tests](#tests)
-8. [Architecture](#architecture)
-9. [Known limitations & recommended next steps](#known-limitations--recommended-next-steps)
+2. [Design system](#design-system)
+3. [Content: what is verified and what the clinic must supply](#content-what-is-verified-and-what-the-clinic-must-supply)
+4. [Run it locally](#run-it-locally)
+5. [Go live](#go-live)
+6. [Using the admin dashboard](#using-the-admin-dashboard)
+7. [Security, privacy & compliance](#security-privacy--compliance)
+8. [Tests & quality checks](#tests--quality-checks)
+9. [Architecture](#architecture)
 
 ---
 
@@ -26,53 +26,69 @@ A premium, fully responsive website for a dermatologist and aesthetic medicine s
 
 | Page | Route | Notes |
 |---|---|---|
-| Home | `/` | Hero with large doctor portrait (placeholder until uploaded), plus 11 sections. Admins can show, hide, reorder and edit every section and **add their own sections**. |
-| About the Doctor | `/about` | Photo, name, qualifications, specialization, experience, certifications, achievements, expertise, biography, registration |
-| Skin / Hair / Aesthetic | `/skin-treatments`, `/hair-treatments`, `/aesthetic-procedures` | Procedure galleries by group (plus `/treatments` for all) |
-| Procedure page | `/treatments/[slug]` | Image, overview, how it works, benefits, suitable candidates, duration, recovery, sessions, price, FAQ, Book button |
-| Skin conditions | `/conditions`, `/conditions/[slug]` | 14 conditions; each page answers: what it is, symptoms, causes, treatments, when to see a dermatologist |
-| Before & After | `/before-after` | Comparison sliders, filter by category and treatment. **Consent is enforced.** |
-| Pricing | `/pricing` | Every procedure with image, description, price, discount and Book Now. Prices come only from the database. |
-| Blog | `/blog`, `/blog/[slug]` | Articles with topics; drafts are never public |
-| Contact | `/contact` | Address, timings, phone, email, WhatsApp, social links, embedded Google Map |
-| Search | header + `/search` | Searches treatments, conditions, articles and pages. Understands patient language ("hair fall", "pimples", "dark spots") and typos. |
-| Booking | `/book` | Treatment → date → time → name, phone, email, notes → submit |
-| Skin Concern Finder | `/skin-finder` | Guided suggestions with a "not a diagnosis" notice |
-| Privacy notice | `/privacy` | Template for the clinic to review |
+| Home | `/` | Hero, popular treatments, about, why choose us, before & after, reviews, team, appointment banner, location & hours, footer. Every section is editable, movable, hideable, duplicable and removable in the admin. |
+| Treatments | `/treatments` | Searchable, filterable directory of all 17 treatments |
+| Treatment groups | `/skin-care`, `/injectables`, `/laser`, `/wellness` | One page per menu group |
+| Treatment page | `/treatments/[slug]` | Overview, how it works, benefits, ideal for, side effects, questions, price, duration/sessions/recovery, Book button |
+| Skin concerns | `/conditions`, `/conditions/[slug]` | 8 concerns that match the clinic's services, each linked to relevant treatments |
+| Before & after | `/before-after` | Consent is enforced; empty until real photos are added |
+| Pricing | `/pricing` | Prices come only from the database |
+| About | `/about` | Clinic story, values, rating, team (once added) |
+| Contact | `/contact` | Address, directions, full weekly hours, phone, map, accessibility/payment notes |
+| Booking | `/book` | Treatment → date → time → details → review. US phone numbers, email confirmation. |
+| Treatment finder | `/skin-finder` | Guided suggestions with a "not a diagnosis" notice |
+| Journal | `/blog` | Four starter articles |
+| Privacy, Accessibility | `/privacy`, `/accessibility` | Templates for the clinic to review |
 
-Also included: a floating WhatsApp button and a floating Book button, a mobile menu, an announcement bar, SEO metadata per page, social preview images, security headers, and optimised images (AVIF/WebP, responsive sizes, lazy loading).
+Navigation: desktop mega-menu for treatments (opens on click, hover or keyboard; Escape closes), a full-screen mobile menu, a slim top bar with address, live "Open now" status and phone, and on phones a sticky **Call · Directions · Book now** bar.
 
 ### Admin dashboard (`/admin`)
 
 | Area | What the clinic can do |
 |---|---|
-| **Appointments** | View today / upcoming / all; search by name, phone, email or reference; filter; **accept, reject (with a message), reschedule, cancel**, mark arrived or completed; see each patient notification and whether it was sent |
-| **Booking hours & slots** | Working days, opening hours, slot length, breaks (per weekday), holidays, **blocked time ranges**, maximum per day, booking window, minimum notice, email required or optional, with a live 14-day availability preview |
-| **Procedures & prices** | Add, edit, delete, reorder, show/hide, feature; image upload; six price types (fixed, from, range, on consultation, **discounted**, session packages); duration, recovery, sessions, FAQs; link to conditions |
-| **Skin conditions** | Add, edit, delete, reorder, show/hide, image upload; include in the Skin Concern Finder |
-| **Before & after** | Upload before/after photos, edit, delete, reorder, filter category. A real photo **cannot be published until written consent is confirmed** (also enforced by the database). |
-| **Blog** | Write with a formatting toolbar and live preview, cover image, topics, draft or publish, unpublish, delete |
-| **Homepage & sections** | Every heading and paragraph, hero texts and badges, hero background, show/hide/reorder sections, **add custom sections**, "why choose us" items, FAQs, announcement bar, SEO title and description, footer text, preview banner |
-| **Doctor profile** | Photo, name, designation, specialization, experience, registration, qualifications, certifications, achievements, expertise, biography |
-| **Contact & social** | Address, city, map location, phone, email, WhatsApp number, new-booking alert email, Instagram, Facebook, YouTube, TikTok |
-| **Branding & appearance** | Clinic name, logo upload, tagline, currency, 5 colour presets or custom colours (with a live accessibility contrast check), heading and body fonts |
-| Treatment journeys | Week-by-week treatment plans per patient (internal) |
+| **Appointments** | Today / upcoming / all; search; accept, reject (with a message), reschedule, cancel, arrived, completed; notification log |
+| **Booking hours & slots** | Working days, **opening hours per weekday**, slot length, breaks, holidays, blocked time ranges, daily maximum, booking window, minimum notice |
+| **Treatments & prices** | Add, edit, delete, reorder, hide, feature; image upload; six price types including discounts and packages |
+| **Skin concerns, Before & after, Blog** | Full editing; gallery photos cannot be published without recorded consent |
+| **Homepage & pages** | **Section builder**: edit, move up/down, show/hide, duplicate, remove, add any of 14 section types; why-choose-us points; About page; FAQs; announcement bar; SEO; footer; preview mode |
+| **Team & reviews** | Team members (portrait, role, license/credentials, bio); testimonials (shown only with the client's permission); public rating summary |
+| **Contact & visit** | Address, phone, email, optional WhatsApp, booking-alert email, map, "good to know" notes, social links (incl. Yelp) |
+| **Branding & appearance** | Name, logo, palette presets or custom colors with automatic accessible text shades and a live contrast check, heading/body fonts |
 
 ---
 
-## Two modes: demo and live
+## Design system
 
-The same code runs in two modes, chosen automatically:
+**Palette** (from the brief): warm ivory `#F8F6F1` · champagne beige `#E8DDCE` · muted gold `#B49A70` · soft taupe `#A99B8C` · deep charcoal `#252525` · white.
 
-| | **Demo mode** (no Supabase keys) | **Live mode** (Supabase keys set) |
+**Accessibility finding:** muted gold and taupe are too light to read as text on ivory (≈2.5:1; WCAG AA requires 4.5:1), and white text on a gold button is only 2.7:1. They are therefore used only for decoration (rules, icons, button fills with charcoal text, text on dark sections, where gold reaches 5.7:1). For small text the site derives companions automatically (`lib/theme.ts`):
+
+| Token | Value | Contrast |
 |---|---|---|
-| Data | Stored in the visitor's own browser | Postgres database (Supabase) |
-| Admin login | Password `demo1234`, clearly labelled as demo | Real staff accounts (email + password) |
-| Image uploads | Kept in the browser (IndexedDB) | Supabase Storage (public CDN) |
-| Email & WhatsApp | **Never sent.** The exact message is shown as a preview. | Sent via Resend and the WhatsApp Cloud API; delivery is logged on each appointment |
-| Use for | Showing the clinic, design review | The real clinic |
+| Text gold | `#725C38` | 5.9:1 on ivory, 4.7:1 on champagne |
+| Secondary text | `#655F57` | ≥ 4.7:1 on every light background |
+| Form borders | `#978A7E` | 3.4:1 (WCAG 1.4.11) |
+| Text on gold buttons | charcoal | 5.7:1 |
 
-Nothing is faked. In demo mode the screens say plainly that messages are not sent. In live mode, a channel that isn't configured is reported as "skipped" with the reason.
+If the clinic changes colors in the admin, these are recalculated, and the admin shows a pass/fail contrast panel.
+
+**Typography:** Cormorant Garamond (display headings, lining numerals) + DM Sans (body, navigation, buttons). Buttons are square, uppercase and tracked, at least 48 px tall (44 px small).
+
+**Motion:** soft page fade, scroll reveals, a curtain-style image reveal, a gentle hero "settle", animated dropdowns, hover zoom on cards. All of it is disabled for visitors who set *reduce motion*, and nothing animates opacity on the hero image, so it never delays the largest paint.
+
+**Imagery:** licensed stock (see `IMAGE_CREDITS.md`) with a light, uniform grade on catalogue images so mixed sources read as one set. Client results and team portraits are never filtered.
+
+---
+
+## Content: what is verified and what the clinic must supply
+
+**Taken from the clinic's verified Google Business Profile (25 Nov 2026):** name, address, phone, hours (Mon–Fri 9:30 AM–6:30 PM, Sat–Sun 10 AM–7 PM), the service list and "About" description, wheelchair accessibility, LGBTQ+ friendly / transgender safe space, accepted payments, the 5.0 rating from 193 reviews, and the two published prices (Laser hair removal from $168; Botox from $8).
+
+**Assumption to confirm:** Botox is shown as "From $8 **per unit**" because Botox is priced per unit in the US; the profile only says "From $8.00".
+
+**Not invented, so the clinic must add before launch:** team members and their licenses, client testimonials, before & after photos, prices for the other treatments, clinic email (required for booking alerts), social links, a logo if they have one, and professional photography of the clinic. While the site is in **preview mode**, the empty team, reviews and results sections show clearly labeled placeholders; when preview mode is turned off they hide themselves until content exists.
+
+All treatment and concern descriptions are general patient information and should be reviewed by the clinic's medical director.
 
 ---
 
@@ -82,169 +98,75 @@ Requirements: **Node.js 20.9+**.
 
 ```bash
 npm install
-npm run dev            # http://localhost:3000  (demo mode)
+npm run dev            # http://localhost:3000  (demo mode, data stays in your browser)
 ```
 
-Open `/admin` and use password **`demo1234`**. **Reset demo data** is in the admin sidebar.
+Open `/admin` and use password **`demo1234`** (demo mode only). **Reset demo data** is in the admin sidebar.
 
 ---
 
-## Go live: step by step
+## Go live
 
-Allow about an hour, plus waiting time for Meta's WhatsApp verification.
-
-### 1. Create the database (Supabase)
-
-1. Create a free project at [supabase.com](https://supabase.com). Choose a region close to Pakistan (e.g. Mumbai or Singapore).
-2. In **SQL Editor**, paste the contents of `supabase/migrations/20261124000000_init.sql` and run it.
-   (Or with the CLI: `npx supabase link --project-ref <ref>` then `npx supabase db push`.)
-3. In **Project Settings → API**, copy the **Project URL**, the **anon public** key and the **service_role** key.
-4. Create `.env.local` from `.env.local.example` and fill in the three Supabase values.
-
-### 2. Load the starter content and create the admin login
-
-```bash
-npm run db:seed                                            # procedures, conditions, articles, site text
-npm run create-admin -- doctor@yourclinic.com 'a-strong-password' owner
-```
-
-Add more staff the same way (role `admin` or `reception`).
-In Supabase **Authentication → Providers → Email**, turn **off** "Allow new users to sign up", so only accounts you create can exist.
-
-### 3. Email (Resend)
-
-1. Create an account at [resend.com](https://resend.com) and **verify the clinic's domain** (add the DNS records it gives you).
-2. Create an API key. Set `RESEND_API_KEY` and `EMAIL_FROM` (e.g. `Aesthetica <appointments@yourclinic.com>`).
-3. In the admin, under **Contact & social**, set the **email for new-booking alerts**.
-
-### 4. WhatsApp (Meta Cloud API)
-
-WhatsApp only allows businesses to start conversations with **pre-approved templates**.
-
-1. In Meta Business Manager, complete **business verification** and add a phone number to the WhatsApp Business Platform (Cloud API). A number used by the Cloud API can't be used in the normal WhatsApp app at the same time unless you use Meta's coexistence option.
-2. Create a **permanent access token** (System User) with `whatsapp_business_messaging` permission.
-3. Create these message templates (category *Utility*, language English). Each uses the variables `{{1}}` name, `{{2}}` treatment, `{{3}}` date & time, `{{4}}` reference:
-
-| Env variable | Suggested template text |
-|---|---|
-| `WHATSAPP_TEMPLATE_CONFIRMATION` | Assalam-o-Alaikum {{1}}, we have received your request for {{2}} on {{3}}. Ref: {{4}}. We will confirm shortly. |
-| `WHATSAPP_TEMPLATE_ACCEPTED` | {{1}}, your {{2}} appointment on {{3}} is confirmed. Ref: {{4}}. Please arrive 10 minutes early. |
-| `WHATSAPP_TEMPLATE_REJECTED` | {{1}}, unfortunately we cannot accommodate {{2}} on {{3}} (Ref: {{4}}). Please book another time or reply to this message. |
-| `WHATSAPP_TEMPLATE_CANCELLED` | {{1}}, your {{2}} appointment on {{3}} (Ref: {{4}}) has been cancelled. |
-| `WHATSAPP_TEMPLATE_RESCHEDULED` | {{1}}, your {{2}} appointment has moved to {{3}}. Ref: {{4}}. |
-| `WHATSAPP_TEMPLATE_CLINIC_ALERT` | New booking request: {{1}}, {{2}}, {{3}}. Ref: {{4}}. |
-
-4. Set `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_TEMPLATE_LANG` (e.g. `en`) and the template names.
-
-Until WhatsApp is configured, bookings still work, emails still go out, and the floating WhatsApp button still opens a normal chat with the clinic's number.
-
-### 5. Deploy (Vercel)
-
-1. Push the repository to GitHub and import it at [vercel.com](https://vercel.com) (framework: Next.js).
-2. Add every variable from `.env.local` under **Settings → Environment Variables**, plus `NEXT_PUBLIC_SITE_URL` (your domain).
-3. Deploy, then add the clinic's domain under **Settings → Domains**.
-
-### 6. Final checks
-
-- In the admin, under **Homepage & sections → Search engines & footer**, switch **off** the preview banner. This also allows Google to index the site.
-- Upload the doctor's photo and logo, and fill in the biography, qualifications, phone, email and WhatsApp number.
-- Review every procedure, condition and price; the starter content is general patient information, not the clinic's own approved text.
-- Make a test booking, then accept it in the admin and check that the email and WhatsApp messages arrive.
+1. **Database (Supabase):** create a project (US West region), run both files in `supabase/migrations/` in order, copy the URL, anon key and service-role key into `.env.local` (see `.env.local.example`). Keep `NEXT_PUBLIC_CLINIC_TIMEZONE=America/Los_Angeles`.
+2. **Seed and create staff:** `npm run db:seed`, then `npm run create-admin -- owner@clinic.com 'a-strong-password' owner`. In Supabase Auth, turn off public sign-ups.
+3. **Email (Resend):** verify the clinic's domain, set `RESEND_API_KEY` and `EMAIL_FROM`, and set the booking-alert email in **Admin → Contact & visit**.
+4. **WhatsApp (optional):** only if the clinic wants it. Without it, clients choose "call or text me" or "email me", and confirmations go by email. (Automatic SMS is not built; see "Recommended next steps".)
+5. **Deploy (Vercel):** import the repo, add the environment variables plus `NEXT_PUBLIC_SITE_URL`, add the domain.
+6. **Final checks:** turn **off** preview mode (Admin → Homepage & pages → Search engines & footer); add team, photos and prices; make a test booking and accept it.
 
 ---
 
 ## Using the admin dashboard
 
-- **New booking:** the clinic gets an email (and WhatsApp alert, if configured), and the patient gets a "request received" message. Open **Appointments → Upcoming** and press **Accept** or **Reject**. Either way the patient is notified, and a rejected or cancelled slot becomes bookable again.
-- **Change a price or add a discount:** **Procedures & prices → Price**, then choose "Discounted price", enter the regular and discounted amounts, and optionally a label and end date. The website updates immediately.
-- **Close the clinic for a day or a few hours:** **Booking hours & slots → Holidays** (whole days) or **Blocked time slots** (part of a day).
-- **Add a section to the homepage:** **Homepage & sections → Add a new section**, then use the arrows to position it.
-- **Photos:** any JPG, PNG or WebP up to 15 MB. Images are automatically resized, compressed and stripped of location metadata before upload.
+- **Rearrange the homepage:** Homepage & pages → use the arrows; the eye switch hides a section; the copy icon duplicates it (e.g. a second treatment row showing only *Laser*); the bin removes it (with confirmation); **Add a section** brings back any section type.
+- **New booking:** the clinic gets an email alert and the client gets a "request received" email. Accept or reject in **Appointments**; the client is notified either way.
+- **Change opening hours:** Booking hours & slots → **Opening hours by day**. The website, the "Open now" status and online booking all update together.
+- **Add a testimonial:** Team & reviews → Add testimonial; paste the review exactly as written and tick the permission box. Without permission it is never shown.
+- **Update the Google rating:** Team & reviews → Rating summary; update the "Checked on" date too.
 
 ---
 
-## Security & patient privacy
+## Security, privacy & compliance
 
-- **Row Level Security on every table.** Website visitors can read only published content. Bookings, journeys and drafts are readable only by signed-in staff (verified in `tests/live.spec.ts`).
-- **Patients never touch the database directly.** Booking and availability go through server API routes that validate everything again. Availability responses contain slot states only, never other patients' details.
-- **Double booking is impossible:** a unique database index on (doctor, date, time) for active bookings, plus re-validation at write time.
-- **Gallery consent** is enforced in the interface *and* by a database constraint.
-- **Spam protection:** a hidden honeypot field and a per-IP rate limit on bookings.
-- **Staff-only admin:** Supabase Auth plus a `staff` role table. Admin API routes verify the session token on every request.
-- **Uploads:** staff-only Storage policies, an image MIME allow-list, a 15 MB limit, and EXIF stripping.
-- **Headers:** `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`, `Permissions-Policy`; the admin is `noindex`.
-- **Content safety:** article Markdown is rendered without raw HTML, so admin text cannot inject scripts.
-- Secrets (`SUPABASE_SERVICE_ROLE_KEY`, Resend and WhatsApp tokens) are server-only and never sent to the browser.
+- Row Level Security on every table; clients never touch the database directly; double booking is prevented by a unique index; gallery consent is enforced by the database; honeypot and rate limiting on bookings; staff-only admin; secrets are server-only; uploads are size-limited and stripped of metadata.
+- **California notes for the clinic to confirm with its advisers:** the privacy notice is a template (review against CMIA and, where applicable, CCPA/CPRA and HIPAA); injectables, PRP, IV therapy and laser are medical procedures in California, so the team section should list licensed providers and the medical director once verified; testimonials must be genuine and unedited (FTC rule on consumer reviews, 16 CFR Part 465); the accessibility statement assumes the site is kept at WCAG 2.1 AA.
 
 ---
 
-## Tests
+## Tests & quality checks
 
 ```bash
-npm test                 # 24 unit tests: slot engine, double booking, validation, pricing, consent, search
+npm test               # 30 unit tests: US phone rules, USD pricing, per-day hours, slots, double booking, search
 npm run build
-npx playwright install chromium    # first time only
-npm run test:e2e         # 37 end-to-end tests on a 375px phone and desktop (demo mode)
+npm run test:e2e       # 46 Playwright tests (phone + desktop), demo mode
 ```
 
-**Live-backend tests** (real Supabase plus stand-in email/WhatsApp servers that record every message):
+The end-to-end suite covers navigation and the treatment menu (including keyboard), every internal link, **no horizontal scroll at 320, 375, 390, 430, 768, 1024, 1280, 1440 and 1920 px**, booking buttons visible and ≥ 44 px at every width, the homepage structure and verified facts, search, the treatment directory, booking with US phone validation, double booking, the full section builder (edit, hide, move, duplicate, remove, add), team & testimonials with permission, theme and logo, prices in USD, gallery consent, blog, contact, appointments, per-day hours, and reduced motion. An axe-core WCAG 2.2 AA audit of 12 key pages at phone and desktop width reports no violations.
 
-```bash
-npx supabase start                              # local Supabase (Docker)
-# put the local keys from `npx supabase status` in your shell, plus the test values from .env.local.example
-npx supabase db reset && npm run db:seed && npm run create-admin -- admin@example.com 'test-password-123'
-NEXT_DIST_DIR=.next-supa npm run build
-npm run test:live                               # 10 tests
-```
-
-What's covered: every navigation link and internal link; no console errors; no horizontal scroll at 375px; search; condition and procedure page structure; booking validation; double booking (UI and API); accept/reject/reschedule/cancel, with the exact email and WhatsApp payloads checked; every admin editor, including real file uploads; theme changes; custom sections; anonymous-access security; SSR pages refreshing after edits.
-
-Lighthouse (mobile, production build): homepage **Performance 91–96, Accessibility 100, Best Practices 100**; procedure, condition, pricing, blog and booking pages **94–98**. (Demo mode scores lower on SEO by design, because the preview banner sets `noindex`.)
+Live-backend tests (`npm run test:live`) run against a local Supabase with stand-in email/WhatsApp servers.
 
 ---
 
 ## Architecture
 
 ```
-app/                       Pages and API routes
-  api/availability         GET  public slot states (no patient data)
-  api/bookings             POST create booking → validate → insert → notify
-  api/admin/bookings/[id]  PATCH accept/reject/cancel/reschedule (staff token)
-  api/revalidate           POST refresh server-rendered pages after edits (staff token)
-components/
-  home/ site/ layout/      Public UI
-  admin/                   CMS
-  booking/                 Booking flow, slot picker, message preview
-lib/
-  data/types.ts            Domain model (the contract)
-  data/source.ts           DataSource interface
-  data/local-source.ts     Demo backend (browser)
-  data/supabase-source.ts  Live backend (browser side)
-  data/rules.ts            Shared validation and status rules
-  data/slots.ts            Slot engine (shared by browser and server)
-  data/seed*.ts            Starter content
-  server/                  Server-only: bookings, notifications, SSR reads
-  supabase/                Clients and row mappers
-  search.ts messages.ts theme.ts tz.ts ...
-supabase/migrations/       Database schema, RLS, storage
-scripts/                   Seeding and admin creation
-tests/                     Playwright (demo, admin, live) + mock providers
+app/                     Pages and API routes (booking, availability, admin actions, revalidation)
+components/home/         Homepage section renderer
+components/layout/       Header + mega-menu, mobile menu, action bar, footer, logo, search
+components/site/         Cards, lists, detail pages, category pages
+components/admin/        CMS, including the section builder (ContentAdmin.tsx)
+lib/theme.ts             Brand colors → accessible derived tokens
+lib/categories.ts        Treatment groups (labels, addresses, intros)
+lib/hours.ts             Per-day hours, grouped display, "Open now"
+lib/phone.ts             US / international phone validation
+lib/data/                Types, seed content, demo and Supabase backends, rules, slot engine
+supabase/migrations/     Schema, RLS, storage; US localisation (contact method, VIP- references)
+tests/                   Playwright (site, admin, live) and helpers
 ```
 
-**Design choices**
-- **Content as JSON documents, bookings as strict relational rows.** The clinic can add fields and sections without database migrations, while patient data keeps hard constraints.
-- **Server-rendered pages** (SEO and speed), refreshed within 60 seconds or immediately after an admin edit.
-- **Clinic time zone** (`Asia/Karachi` by default; set `NEXT_PUBLIC_CLINIC_TIMEZONE`): "today" and same-day slots are correct even though servers run in UTC.
-- **Modular:** new procedures, conditions, articles and homepage sections need no code. A new *type* of page or section is one component plus one entry in the content model.
+### Recommended next steps
 
-**Images:** stock photography from Pexels under the Pexels License (see `IMAGE_CREDITS.md`). No stock photo is presented as the doctor or as a patient result.
-
----
-
-## Known limitations & recommended next steps
-
-- **Appointment reminders** (e.g. 24 hours before) are not scheduled yet. The template exists (`reminder`); add a Supabase `pg_cron` job or Vercel Cron that calls a reminder endpoint.
-- **Rate limiting** is per server instance. For heavier traffic, add Vercel Firewall rules or a shared store (e.g. Upstash).
-- **Content review:** the starter medical text is general patient information. The doctor should review every page, and the clinic should confirm compliance with PMDC guidance on medical advertising and with applicable data-protection law before launch.
-- **Single practitioner:** the data model supports several doctors (`doctorId`), but the interface currently assumes one. Adding a doctor selector is a small change if the clinic grows.
-- **No contact form:** the site uses WhatsApp, phone, email and booking instead, which avoids collecting unstructured medical information.
+1. **Professional photography** of the real clinic (white and gold interior, treatment rooms, team). This is the single biggest upgrade to the premium feel and to trust.
+2. **Simplified Chinese version** — the clinic's signage is bilingual (童颜·轻医美), which suggests a significant Chinese-speaking clientele.
+3. **SMS confirmations and reminders** (e.g. Twilio), with TCPA-compliant consent, since US clients expect texts.
+4. **Google reviews widget or Places API** to keep the rating current automatically.

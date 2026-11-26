@@ -3,7 +3,7 @@
  * the clinic's wall-clock time. Returns a Date whose local fields equal the
  * clinic's local time, so date helpers work unchanged on server and browser.
  */
-export const CLINIC_TIME_ZONE = process.env.NEXT_PUBLIC_CLINIC_TIMEZONE || "Asia/Karachi";
+export const CLINIC_TIME_ZONE = process.env.NEXT_PUBLIC_CLINIC_TIMEZONE || "America/Los_Angeles";
 
 export function clinicNow(timeZone = CLINIC_TIME_ZONE, at = new Date()): Date {
   try {

@@ -5,124 +5,191 @@ export { SEED_CONDITIONS } from "./seed-conditions";
 export { SEED_POSTS } from "./seed-posts";
 
 /**
- * Default site content. Everything here is editable in the admin dashboard.
- * Doctor details are placeholders: nothing about the doctor is invented.
+ * Default site content for VVIP Beauty & Skin Care, Chino, California.
+ *
+ * Every business fact below comes from the clinic's verified Google Business
+ * Profile (captured 25 November 2026): name, address, phone, opening hours,
+ * the "About" description, accessibility / inclusivity / payment attributes,
+ * the 5.0 rating from 193 reviews, and the two published prices. Nothing about
+ * the team, clients or results is invented: those sections stay empty until
+ * the clinic adds verified content in the admin dashboard.
  */
+
+const MAPS_QUERY = "VVIP Beauty & Skin Care, 13788 Roswell Ave #118, Chino, CA 91710";
+
 export const SEED_CONTENT: SiteContent = {
-  brand: { clinicName: "Aesthetica by Dr. Sajjad", shortName: "Aesthetica", tagline: "Dermatology & Aesthetic Medicine", logoAlt: "Aesthetica logo" },
-  doctor: {
-    name: "Dr. Sajjad Ahmad",
-    designation: "Dermatologist & Aesthetic Physician",
-    shortIntro: "Doctor-led care for skin, hair and aesthetic concerns, with honest advice and a plan built around you.",
-    bio: "",
-    qualifications: [],
-    specialization: "",
-    experience: "",
-    certifications: [],
-    achievements: [],
-    expertise: ["Medical dermatology", "Acne and acne scars", "Pigmentation and melasma", "Hair loss", "Aesthetic injectables", "Laser and skin procedures"],
-    registration: "",
-  },
-  hero: {
-    eyebrow: "Dermatology · Aesthetics · Hair",
-    title: "Expert care for skin that",
-    highlight: "feels like yours.",
-    intro: "Medical and aesthetic dermatology delivered with precision, honesty and calm. Every plan starts with a proper diagnosis.",
-    primaryCta: "Book appointment",
-    secondaryCta: "Explore treatments",
-    badges: [
-      { title: "Doctor-led", text: "consultations" },
-      { title: "Evidence-based", text: "treatments" },
-      { title: "Online", text: "booking 24/7" },
+  brand: { clinicName: "VVIP Beauty & Skin Care", shortName: "VVIP", tagline: "Beauty & Skin Care", logoAlt: "VVIP Beauty & Skin Care" },
+  announcement: { enabled: false, text: "Open seven days a week.", linkLabel: "Book online", href: "/book" },
+  homeSections: [
+    {
+      id: "hero",
+      type: "hero",
+      visible: true,
+      eyebrow: "Skin care clinic · Chino, California",
+      title: "Personalized skin care,",
+      highlight: "beautifully done.",
+      intro: "Facials, injectables, laser and wellness treatments, tailored to you in a calm, luxurious clinic.",
+      image: "/images/hero-skin.jpg",
+      imageAlt: "Woman with smooth, radiant skin applying a moisturizing cream",
+      ctaLabel: "Book an Appointment",
+      ctaHref: "/book",
+      secondaryLabel: "Explore Treatments",
+      secondaryHref: "/treatments",
+    },
+    {
+      id: "popular",
+      type: "treatments",
+      visible: true,
+      eyebrow: "The treatment menu",
+      title: "Popular treatments",
+      intro: "From a restorative HydraFacial to laser hair removal and IV wellness therapy, each treatment is personalized to you.",
+      category: "featured",
+      limit: 6,
+      ctaLabel: "View all treatments",
+      ctaHref: "/treatments",
+    },
+    {
+      id: "about",
+      type: "about",
+      visible: true,
+      eyebrow: "About the clinic",
+      title: "Enhancing your natural beauty, inside and out.",
+      intro:
+        "We offer customizable skincare and wellness treatments designed to enhance your natural beauty and overall well-being. Every treatment is personalized to help you achieve healthy, radiant, long-lasting results in a luxurious and professional environment.",
+      image: "/images/about-serum.jpg",
+      imageAlt: "Hands presenting a glass bottle of facial oil against a warm beige background",
+      imageSide: "left",
+      ctaLabel: "About us",
+      ctaHref: "/about",
+    },
+    { id: "why", type: "why", visible: true, eyebrow: "Why VVIP", title: "Care you can feel confident in.", intro: "" },
+    {
+      id: "results",
+      type: "beforeAfter",
+      visible: true,
+      eyebrow: "Results",
+      title: "Before & after",
+      intro: "Real client results, published only with each client's written consent. Individual results vary.",
+      ctaLabel: "View the gallery",
+      ctaHref: "/before-after",
+    },
+    { id: "reviews", type: "testimonials", visible: true, eyebrow: "Client reviews", title: "Loved by our clients", intro: "", limit: 6 },
+    {
+      id: "team",
+      type: "team",
+      visible: true,
+      eyebrow: "Meet the team",
+      title: "The people behind your care",
+      intro: "Licensed professionals who take the time to understand your goals.",
+    },
+    {
+      id: "book",
+      type: "booking",
+      visible: true,
+      eyebrow: "Appointments",
+      title: "Your skin deserves our full attention.",
+      intro: "Choose a treatment and a time online in under a minute, or call us. We are open seven days a week.",
+      ctaLabel: "Book an Appointment",
+      ctaHref: "/book",
+      image: "/images/s-serum.jpg",
+      imageAlt: "",
+    },
+    { id: "visit", type: "location", visible: true, eyebrow: "Visit us", title: "Find us in Chino", intro: "" },
+  ],
+  about: {
+    eyebrow: "About us",
+    title: "Beauty, thoughtfully personalized.",
+    body:
+      "VVIP Beauty & Skin Care is a skin care clinic in Chino, California, offering customizable skincare and wellness treatments designed to enhance your natural beauty and overall well-being.\n\n" +
+      "Our menu brings together facial care and HydraFacial, acne and anti-aging treatments, microneedling, PRP skin rejuvenation, Sculptra, Botox, dermal fillers and advanced laser treatments for skin concerns and hair removal. We also provide skin tag, mole and wart removal, as well as wellness services including IV wellness shots, NAD+ therapy, vitamin therapy and body detox programs.\n\n" +
+      "Every treatment is personalized to help you achieve healthy, radiant, youthful and long-lasting results, in a luxurious and professional environment.",
+    image: "/images/about-serum.jpg",
+    imageAlt: "Hands presenting a glass bottle of facial oil against a warm beige background",
+    values: [
+      { title: "Personalized", text: "Every treatment is tailored to your skin, your goals and your schedule." },
+      { title: "Comprehensive", text: "Facials, injectables, laser and wellness, all under one roof." },
+      { title: "Welcoming", text: "An accessible, inclusive clinic, open seven days a week." },
     ],
   },
-  announcement: { enabled: false, text: "New: online booking is now open.", linkLabel: "Book now", href: "/book" },
-  sections: {
-    intro: { visible: true, order: 1, eyebrow: "Welcome", title: "A modern clinic for skin, hair and confidence.", intro: "We combine medical dermatology with carefully chosen aesthetic treatments. You will always know what is being recommended, why, and what it costs before you begin." },
-    conditions: { visible: true, order: 2, eyebrow: "Skin conditions", title: "Conditions we treat", intro: "Explore common skin and hair conditions: what they are, why they happen and how they can be treated." },
-    procedures: { visible: true, order: 3, eyebrow: "Procedures", title: "Treatments & procedures", intro: "Medical, aesthetic and hair procedures, each explained clearly with recovery time, sessions and pricing." },
-    doctor: { visible: true, order: 4, eyebrow: "Meet the doctor", title: "Your doctor", intro: "" },
-    why: { visible: true, order: 5, eyebrow: "Why choose us", title: "Care that starts with listening.", intro: "" },
-    beforeAfter: { visible: true, order: 6, eyebrow: "Before & after", title: "Results gallery", intro: "Published only with each patient's written consent. Individual results vary." },
-    pricing: { visible: true, order: 7, eyebrow: "Pricing", title: "Clear, upfront pricing", intro: "Prices for popular treatments. Your final price is confirmed at consultation." },
-    blog: { visible: true, order: 8, eyebrow: "Skincare education", title: "From the journal", intro: "Practical, evidence-based guidance from the clinic." },
-    cta: { visible: true, order: 9, eyebrow: "Appointments", title: "Your first step is a conversation.", intro: "Choose a treatment and a time that suits you. The clinic will confirm your appointment." },
-    faq: { visible: true, order: 10, eyebrow: "FAQ", title: "Questions, answered", intro: "Anything else? Message us on WhatsApp." },
-    contact: { visible: true, order: 11, eyebrow: "Visit us", title: "Location & contact", intro: "" },
+  team: [],
+  testimonials: [],
+  reviews: {
+    enabled: true,
+    rating: 5,
+    count: 193,
+    source: "Google",
+    url: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(MAPS_QUERY)}`,
+    asOf: "2026-11-25",
   },
-  customSections: [],
   why: [
-    { title: "Diagnosis first", text: "Your skin is examined by a doctor before any treatment is recommended." },
-    { title: "Honest, personalised plans", text: "Realistic expectations, explained clearly. Sometimes the right advice is to do less." },
-    { title: "Transparent pricing", text: "Prices are published and your final cost is confirmed before you begin." },
-    { title: "Safety & privacy", text: "Medical-grade protocols, and your information handled with strict confidentiality." },
+    { icon: "star", title: "Five-star rated", text: "Our clients rate us five stars on our verified Google Business Profile." },
+    { icon: "sparkle", title: "Personalized to you", text: "Every treatment is tailored to your skin, your goals and your schedule." },
+    { icon: "clock", title: "Open seven days", text: "Weekday and weekend appointments, Monday through Sunday." },
+    { icon: "accessible", title: "Accessible & inclusive", text: "Wheelchair-accessible entrance, parking, restroom and seating. LGBTQ+ friendly and a transgender safe space." },
   ],
   faqs: [
-    { q: "Do I need a consultation before treatment?", a: "For most procedures, yes. A consultation lets the doctor assess your skin and medical history, explain options and confirm that a treatment is suitable for you." },
-    { q: "How do I book, change or cancel an appointment?", a: "Book online at any time. You will receive a confirmation by email and, where available, WhatsApp. To make changes, reply to that message or contact the clinic." },
-    { q: "Are the prices on the website final?", a: "Prices are a guide. Your final price is confirmed by the clinic before treatment, based on the plan agreed with your doctor." },
-    { q: "Will I see results after one session?", a: "It depends on the treatment and your skin. Many treatments need a course of sessions, and results vary between individuals." },
-    { q: "Is my information kept private?", a: "Yes. Your details are used only to manage your care and appointments and are stored securely. See our privacy notice for details." },
+    { q: "Which treatment is right for me?", a: "If you are not sure, book a consultation. We will talk through your goals and health history and recommend options that suit your skin." },
+    { q: "How do I book, change or cancel an appointment?", a: "Book online at any time, or call us at (909) 516-7066. To change or cancel, call us or reply to your confirmation email." },
+    { q: "What forms of payment do you accept?", a: "We accept Visa, MasterCard, American Express, Discover, debit cards and contactless mobile payments." },
+    { q: "Is the clinic wheelchair accessible?", a: "Yes. We have a wheelchair-accessible entrance, parking lot, restroom and seating." },
+    { q: "Will I see results after one session?", a: "It depends on the treatment and on your skin. Some treatments show results right away, others work best as a series. Results vary from person to person, and your provider will explain what to expect." },
   ],
   contact: {
-    address: "Jadoon Plaza, Phase 2 Road",
-    city: "Abbottabad",
-    mapsQuery: "Aesthetica by Dr Sajjad, Jadoon Plaza, Phase 2 Road, Abbottabad",
-    phone: "",
+    address: "13788 Roswell Ave, #118",
+    city: "Chino, CA 91710",
+    mapsQuery: MAPS_QUERY,
+    phone: "(909) 516-7066",
     email: "",
     whatsapp: "",
     bookingAlertEmail: "",
   },
-  social: { instagram: "", facebook: "", youtube: "", tiktok: "" },
-  theme: { preset: "champagne", ...THEME_PRESETS.champagne, headingFont: "cormorant", bodyFont: "manrope" },
+  visitInfo: [
+    { title: "Accessibility", text: "Wheelchair-accessible entrance, parking lot, restroom and seating." },
+    { title: "Payment", text: "Visa, MasterCard, American Express, Discover, debit cards and contactless mobile payments." },
+    { title: "Everyone is welcome", text: "LGBTQ+ friendly and a transgender safe space." },
+  ],
+  social: { instagram: "", facebook: "", youtube: "", tiktok: "", yelp: "" },
+  theme: { preset: "vvip", ...THEME_PRESETS.vvip, headingFont: "cormorant", bodyFont: "dmsans" },
   seo: {
-    title: "Aesthetica by Dr. Sajjad | Dermatology & Aesthetic Clinic",
-    description: "Dermatology, aesthetic and hair treatments with doctor-led consultations, transparent pricing and online booking.",
+    title: "VVIP Beauty & Skin Care | Skin Care Clinic in Chino, CA",
+    description: "Facials, HydraFacial, Botox, fillers, Sculptra, laser hair removal and IV wellness therapy in Chino, California. Open 7 days. Book online.",
   },
   footer: {
-    about: "Medical, aesthetic and hair dermatology. Every plan begins with a proper diagnosis.",
-    disclaimer: "Information on this website is general and is not a substitute for personal medical advice. Results vary between individuals.",
+    about: "Personalized skincare and wellness treatments in a luxurious, professional setting in Chino, California.",
+    disclaimer: "Information on this website is general and is not a substitute for personal medical advice. Individual results vary.",
   },
-  previewBanner: { enabled: true, text: "Design preview prepared for Aesthetica by Dr. Sajjad. Not the official website." },
-  currency: "PKR",
+  previewBanner: { enabled: true, text: "Design preview for VVIP Beauty & Skin Care. Not yet the official website." },
+  currency: "USD",
 };
 
 export const SEED_SETTINGS: ClinicSettings = {
   workingDays: [0, 1, 2, 3, 4, 5, 6],
-  openTime: "11:00",
-  closeTime: "19:00",
+  // Monday–Friday 9:30 AM – 6:30 PM; Saturday–Sunday 10:00 AM – 7:00 PM (Google Business Profile).
+  openTime: "09:30",
+  closeTime: "18:30",
+  dayHours: { "0": { open: "10:00", close: "19:00" }, "6": { open: "10:00", close: "19:00" } },
   slotMinutes: 30,
-  breaks: [
-    { id: "brk-lunch", label: "Lunch & prayer", start: "13:30", end: "14:30", days: [1, 2, 3, 4, 6, 0] },
-    { id: "brk-jumuah", label: "Jumu'ah", start: "12:30", end: "14:30", days: [5] },
-  ],
-  holidays: [
-    { id: "hol-quaid", date: "2026-12-25", label: "Quaid-e-Azam Day" },
-    { id: "hol-kashmir", date: "2027-02-05", label: "Kashmir Solidarity Day" },
-    { id: "hol-pakistan", date: "2027-03-23", label: "Pakistan Day" },
-  ],
+  breaks: [],
+  holidays: [],
   blocked: [],
-  maxPerDay: 14,
-  bookingWindowDays: 30,
-  minNoticeMinutes: 60,
+  maxPerDay: 16,
+  bookingWindowDays: 45,
+  minNoticeMinutes: 120,
   requireEmail: true,
 };
 
+/** Bookings are kept on one clinic calendar. */
 export const MAIN_DOCTOR_ID = "main";
 
 export function doctorFromContent(c: SiteContent): Doctor {
-  return { id: MAIN_DOCTOR_ID, name: c.doctor.name, role: c.doctor.designation, bio: c.doctor.bio || null };
+  return { id: MAIN_DOCTOR_ID, name: c.brand.clinicName, role: "Clinic calendar", bio: null };
 }
 
-/** Demo gallery: abstract illustrations only (no real people), clearly labelled. */
-export const SEED_GALLERY: GalleryItem[] = [
-  { id: "g-demo-1", title: "Illustration: texture", treatmentId: "t-microneedling", category: "skin", before: "art:before:4", after: "art:after:7", caption: "Abstract demo images to show how the comparison slider works.", consentConfirmed: false, illustrative: true, published: true, order: 0, createdAt: "2026-01-01T00:00:00.000Z" },
-  { id: "g-demo-2", title: "Illustration: tone", treatmentId: "t-chemical-peels", category: "skin", before: "art:before:5", after: "art:after:0", caption: "Abstract demo images to show how the comparison slider works.", consentConfirmed: false, illustrative: true, published: true, order: 1, createdAt: "2026-01-01T00:00:00.000Z" },
-  { id: "g-demo-3", title: "Illustration: hair density", treatmentId: "t-prp-hair-treatment", category: "hair", before: "art:before:6", after: "art:after:2", caption: "Abstract demo images to show how the comparison slider works.", consentConfirmed: false, illustrative: true, published: true, order: 2, createdAt: "2026-01-01T00:00:00.000Z" },
-];
+/** No results are shown until the clinic uploads real, consented photographs. */
+export const SEED_GALLERY: GalleryItem[] = [];
 
-/** Fictional names for seeded demo appointments. Not real patients. */
+/** Fictional names for seeded demo appointments (demo mode only). Not real clients. */
 export const DEMO_PATIENT_NAMES = [
-  "Ayesha Khan", "Hamza Ali", "Mahnoor Abbasi", "Usman Jadoon", "Fatima Qureshi", "Bilal Awan",
-  "Zainab Tanoli", "Saad Malik", "Hira Shah", "Imran Swati", "Sana Mir", "Omer Farooq",
+  "Emily Chen", "Sofia Martinez", "Jessica Nguyen", "Daniel Park", "Ashley Johnson", "Grace Liu",
+  "Maria Hernandez", "Olivia Wang", "Sarah Kim", "Isabella Garcia", "Hannah Lee", "Vanessa Lopez",
 ];

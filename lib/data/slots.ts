@@ -1,4 +1,5 @@
 import { addDays, minutesToTime, timeToMinutes, todayISO, weekdayOf } from "../dates";
+import { hoursFor } from "../hours";
 import type { Booking, ClinicSettings, DayAvailability, ISODate, Slot } from "./types";
 
 /**
@@ -26,8 +27,10 @@ export function closedReason(settings: ClinicSettings, date: ISODate): string | 
 /** Times the clinic offers on that weekday, before bookings are considered. */
 export function baseTimes(settings: ClinicSettings, date: ISODate): string[] {
   const dow = weekdayOf(date);
-  const open = timeToMinutes(settings.openTime);
-  const close = timeToMinutes(settings.closeTime);
+  const hours = hoursFor(settings, dow);
+  if (!hours) return [];
+  const open = timeToMinutes(hours.open);
+  const close = timeToMinutes(hours.close);
   const step = Math.max(5, settings.slotMinutes);
   const breaks = settings.breaks
     .filter((b) => b.days.length === 0 || b.days.includes(dow))

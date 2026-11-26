@@ -133,6 +133,25 @@ const paths = {
   grip: <path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01" />,
   arrowUp: <path d="M12 19V5m-6 6 6-6 6 6" />,
   arrowDown: <path d="M12 5v14m6-6-6 6-6-6" />,
+  star: <path d="m12 3.8 2.45 5 5.5.8-3.98 3.88.94 5.47L12 16.37l-4.91 2.58.94-5.47L4.05 9.6l5.5-.8L12 3.8Z" />,
+  accessible: (
+    <>
+      <circle cx="12.5" cy="4.5" r="1.5" />
+      <path d="M12 7.5v6h5l2 5.5M12 10.5h4.5" />
+      <path d="M9.2 10.3a5.5 5.5 0 1 0 6.9 7.2" />
+    </>
+  ),
+  directions: <path d="m12 2.8 9.2 9.2-9.2 9.2L2.8 12 12 2.8ZM9.5 14v-2.5a1 1 0 0 1 1-1h4M13 8.5l2 2-2 2" />,
+  quote: <path d="M10 7.5C7 8.3 5.5 10.6 5.5 14v3h4.5v-4.5H7.6c.2-2 1.1-3.2 2.9-3.9L10 7.5Zm8 0c-3 .8-4.5 3.1-4.5 6.5v3H18v-4.5h-2.4c.2-2 1.1-3.2 2.9-3.9L18 7.5Z" />,
+  copy: <path d="M9 9h10.5v10.5H9V9Zm-4.5 6V4.5H15" />,
+  eyeOff: <path d="M3.5 3.5 20.5 20.5M10.6 6.1A9.8 9.8 0 0 1 12 6c5 0 8.5 4.5 9.5 6-.5.8-1.6 2.2-3.1 3.5M6.6 7.7C4.6 9 3.1 10.9 2.5 12c1 1.5 4.5 6 9.5 6 1.5 0 2.9-.4 4.1-1M9.9 9.9a3 3 0 0 0 4.2 4.2" />,
+  globe: (
+    <>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M3.5 12h17M12 3.5c2.3 2.4 3.5 5.2 3.5 8.5s-1.2 6.1-3.5 8.5c-2.3-2.4-3.5-5.2-3.5-8.5S9.7 5.9 12 3.5Z" />
+    </>
+  ),
+  yelp: <path d="M12.5 3.5v8L7 6.5M13.5 13.5l6 1.5-3 4.5M11 14l-4.5 4M10.5 12 4.5 11l1-4" />,
   whatsapp: (
     <path
       fill="currentColor"
@@ -144,15 +163,16 @@ const paths = {
 
 export type IconName = keyof typeof paths;
 
-export function Icon({ name, size = 20, ...rest }: { name: IconName; size?: number } & SVGProps<SVGSVGElement>) {
+export function Icon({ name, size = 20, className, ...rest }: { name: IconName; size?: number } & SVGProps<SVGSVGElement>) {
   return (
     <svg
+      className={name === "arrow" ? `icon-arrow ${className ?? ""}` : className}
       width={size}
       height={size}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth={1.6}
+      strokeWidth={1.4}
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"

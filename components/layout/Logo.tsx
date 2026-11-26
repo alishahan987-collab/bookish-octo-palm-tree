@@ -4,17 +4,24 @@ import Link from "next/link";
 import { useSite } from "../site/SiteProvider";
 import { SmartImage } from "../ui/SmartImage";
 
-export function Logo({ light = false, compact = false }: { light?: boolean; compact?: boolean }) {
+/** Wordmark: the short name in widely spaced serif capitals over a fine sans-serif tagline. */
+export function Logo({ light = false, size = "md" }: { light?: boolean; size?: "md" | "lg" }) {
   const { content } = useSite();
   const { brand } = content;
   return (
-    <Link href="/" className="inline-flex items-center gap-3 leading-none" aria-label={`${brand.clinicName}, home`}>
+    <Link href="/" className="inline-flex items-center leading-none" aria-label={`${brand.clinicName}, home`}>
       {brand.logo ? (
         <SmartImage src={brand.logo} alt={brand.logoAlt || brand.clinicName} className="h-11 w-36" sizes="144px" fill style={{ objectFit: "contain" }} />
       ) : (
-        <span className="flex flex-col">
-          <span className={`font-serif text-[1.6rem] tracking-[0.02em] ${light ? "text-ivory" : "text-charcoal"}`}>{brand.shortName}</span>
-          <span className={`mt-1 whitespace-nowrap text-[0.5rem] font-semibold uppercase tracking-[0.15em] ${compact ? "" : "sm:text-[0.6rem] sm:tracking-[0.28em]"} ${light ? "text-champagne" : "text-gold"}`}>{brand.tagline}</span>
+        <span className="flex flex-col items-center" aria-hidden="true">
+          <span className={`font-serif font-medium leading-none tracking-[0.24em] [margin-right:-0.24em] ${size === "lg" ? "text-[2.6rem]" : "text-[1.7rem] sm:text-[1.85rem]"} ${light ? "text-ivory" : "text-charcoal"}`}>
+            {brand.shortName}
+          </span>
+          {brand.tagline && (
+            <span className={`mt-1.5 flex items-center gap-2 whitespace-nowrap font-sans font-medium uppercase leading-none tracking-[0.3em] [margin-right:-0.3em] ${size === "lg" ? "text-[0.62rem]" : "text-[0.5rem] sm:text-[0.52rem]"} ${light ? "text-champagne" : "text-gold"}`}>
+              {brand.tagline}
+            </span>
+          )}
         </span>
       )}
     </Link>

@@ -10,10 +10,10 @@ export const metadata: Metadata = { title: "Book an appointment" };
 export default async function BookPage() {
   const treatments = await getProcedures();
   return (
-    <section className="container-lux max-w-3xl pb-16 pt-10 sm:pt-14">
+    <section className="container-lux max-w-3xl pb-24 pt-10 sm:pt-16">
       <p className="eyebrow">Online booking</p>
-      <h1 className="mt-3 text-5xl sm:text-6xl">Book an appointment</h1>
-      <p className="mt-3 text-muted">Takes about a minute. The clinic will confirm your appointment.</p>
+      <h1 className="display mt-4 text-[2.8rem] sm:text-6xl">Book an appointment</h1>
+      <p className="lead mt-4">Takes about a minute. We will confirm your appointment by email.</p>
       <Suspense fallback={<div className="mt-10 h-96" aria-busy="true" />}>
         <MotionProvider>
           <BookingFlow initialTreatments={treatments} />

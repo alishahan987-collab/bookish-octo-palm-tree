@@ -6,6 +6,7 @@ import { useData } from "@/lib/data/hooks";
 import { MAIN_DOCTOR_ID, SEED_SETTINGS } from "@/lib/data/seed";
 import type { DayAvailability, Weekday } from "@/lib/data/types";
 import { WEEKDAYS, formatDate, parseISODate, todayISO } from "@/lib/dates";
+import { hoursFor } from "@/lib/hours";
 import { uid } from "@/lib/id";
 import { Icon } from "../ui/Icon";
 import { Card, SaveBar, Switch, errorMessage, useDraft, useToast } from "./ui";
@@ -57,10 +58,28 @@ export function SettingsAdmin() {
             </div>
           </Card>
 
-          <Card title="Hours & slot rules">
+          <Card title="Opening hours by day" description="Shown on the website and used for online booking. Turn a day off under Working days.">
+            <ul className="divide-y divide-line border-y border-line" data-testid="day-hours">
+              {WEEKDAYS.filter((d) => draft.workingDays.includes(d.id)).map((d) => {
+                const h = hoursFor(draft, d.id) ?? { open: draft.openTime, close: draft.closeTime };
+                const setDay = (v: Partial<typeof h>) => set("dayHours", { ...(draft.dayHours ?? {}), [String(d.id)]: { ...h, ...v } });
+                return (
+                  <li key={d.id} className="grid grid-cols-[5.5rem_1fr_1fr] items-center gap-3 py-2.5">
+                    <span className="text-sm font-medium text-charcoal">{d.long}</span>
+                    <label className="sr-only" htmlFor={`dh-o-${d.id}`}>{d.long} opens</label>
+                    <input id={`dh-o-${d.id}`} type="time" className="field" value={h.open} onChange={(e) => setDay({ open: e.target.value })} />
+                    <label className="sr-only" htmlFor={`dh-c-${d.id}`}>{d.long} closes</label>
+                    <input id={`dh-c-${d.id}`} type="time" className="field" value={h.close} onChange={(e) => setDay({ close: e.target.value })} />
+                  </li>
+                );
+              })}
+            </ul>
+          </Card>
+
+          <Card title="Slot rules">
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <Field id="s-open" label="Opens"><input id="s-open" type="time" className="field" value={draft.openTime} onChange={(e) => set("openTime", e.target.value)} /></Field>
-              <Field id="s-close" label="Closes"><input id="s-close" type="time" className="field" value={draft.closeTime} onChange={(e) => set("closeTime", e.target.value)} /></Field>
+              <Field id="s-open" label="Default opening (new days)"><input id="s-open" type="time" className="field" value={draft.openTime} onChange={(e) => set("openTime", e.target.value)} /></Field>
+              <Field id="s-close" label="Default closing (new days)"><input id="s-close" type="time" className="field" value={draft.closeTime} onChange={(e) => set("closeTime", e.target.value)} /></Field>
               <Field id="s-slot" label="Appointment slot length">
                 <select id="s-slot" className="field" value={draft.slotMinutes} onChange={(e) => set("slotMinutes", Number(e.target.value))}>
                   {[15, 20, 30, 45, 60, 90].map((n) => <option key={n} value={n}>{n} minutes</option>)}
@@ -76,7 +95,7 @@ export function SettingsAdmin() {
           <Card title="Daily breaks">
             <ul className="space-y-3">
               {draft.breaks.map((b, i) => (
-                <li key={b.id} className="rounded-2xl border border-line p-3">
+                <li key={b.id} className="border border-line p-3">
                   <div className="grid gap-3 sm:grid-cols-[1fr_8rem_8rem_auto] sm:items-end">
                     <Field id={`b-l-${i}`} label="Label"><input id={`b-l-${i}`} className="field" value={b.label} onChange={(e) => set("breaks", draft.breaks.map((x) => (x.id === b.id ? { ...x, label: e.target.value } : x)))} /></Field>
                     <Field id={`b-s-${i}`} label="From"><input id={`b-s-${i}`} type="time" className="field" value={b.start} onChange={(e) => set("breaks", draft.breaks.map((x) => (x.id === b.id ? { ...x, start: e.target.value } : x)))} /></Field>
@@ -123,12 +142,12 @@ export function SettingsAdmin() {
               setNewHoliday({ date: "", label: "" });
             }}>
               <Field id="h-date" label="Date"><input id="h-date" type="date" min={todayISO()} className="field" value={newHoliday.date} onChange={(e) => setNewHoliday({ ...newHoliday, date: e.target.value })} /></Field>
-              <Field id="h-label" label="Reason"><input id="h-label" className="field" placeholder="e.g. Eid ul-Fitr" value={newHoliday.label} onChange={(e) => setNewHoliday({ ...newHoliday, label: e.target.value })} /></Field>
+              <Field id="h-label" label="Reason"><input id="h-label" className="field" placeholder="e.g. Christmas Day" value={newHoliday.label} onChange={(e) => setNewHoliday({ ...newHoliday, label: e.target.value })} /></Field>
               <button type="submit" className="btn btn-ghost" disabled={!newHoliday.date}><Icon name="plus" size={16} /> Add holiday</button>
             </form>
           </Card>
 
-          <Card title="Blocked time slots" description="Block part of a day (e.g. the doctor is away for a few hours). Those slots disappear from online booking.">
+          <Card title="Blocked time slots" description="Block part of a day (e.g. a provider is away for a few hours). Those slots disappear from online booking.">
             <ul className="divide-y divide-line">
               {[...(draft.blocked ?? [])].sort((a, b) => (a.date + a.start).localeCompare(b.date + b.start)).map((b) => (
                 <li key={b.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">

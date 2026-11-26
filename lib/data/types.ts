@@ -28,7 +28,8 @@ export type PriceType = PriceModel["type"];
 
 /* ----------------------------- Procedures ----------------------------- */
 
-export type CategoryId = "skin" | "aesthetic" | "hair" | "consultation";
+/** Treatment menu groups. Labels and page addresses live in lib/categories.ts. */
+export type CategoryId = "skin" | "injectables" | "laser" | "wellness" | "consultation";
 
 export interface FAQ {
   q: string;
@@ -138,84 +139,103 @@ export type PostInput = Omit<Post, "id" | "updatedAt"> & { id?: string };
 
 /* ---------------------------- Site content ---------------------------- */
 
-export type SectionId =
-  | "intro"
-  | "conditions"
-  | "procedures"
-  | "doctor"
+/**
+ * Homepage building blocks. The homepage is an ordered list of section
+ * instances: each can be edited, moved, hidden, duplicated or removed in
+ * Admin → Homepage, and any type can be added again from the library.
+ */
+export type HomeSectionType =
+  | "hero"
+  | "treatments"
+  | "about"
   | "why"
   | "beforeAfter"
-  | "pricing"
-  | "blog"
-  | "cta"
+  | "testimonials"
+  | "team"
+  | "booking"
+  | "location"
   | "faq"
-  | "contact";
+  | "concerns"
+  | "pricing"
+  | "journal"
+  | "custom";
 
-export interface SectionConfig {
+export interface HomeSection {
+  id: string;
+  type: HomeSectionType;
   visible: boolean;
-  order: number;
   eyebrow: string;
   title: string;
+  /** Hero only: words shown in italic after the title. */
+  highlight?: string;
   intro: string;
+  image?: ImageRef;
+  imageAlt?: string;
+  ctaLabel?: string;
+  ctaHref?: string;
+  secondaryLabel?: string;
+  secondaryHref?: string;
+  tone?: "light" | "cream" | "dark";
+  imageSide?: "left" | "right";
+  /** Treatments section: which group to show. */
+  category?: CategoryId | "featured" | "all";
+  /** Treatments / journal / testimonials: how many items. */
+  limit?: number;
 }
 
-/** A section the clinic adds itself (e.g. "Our promise", "New: laser suite"). */
-export interface CustomSection {
+export interface TeamMember {
   id: string;
+  name: string;
+  role: string;
+  /** e.g. "RN, BSN · California Board of Registered Nursing" — publish only after verification. */
+  credentials: string;
+  bio: string;
+  photo?: ImageRef;
+  photoAlt?: string;
   visible: boolean;
-  order: number;
-  eyebrow: string;
-  title: string;
-  body: string;
-  image?: ImageRef;
-  imageSide: "left" | "right";
-  ctaLabel: string;
-  ctaHref: string;
-  tone: "light" | "cream" | "dark";
+}
+
+export interface Testimonial {
+  id: string;
+  quote: string;
+  author: string;
+  /** Where the review was originally posted, e.g. "Google". */
+  source: string;
+  date?: ISODate;
+  rating?: number;
+  /** Must be true before the testimonial can be shown publicly. */
+  permission: boolean;
+  visible: boolean;
 }
 
 export interface ThemeConfig {
   preset: string;
+  /** Page background (warm ivory). */
   background: string;
+  /** Cards and forms (white). */
   surface: string;
+  /** Alternate section background (champagne beige). */
   cream: string;
+  /** Decorative accent (muted gold): rules, icons, buttons. Text-safe shades are derived automatically. */
   accent: string;
-  accentText: string;
+  /** Soft neutral (taupe) for hairlines. */
+  taupe: string;
+  /** Headings and body text (deep charcoal). */
   ink: string;
   headingFont: "cormorant" | "playfair" | "bodoni";
-  bodyFont: "manrope" | "inter" | "dmsans";
+  bodyFont: "dmsans" | "inter" | "manrope";
 }
 
 export interface SiteContent {
   brand: { clinicName: string; shortName: string; tagline: string; logo?: ImageRef; logoAlt: string };
-  doctor: {
-    name: string;
-    designation: string;
-    photo?: ImageRef;
-    shortIntro: string;
-    bio: string;
-    qualifications: string[];
-    specialization: string;
-    experience: string;
-    certifications: string[];
-    achievements: string[];
-    expertise: string[];
-    registration: string;
-  };
-  hero: {
-    eyebrow: string;
-    title: string;
-    highlight: string;
-    intro: string;
-    primaryCta: string;
-    secondaryCta: string;
-    badges: { title: string; text: string }[];
-    backgroundImage?: ImageRef;
-  };
   announcement: { enabled: boolean; text: string; linkLabel: string; href: string };
-  sections: Record<SectionId, SectionConfig>;
-  customSections: CustomSection[];
-  why: { title: string; text: string }[];
+  homeSections: HomeSection[];
+  about: { eyebrow: string; title: string; body: string; image?: ImageRef; imageAlt?: string; values: { title: string; text: string }[] };
+  team: TeamMember[];
+  testimonials: Testimonial[];
+  /** Public rating summary, shown only when enabled. Update `asOf` whenever the numbers change. */
+  reviews: { enabled: boolean; rating: number; count: number; source: string; url: string; asOf: ISODate };
+  why: { title: string; text: string; icon?: string }[];
   faqs: FAQ[];
   contact: {
     address: string;
@@ -223,12 +243,14 @@ export interface SiteContent {
     mapsQuery: string;
     phone: string;
     email: string;
-    /** International digits only, e.g. 923001234567. */
+    /** International digits only, e.g. 19095167066. Leave empty to hide WhatsApp buttons. */
     whatsapp: string;
     /** Where new-booking alerts go (email). Falls back to `email`. */
     bookingAlertEmail: string;
   };
-  social: { instagram: string; facebook: string; youtube: string; tiktok: string };
+  /** "Good to know" notes on the contact page and homepage (accessibility, parking, payments...). */
+  visitInfo: { title: string; text: string }[];
+  social: { instagram: string; facebook: string; youtube: string; tiktok: string; yelp: string };
   theme: ThemeConfig;
   seo: { title: string; description: string };
   footer: { about: string; disclaimer: string };
@@ -265,8 +287,11 @@ export interface BlockedSlot {
 
 export interface ClinicSettings {
   workingDays: Weekday[];
+  /** Default hours. */
   openTime: HHmm;
   closeTime: HHmm;
+  /** Hours that differ by weekday, keyed "0" (Sunday) to "6" (Saturday). */
+  dayHours?: Partial<Record<string, { open: HHmm; close: HHmm }>>;
   slotMinutes: number;
   breaks: BreakTime[];
   holidays: Holiday[];
@@ -279,7 +304,8 @@ export interface ClinicSettings {
 
 /* ------------------------------ Bookings ------------------------------ */
 
-export type ContactMethod = "whatsapp" | "email" | "both";
+/** phone = the clinic calls or texts; both = WhatsApp and email (only offered when WhatsApp is set up). */
+export type ContactMethod = "phone" | "email" | "whatsapp" | "both";
 
 export type BookingStatus = "pending" | "confirmed" | "rejected" | "arrived" | "completed" | "cancelled";
 

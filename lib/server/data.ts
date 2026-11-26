@@ -1,6 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { seedSnapshot } from "../data/local-source";
+import { normalizeContent, normalizeSettings } from "../data/content";
 import { SEED_CONTENT, SEED_SETTINGS } from "../data/seed";
 import type { ClinicSettings, Condition, GalleryItem, Post, SiteContent, Treatment } from "../data/types";
 import { rowToCondition, rowToGallery, rowToPost, rowToTreatment } from "../supabase/mappers";
@@ -15,12 +16,12 @@ import { anonServerClient } from "../supabase/server";
  */
 
 export const getSite = cache(async (): Promise<{ content: SiteContent; settings: ClinicSettings }> => {
-  if (!isSupabaseMode) return { content: SEED_CONTENT, settings: SEED_SETTINGS };
+  if (!isSupabaseMode) return { content: normalizeContent(SEED_CONTENT), settings: SEED_SETTINGS };
   const { data } = await anonServerClient().from("site_config").select("key,data");
   const map = Object.fromEntries((data ?? []).map((r) => [r.key, r.data]));
   return {
-    content: { ...SEED_CONTENT, ...(map.content ?? {}) },
-    settings: { ...SEED_SETTINGS, ...(map.settings ?? {}) },
+    content: normalizeContent(map.content),
+    settings: normalizeSettings(map.settings),
   };
 });
 

@@ -87,7 +87,7 @@ export function SlotPicker({
                           onClick={() => onTime(s.time)}
                           data-time={s.time}
                           data-state={s.state}
-                          className={`rounded-xl border px-2 py-2.5 text-sm font-semibold transition-colors ${
+                          className={`rounded-xl border px-2 py-2.5 text-sm font-medium transition-colors ${
                             selected
                               ? "border-charcoal bg-charcoal text-ivory"
                               : taken

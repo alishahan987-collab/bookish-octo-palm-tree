@@ -90,7 +90,7 @@ function ConditionEditor({ initial, onClose }: { initial: ConditionInput; onClos
             <LinesInput id="c-symptoms" label="2. Common symptoms" value={c.symptoms} onChange={(v) => set("symptoms", v)} />
             <LinesInput id="c-causes" label="3. Causes" value={c.causes} onChange={(v) => set("causes", v)} />
             <LinesInput id="c-treatments" label="4. Available treatments" value={c.treatments} onChange={(v) => set("treatments", v)} />
-            <LinesInput id="c-consult" label="5. When to consult a dermatologist" value={c.whenToConsult} onChange={(v) => set("whenToConsult", v)} />
+            <LinesInput id="c-consult" label="5. When to see a medical professional" value={c.whenToConsult} onChange={(v) => set("whenToConsult", v)} />
           </div>
         </Group>
         <div className="flex flex-wrap gap-4">

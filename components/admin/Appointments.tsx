@@ -1,5 +1,6 @@
 "use client";
 
+import { CONTACT_METHOD_LABEL } from "@/lib/messages";
 import { useMemo, useState } from "react";
 import { allowedNextStatuses, canReschedule, dataMode, getAvailability, getBookings, getTreatments, rescheduleBooking, setBookingStatus } from "@/lib/data";
 import { useData } from "@/lib/data/hooks";
@@ -176,7 +177,7 @@ export function Appointments() {
                     <p className="text-xs font-semibold uppercase tracking-wider text-muted">Contact</p>
                     <p className="mt-1">{b.phone}</p>
                     {b.email && <p className="break-all">{b.email}</p>}
-                    <p className="text-muted">Prefers: {{ whatsapp: "WhatsApp", email: "Email", both: "Email + WhatsApp" }[b.contactMethod]}</p>
+                    <p className="text-muted">Prefers: {CONTACT_METHOD_LABEL[b.contactMethod]}</p>
                     {b.notes && <p className="mt-2 text-muted">Note: {b.notes}</p>}
                     <p className="mt-3 text-xs text-muted">Consent recorded {new Date(b.consent.at).toLocaleString("en-GB")}</p>
                   </div>
@@ -204,9 +205,9 @@ export function Appointments() {
         {reasonFor && (
           <>
             <p className="text-muted">{reasonFor.b.patientName} · {reasonFor.b.treatmentName} · {formatDateLong(reasonFor.b.date)}, {formatTime(reasonFor.b.time)}</p>
-            <label htmlFor="reason" className="label mt-5">{reasonFor.action === "rejected" ? "Message to the patient (optional)" : "Reason (internal, optional)"}</label>
+            <label htmlFor="reason" className="label mt-5">{reasonFor.action === "rejected" ? "Message to the client (optional)" : "Reason (internal, optional)"}</label>
             <textarea id="reason" className="field" rows={3} value={reason} onChange={(e) => setReason(e.target.value)} maxLength={300}
-              placeholder={reasonFor.action === "rejected" ? "e.g. The doctor is unavailable that day. Please choose another date." : ""} />
+              placeholder={reasonFor.action === "rejected" ? "e.g. The provider is unavailable that day. Please choose another date." : ""} />
             <p className="hint">The patient is notified and the time slot becomes available again.</p>
             <div className="mt-6 flex justify-end gap-3">
               <button type="button" className="btn btn-ghost" onClick={() => setReasonFor(null)}>Back</button>

@@ -85,7 +85,7 @@ function GalleryEditor({ initial, onClose }: { initial: GalleryInput; onClose: (
           <div>
             <label htmlFor="g-cat" className="label">Category</label>
             <select id="g-cat" className="field" value={g.category} onChange={(e) => set("category", e.target.value as CategoryId)}>
-              {(["skin", "aesthetic", "hair"] as CategoryId[]).map((c) => <option key={c} value={c}>{CATEGORY_LABEL[c]}</option>)}
+              {(["skin", "injectables", "laser", "wellness"] as CategoryId[]).map((c) => <option key={c} value={c}>{CATEGORY_LABEL[c]}</option>)}
             </select>
           </div>
           <div>

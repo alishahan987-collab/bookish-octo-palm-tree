@@ -10,15 +10,15 @@ export function PreviewBanner() {
   return (
     <>
       {p.enabled && (
-        <div role="note" className="bg-charcoal px-4 py-1.5 text-center text-[0.72rem] leading-snug tracking-wide text-champagne-soft">
+        <div role="note" className="border-b border-white/10 bg-[#161616] px-4 py-1.5 text-center text-[0.7rem] leading-snug tracking-[0.06em] text-[#d8cdb9]">
           {p.text}
         </div>
       )}
       {a.enabled && a.text && (
-        <div className="bg-cream px-4 py-2 text-center text-[0.8rem] text-ink">
+        <div className="bg-cream px-4 py-2.5 text-center text-[0.8rem] text-ink">
           {a.text}{" "}
           {a.href && (
-            <Link href={a.href} className="font-semibold text-gold underline underline-offset-4">
+            <Link href={a.href} className="font-medium text-gold underline underline-offset-4">
               {a.linkLabel || "Learn more"}
             </Link>
           )}

@@ -1,6 +1,6 @@
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { addDays, todayISO, weekdayOf } from "../dates";
-import { normalisePkMobile } from "../phone";
+import { normalisePhone } from "../phone";
 import { validatePrice, priceSummary } from "../pricing";
 import { SEED_SETTINGS } from "./seed";
 import { baseTimes, getDayAvailability } from "./slots";
@@ -32,16 +32,19 @@ function nextWeekday(dow: Weekday): string {
 
 describe("phone validation", () => {
   it.each([
-    ["0300 1234567", "+92 300 1234567"],
-    ["0300-1234567", "+92 300 1234567"],
-    ["+92 345 1234567", "+92 345 1234567"],
-    ["923451234567", "+92 345 1234567"],
-    ["0092 312 1234567", "+92 312 1234567"],
-  ])("accepts %s", (input, out) => expect(normalisePkMobile(input)).toBe(out));
+    ["(909) 516-7066", "+1 (909) 516-7066"],
+    ["909-516-7066", "+1 (909) 516-7066"],
+    ["9095167066", "+1 (909) 516-7066"],
+    ["+1 909 516 7066", "+1 (909) 516-7066"],
+    ["1 (909) 516-7066", "+1 (909) 516-7066"],
+    ["909.516.7066", "+1 (909) 516-7066"],
+    ["+44 7700 900123", "+447700900123"],
+    ["0086 138 0013 8000", "+8613800138000"],
+  ])("accepts %s", (input, out) => expect(normalisePhone(input)).toBe(out));
 
-  it.each(["", "0992 330000", "0300123456", "03001234567890", "0423 1234567", "abc0300 1234567", "300 1234567"])(
+  it.each(["", "516-7066", "(109) 516-7066", "(909) 116-7066", "909516706", "90951670661", "abc 909 516 7066", "+0 123456789", "+1234567"])(
     "rejects %s",
-    (input) => expect(normalisePkMobile(input)).toBeNull(),
+    (input) => expect(normalisePhone(input)).toBeNull(),
   );
 });
 
@@ -55,27 +58,38 @@ describe("pricing", () => {
     expect(validatePrice({ type: "consultation" })).toBeNull();
   });
   it("summarises prices", () => {
-    expect(priceSummary({ type: "from", amount: 5000 })).toBe("From PKR 5,000");
-    expect(priceSummary({ type: "consultation" })).toBe("Price after consultation");
+    expect(priceSummary({ type: "from", amount: 168 })).toBe("From $168");
+    expect(priceSummary({ type: "from", amount: 8, unit: "per unit" })).toBe("From $8 per unit");
+    expect(priceSummary({ type: "range", min: 1200, max: 1500 })).toBe("$1,200–$1,500");
+    expect(priceSummary({ type: "promo", regular: 250, promo: 199 })).toBe("$199 (was $250)");
+    expect(priceSummary({ type: "consultation" })).toBe("Priced at consultation");
   });
 });
 
 describe("slot engine", () => {
-  it("skips breaks", () => {
-    const monday = nextWeekday(1);
-    const times = baseTimes(settings(), monday);
-    expect(times).toContain("13:00");
-    expect(times).not.toContain("13:30");
-    expect(times).not.toContain("14:00");
-    expect(times).toContain("14:30");
-    expect(times[0]).toBe("11:00");
-    expect(times.at(-1)).toBe("18:30");
+  it("uses weekday and weekend opening hours", () => {
+    const monday = baseTimes(settings(), nextWeekday(1));
+    expect(monday[0]).toBe("09:30");
+    expect(monday.at(-1)).toBe("18:00");
+    const saturday = baseTimes(settings(), nextWeekday(6));
+    expect(saturday[0]).toBe("10:00");
+    expect(saturday.at(-1)).toBe("18:30");
+    expect(baseTimes(settings(), nextWeekday(0))[0]).toBe("10:00");
   });
 
-  it("applies the Friday Jumu'ah break only on Fridays", () => {
-    const friday = nextWeekday(5);
-    expect(baseTimes(settings(), friday)).not.toContain("12:30");
-    expect(baseTimes(settings(), nextWeekday(2))).toContain("12:30");
+  it("skips breaks only on their days", () => {
+    const s = settings({ breaks: [{ id: "b", label: "Team meeting", start: "13:00", end: "14:00", days: [1] }] });
+    const monday = baseTimes(s, nextWeekday(1));
+    expect(monday).toContain("12:30");
+    expect(monday).not.toContain("13:00");
+    expect(monday).not.toContain("13:30");
+    expect(monday).toContain("14:00");
+    expect(baseTimes(s, nextWeekday(2))).toContain("13:00");
+  });
+
+  it("rejects per-day hours that close before they open", async () => {
+    const { assertSettings } = await import("./rules");
+    expect(() => assertSettings(settings({ dayHours: { "6": { open: "19:00", close: "10:00" } } }))).toThrow(/Saturday/);
   });
 
   it("closes non-working days and holidays", () => {
@@ -83,10 +97,10 @@ describe("slot engine", () => {
     const s = settings({ workingDays: [1, 2, 3, 4, 5, 6] });
     expect(getDayAvailability(s, [], sunday, "main").open).toBe(false);
     const monday = nextWeekday(1);
-    const h = settings({ holidays: [{ id: "h", date: monday, label: "Eid" }] });
+    const h = settings({ holidays: [{ id: "h", date: monday, label: "Thanksgiving" }] });
     const day = getDayAvailability(h, [], monday, "main");
     expect(day.open).toBe(false);
-    if (!day.open) expect(day.reason).toContain("Eid");
+    if (!day.open) expect(day.reason).toContain("Thanksgiving");
   });
 
   it("marks booked slots and enforces max per day", () => {
@@ -121,16 +135,16 @@ describe("local data source", () => {
     }
     const input = {
       treatmentId: t.id, doctorId: "main", date, time, patientName: "Test Person",
-      phone: "0300 1234567", email: "test@example.com", contactMethod: "both" as const, consent: true,
+      phone: "(909) 555-0142", email: "test@example.com", contactMethod: "phone" as const, consent: true,
     };
     const { booking: b, notifications } = await data.createBooking(input);
     expect(notifications.every((n) => n.status === "skipped")).toBe(true); // demo mode never sends
-    expect(b.reference).toMatch(/^AES-\d{4}-\d{4}$/);
-    expect(b.phone).toBe("+92 300 1234567");
+    expect(b.reference).toMatch(/^VIP-\d{4}-\d{4}$/);
+    expect(b.phone).toBe("+1 (909) 555-0142");
     await expect(data.createBooking(input)).rejects.toMatchObject({ code: "SLOT_UNAVAILABLE" });
 
     // rejecting frees it again
-    await data.setBookingStatus(b.id, "rejected", "Doctor unavailable");
+    await data.setBookingStatus(b.id, "rejected", "Provider unavailable");
     const again = await data.createBooking(input);
     expect(again.booking.reference).not.toBe(b.reference);
     // email is required by default
@@ -191,10 +205,13 @@ describe("search", () => {
     const { buildIndex, search } = await import("../search");
     const { SEED_TREATMENTS, SEED_CONDITIONS, SEED_POSTS } = await import("./seed");
     const index = buildIndex({ treatments: SEED_TREATMENTS, conditions: SEED_CONDITIONS, posts: SEED_POSTS });
-    expect(search(index, "hair fall")[0].title).toMatch(/hair/i);
-    expect(search(index, "pimples").some((h) => h.title === "Acne")).toBe(true);
-    expect(search(index, "melasama").some((h) => h.title === "Melasma")).toBe(true); // typo
+    expect(search(index, "hair removal")[0].title).toBe("Laser Hair Removal");
+    expect(search(index, "pimples").some((h) => h.title === "Acne & Breakouts")).toBe(true);
+    expect(search(index, "hydrafacal").some((h) => h.title === "HydraFacial")).toBe(true); // typo
     expect(search(index, "botox")[0].title).toMatch(/Botox/);
+    expect(search(index, "wrinkles").some((h) => h.title === "Botox")).toBe(true);
+    expect(search(index, "iv drip").some((h) => h.title === "IV Wellness Therapy")).toBe(true);
+    expect(search(index, "skin tag").some((h) => /Skin Tag/.test(h.title))).toBe(true);
     expect(search(index, "sunscreen").some((h) => h.type === "article")).toBe(true);
     expect(search(index, "x")).toEqual([]);
   });

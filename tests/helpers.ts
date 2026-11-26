@@ -34,11 +34,12 @@ export async function pickSlot(page: Page, slug = "hydrafacial", dayIndex = 1) {
   return { date, time };
 }
 
-export async function fillDetails(page: Page, opts: { name?: string; email?: string } = {}) {
+export async function fillDetails(page: Page, opts: { name?: string; email?: string; method?: string } = {}) {
   await page.getByRole("button", { name: /Continue/ }).click();
   await page.getByLabel("Full name").fill(opts.name ?? "Test Patient");
-  await page.getByLabel("Phone number").fill("0300-1234567");
-  await page.getByRole("textbox", { name: /Email address/ }).fill(opts.email ?? "patient@example.com");
+  await page.getByLabel("Phone number").fill("(909) 555-0142");
+  await page.getByRole("textbox", { name: /Email address/ }).fill(opts.email ?? "client@example.com");
+  if (opts.method) await page.getByText(opts.method, { exact: true }).click();
   await page.locator("#f-consent").check();
   await page.getByRole("button", { name: /Continue/ }).click();
   await expect(page.getByTestId("review")).toBeVisible();
