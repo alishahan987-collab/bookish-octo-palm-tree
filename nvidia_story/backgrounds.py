@@ -2,15 +2,31 @@
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
-W, H, K = 1920, 1080, 2               # output size, supersampling factor
+W, H, Q = 1920, 1080, 2               # design size; output is Q times bigger (Q=2 -> 4K 3840x2160)
+K = 2 * Q                              # drawing scale (2x supersampled)
+CREAM = (252, 246, 234)
 OUT = (32, 30, 34)
 OW = 5 * K                            # outline width
 
 
+def pastel(col, k):
+    """Soften a fill colour toward warm cream (the tutorial's pastel look); outlines stay dark."""
+    if col is None or tuple(col[:3]) == OUT or k <= 0:
+        return col
+    lum = sum(col[:3]) / 3
+    rgb = [c * 0.88 + lum * 0.12 for c in col[:3]]
+    rgb = tuple(int(c * (1 - k) + w * k) for c, w in zip(rgb, CREAM))
+    return rgb + tuple(col[3:])
+
+
 class Painter:
-    def __init__(self, color):
-        self.img = Image.new("RGB", (W * K, H * K), color)
+    def __init__(self, color, soft=0.2):
+        self.k = soft
+        self.img = Image.new("RGB", (W * K, H * K), pastel(color, soft))
         self.d = ImageDraw.Draw(self.img)
+
+    def pc(self, col):
+        return pastel(col, self.k)
 
     @staticmethod
     def s(pts):
@@ -19,23 +35,23 @@ class Painter:
     def rect(self, x0, y0, x1, y1, fill, outline=True, w=OW, r=0):
         box = [x0 * K, y0 * K, x1 * K, y1 * K]
         if r:
-            self.d.rounded_rectangle(box, radius=r * K, fill=fill, outline=OUT if outline else None, width=w if outline else 0)
+            self.d.rounded_rectangle(box, radius=r * K, fill=self.pc(fill), outline=OUT if outline else None, width=w if outline else 0)
         else:
-            self.d.rectangle(box, fill=fill, outline=OUT if outline else None, width=w if outline else 0)
+            self.d.rectangle(box, fill=self.pc(fill), outline=OUT if outline else None, width=w if outline else 0)
 
     def poly(self, pts, fill, outline=True, w=OW):
-        self.d.polygon(self.s(pts), fill=fill, outline=OUT if outline else None, width=w if outline else 0)
+        self.d.polygon(self.s(pts), fill=self.pc(fill), outline=OUT if outline else None, width=w if outline else 0)
 
     def line(self, pts, col=OUT, w=OW):
-        self.d.line(self.s(pts), fill=col, width=int(w), joint="curve")
+        self.d.line(self.s(pts), fill=self.pc(col), width=int(w), joint="curve")
 
     def ell(self, x0, y0, x1, y1, fill, outline=True, w=OW):
-        self.d.ellipse([x0 * K, y0 * K, x1 * K, y1 * K], fill=fill, outline=OUT if outline else None, width=w if outline else 0)
+        self.d.ellipse([x0 * K, y0 * K, x1 * K, y1 * K], fill=self.pc(fill), outline=OUT if outline else None, width=w if outline else 0)
 
     def grad(self, x0, y0, x1, y1, c0, c1):
         h = int((y1 - y0) * K)
         t = np.linspace(0, 1, h)[:, None]
-        col = (np.array(c0)[None, :] * (1 - t) + np.array(c1)[None, :] * t).astype(np.uint8)
+        col = (np.array(self.pc(c0))[None, :] * (1 - t) + np.array(self.pc(c1))[None, :] * t).astype(np.uint8)
         strip = np.repeat(col[:, None, :], int((x1 - x0) * K), axis=1)
         self.img.paste(Image.fromarray(strip, "RGB"), (int(x0 * K), int(y0 * K)))
         self.d = ImageDraw.Draw(self.img)
@@ -47,10 +63,10 @@ class Painter:
         self.d = ImageDraw.Draw(self.img)
 
     def text(self, x, y, txt, font_path, size, col=OUT, anchor="mm"):
-        self.d.text((x * K, y * K), txt, font=ImageFont.truetype(font_path, int(size * K)), fill=col, anchor=anchor)
+        self.d.text((x * K, y * K), txt, font=ImageFont.truetype(font_path, int(size * K)), fill=self.pc(col), anchor=anchor)
 
     def done(self):
-        return self.img.resize((W, H), Image.LANCZOS)
+        return self.img.resize((W * Q, H * Q), Image.LANCZOS)
 
 
 def crt(p, x, y, w=230, h=180, on=True):
@@ -63,7 +79,7 @@ def crt(p, x, y, w=230, h=180, on=True):
 
 
 def bg_stage(font):
-    p = Painter((20, 22, 34))
+    p = Painter((20, 22, 34), soft=0.12)
     p.grad(0, 0, W, 800, (12, 14, 26), (42, 46, 66))
     p.rect(-10, -10, W + 10, 36, (30, 30, 36))
     for x in (260, 1660):
@@ -150,7 +166,7 @@ def diner_table(font, names=None):
     for k in range(4):
         for a, b in (((812 + 12 * k + 6, 800), (812 + 12 * k + 6, 806)), ((812 + 12 * k + 6, 846), (812 + 12 * k + 6, 852))):
             layer.line([a, b], (40, 90, 200), 3 * K)
-    return layer.img.resize((W, H), Image.LANCZOS)
+    return layer.img.resize((W * Q, H * Q), Image.LANCZOS)
 
 
 def nameplate(font, text, size=30):
@@ -160,7 +176,7 @@ def nameplate(font, text, size=30):
     d = ImageDraw.Draw(img)
     d.rounded_rectangle([2, 2, img.width - 3, img.height - 3], radius=10 * K, fill=(250, 248, 240), outline=OUT, width=4 * K)
     d.text((img.width / 2, img.height / 2 + 2 * K), text, font=f, fill=OUT, anchor="mm")
-    return img.resize((img.width // K, img.height // K), Image.LANCZOS)
+    return img.resize((img.width * Q // K, img.height * Q // K), Image.LANCZOS)
 
 
 def bg_lab(font):
@@ -264,7 +280,7 @@ def tokyo_desk(font):
     layer.text(1100, 806, "CONTRACT", font, 20)
     layer.rect(1600, 760, 1700, 800, (60, 60, 66), r=6)
     layer.rect(1612, 748, 1688, 766, (40, 40, 44), r=6)
-    return layer.img.resize((W, H), Image.LANCZOS)
+    return layer.img.resize((W * Q, H * Q), Image.LANCZOS)
 
 
 def bg_office(font):
@@ -324,4 +340,4 @@ def bg_store(font):
 
 
 def bg_black(font):
-    return Image.new("RGB", (W, H), (10, 10, 12))
+    return Image.new("RGB", (W * Q, H * Q), (10, 10, 12))
