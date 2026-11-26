@@ -185,6 +185,8 @@ def caption_image(text, dark):
         tw = max(f.getlength(l) for l in lines)
         img = Image.new("RGBA", (int(tw + 40 * k), int(lh * len(lines) + 35 * k)), (0, 0, 0, 0))
         d = ImageDraw.Draw(img)
+        d.rounded_rectangle([0, 4 * k, img.width - 1, img.height - 4 * k], radius=22 * k,
+                            fill=(20, 20, 26, 120) if dark else (255, 253, 247, 185))
         fill, stroke = ((255, 255, 255), (20, 20, 24)) if dark else ((30, 30, 34), (255, 255, 255))
         for i, l in enumerate(lines):
             d.text((img.width / 2, 17 * k + i * lh + lh / 2), l, font=f, fill=fill, anchor="mm",
@@ -490,7 +492,7 @@ scene(name="curves", bg="board", pad=0.7, zoom=0.0, fx=[fx_diagram(1.4, 2.6)],
 
 TOKYO_J_GY, BOSS_X, BOSS_GY = 1015, 1390, 950
 WALK_PX = C.STEP_U * 2 / (10 / AFPS) * 1.9
-J_STOP = 520 + WALK_PX * 1.3
+J_STOP = 520 + WALK_PX * 0.55
 
 
 def cast_tokyo(sc, t, tq, mode):
@@ -499,7 +501,7 @@ def cast_tokyo(sc, t, tq, mode):
     bm, ba = mouth_for(sc, t, "B", "line")
     bp = C.stand(-1, look=(-1, 0), mouth=bm, amp=ba)
     if mode == "walk":
-        if tq < 1.3:
+        if tq < 0.55:
             k = int(round(tq * AFPS))
             jp = C.walk(2 * math.pi * (k % 10) / 10, 1, brows="worried", mouth="line", marks=("sweat",))
             jp["step"] = k % 5 == 2
@@ -556,7 +558,7 @@ def cast_layoff(sc, t, tq):
     return [("worker", wp, wx, 1000, 1.8), ("jensen", C.stand(-1, brows="sad", mouth="frown", look=(-1, 0.2)), 1620, 1015, 1.9)]
 
 
-scene(name="layoffs", bg="office", pad=0.4, post=[fx_label("1996", 180, 200)], cast=cast_layoff,
+scene(name="layoffs", bg="office", pad=0.4, post=[fx_label("1996", 320, 200)], cast=cast_layoff,
       lines=[("N", "But Nvidia still had to lay off more than half its people.")])
 
 
