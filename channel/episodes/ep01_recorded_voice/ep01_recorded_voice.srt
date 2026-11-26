@@ -1,0 +1,251 @@
+1
+00:00:00,120 --> 00:00:03,911
+There is a version of your voice that everyone you know has heard.
+
+2
+00:00:04,331 --> 00:00:06,944
+Your friends. Your family. Your teachers.
+
+3
+00:00:07,364 --> 00:00:09,059
+Everyone... except you.
+
+4
+00:00:09,479 --> 00:00:14,023
+So why do so many of us hate the sound of our own recorded voice?
+
+5
+00:00:14,443 --> 00:00:19,120
+It usually starts with something simple. Like sending a voice message.
+
+6
+00:00:19,540 --> 00:00:21,683
+[Stickman] Hey! It's me. Call me back when you get this!
+
+7
+00:00:22,103 --> 00:00:25,118
+Then, just out of curiosity, you press play.
+
+8
+00:00:25,538 --> 00:00:27,682
+[Stickman] Hey! It's me. Call me back when you get this!
+
+9
+00:00:28,102 --> 00:00:29,769
+[Stickman] Wait... is that what I sound like?
+
+10
+00:00:30,189 --> 00:00:37,046
+If that made you cringe, you're not alone. Lots of people can't stand hearing their own recorded voice.
+
+11
+00:00:37,466 --> 00:00:41,548
+But here's the strange part. The recording isn't lying to you.
+
+12
+00:00:41,968 --> 00:00:45,495
+It's actually much closer to how everyone else hears you.
+
+13
+00:00:45,915 --> 00:00:50,468
+To understand why, let's look at what happens every time you speak.
+
+14
+00:00:50,888 --> 00:00:53,599
+When you talk, your vocal cords vibrate.
+
+15
+00:00:54,019 --> 00:01:00,152
+Those vibrations push sound waves out of your mouth, through the air, and into your ears.
+
+16
+00:01:00,572 --> 00:01:04,758
+That's the first road. And it's exactly how other people hear you.
+
+17
+00:01:05,178 --> 00:01:08,546
+But there's a second road. One that only you have.
+
+18
+00:01:08,966 --> 00:01:16,310
+The same vibrations travel through your throat, your jaw, and the bones of your skull, straight to your inner ear.
+
+19
+00:01:16,730 --> 00:01:19,163
+Scientists call this bone conduction.
+
+20
+00:01:19,583 --> 00:01:23,605
+And your skull is especially good at carrying the low, deep notes.
+
+21
+00:01:24,025 --> 00:01:29,751
+So the voice you hear in your head is a mix of both roads. Deeper. Fuller. Richer.
+
+22
+00:01:30,171 --> 00:01:33,691
+It's the voice you've heard every single day of your life.
+
+23
+00:01:34,111 --> 00:01:37,625
+A microphone, though, only catches the first road.
+
+24
+00:01:38,045 --> 00:01:41,046
+It can't hear the vibrations inside your skull.
+
+25
+00:01:41,466 --> 00:01:44,832
+So when you play it back, those deep notes are gone.
+
+26
+00:01:45,252 --> 00:01:49,195
+What's left sounds thinner, higher, and strangely unfamiliar.
+
+27
+00:01:49,615 --> 00:01:52,657
+Like a stranger doing a bad impression of you.
+
+28
+00:01:53,077 --> 00:01:58,532
+Here's a rough idea of the difference. First, something like the voice in your head.
+
+29
+00:01:58,952 --> 00:02:00,364
+[Stickman] This is how I sound to me.
+
+30
+00:02:00,784 --> 00:02:02,321
+And now, the recording.
+
+31
+00:02:02,741 --> 00:02:04,538
+[Stickman] This is how I sound to everyone else.
+
+32
+00:02:05,058 --> 00:02:09,777
+You can test this right now. Put your fingers in your ears and say something.
+
+33
+00:02:10,197 --> 00:02:12,160
+Go on. Nobody's watching.
+
+34
+00:02:12,580 --> 00:02:20,403
+Hear how deep and boomy it sounds? Blocking your ears cuts out most of the air road, so you mostly hear the bone road.
+
+35
+00:02:20,823 --> 00:02:23,832
+That's the hidden bass you never knew was there.
+
+36
+00:02:24,252 --> 00:02:32,463
+But bone conduction only explains why a recording sounds different. It doesn't fully explain why it makes us cringe.
+
+37
+00:02:32,883 --> 00:02:40,909
+In 1966, two psychologists, Philip Holzman and Clyde Rousey, studied this exact feeling.
+
+38
+00:02:41,329 --> 00:02:43,482
+They called it voice confrontation.
+
+39
+00:02:43,902 --> 00:02:49,215
+When people heard someone else's recording, they paid attention to what was being said.
+
+40
+00:02:49,635 --> 00:02:55,002
+But when they heard their own voice, they focused on how it sounded. And they didn't like it.
+
+41
+00:02:55,422 --> 00:03:06,766
+The researchers suggested that recordings reveal things we don't notice while we're talking. A nervous tone. A hesitation. Little clues about how we come across.
+
+42
+00:03:07,186 --> 00:03:11,098
+Things that don't match the confident voice we hear in our heads.
+
+43
+00:03:11,518 --> 00:03:13,960
+Something similar happens with photos.
+
+44
+00:03:14,380 --> 00:03:24,528
+In a 1977 experiment, researchers showed a group of students two photos of their own face: a normal one, and a mirror-flipped one.
+
+45
+00:03:24,948 --> 00:03:32,950
+Most preferred the flipped one: the face they see in the mirror every day. But their close friends preferred the normal photo.
+
+46
+00:03:33,370 --> 00:03:36,104
+Each side liked the version they were used to.
+
+47
+00:03:36,524 --> 00:03:43,936
+Psychologists call this the mere exposure effect. The more familiar something is, the more we tend to like it.
+
+48
+00:03:44,356 --> 00:03:50,913
+And your voice works the same way. You're used to the version in your head, so the real one sounds wrong.
+
+49
+00:03:51,333 --> 00:03:52,852
+But here's the twist.
+
+50
+00:03:53,272 --> 00:04:03,773
+In 2013, researchers asked eighty people to rate how attractive a set of recorded voices sounded. Their own voice was secretly mixed in.
+
+51
+00:04:04,193 --> 00:04:09,744
+The result? People rated their own voice as more attractive than other listeners did.
+
+52
+00:04:10,164 --> 00:04:13,151
+And more attractive than everyone else's voice.
+
+53
+00:04:13,571 --> 00:04:18,633
+So maybe the problem isn't your voice at all. Maybe it's knowing that it's yours.
+
+54
+00:04:19,053 --> 00:04:28,223
+The good news? The cringe fades. Radio hosts, singers, YouTubers... people who hear their own voice every day often get used to it.
+
+55
+00:04:28,643 --> 00:04:31,714
+The more you hear it, the more normal it sounds.
+
+56
+00:04:32,134 --> 00:04:40,863
+So next time you hear a recording of yourself, remember: that voice isn't worse. It's just the one you've never heard from the outside.
+
+57
+00:04:41,283 --> 00:04:44,397
+It's the voice your friends recognize instantly.
+
+58
+00:04:44,817 --> 00:04:45,545
+[Stickman] Hey!
+
+59
+00:04:45,605 --> 00:04:49,730
+That's the voice that makes someone turn around when you call their name.
+
+60
+00:04:50,150 --> 00:04:53,230
+Everyone in your life already knows that voice.
+
+61
+00:04:53,650 --> 00:04:56,001
+Maybe it's time you got to know it too.
+
+62
+00:04:56,421 --> 00:05:00,270
+So... do you hate your recorded voice? Tell me in the comments.
+
+63
+00:05:00,690 --> 00:05:04,176
+And follow for more strange questions about your brain.
